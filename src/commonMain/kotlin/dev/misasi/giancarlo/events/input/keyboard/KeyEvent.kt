@@ -23,35 +23,26 @@
  *
  */
 
-package dev.misasi.giancarlo.opengl
+package dev.misasi.giancarlo.events.input.keyboard
 
+import dev.misasi.giancarlo.crash
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.events.input.mouse.CursorMode
-import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.getTimeMillis
 
-interface DisplayContext {
+data class KeyEvent(
+    val key: Key,
+    val action: KeyAction,
+    val modifier: KeyModifier?,
+    val scanCode: Int,
+    val time: Long
+) : Event {
 
-    var title: String
-    var targetResolution: Vector2f
-    var windowSize: Vector2f
-    var fullScreen: Boolean
-    var vsync: Boolean
-    var refreshRate: Int?
-
-    fun getPrimaryMonitorResolution(): Vector2f
-    fun getActualWindowSize(): Vector2f
-    fun reconfigure()
-    fun swapBuffers()
-
-    fun enableKeyboardEvents(enable: Boolean)
-    fun enableTextEvents(enable: Boolean)
-    fun enableMouseEvents(enable: Boolean)
-    fun enableMouseButtonEvents(enable: Boolean)
-    fun enableScrollEvents(enable: Boolean)
-    fun setCursorMode(mode: CursorMode)
-    fun pollEvents()
-    fun getNextEvent() : Event?
-
-    fun close()
-    fun shouldClose(): Boolean
+    companion object {
+        fun valueOf(keyCode: Int, scanCode: Int, actionCode: Int, modifierCode: Int): KeyEvent {
+            val key = Key.valueOf(keyCode) ?: crash("Unknown key value: $keyCode, $scanCode, $actionCode, $modifierCode")
+            val action = KeyAction.valueOf(actionCode) ?: crash("Unknown key value: $keyCode, $scanCode, $actionCode, $modifierCode")
+            val modifier = KeyModifier.valueOf(modifierCode)
+            return KeyEvent(key, action, modifier, scanCode, getTimeMillis())
+        }
+    }
 }

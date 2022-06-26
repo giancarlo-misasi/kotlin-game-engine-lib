@@ -23,35 +23,20 @@
  *
  */
 
-package dev.misasi.giancarlo.opengl
+package dev.misasi.giancarlo.events.input.text
 
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.events.input.mouse.CursorMode
-import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.getTimeMillis
 
-interface DisplayContext {
+data class TextEvent (
+    val codePoint: Int,
+    val time: Long
+) : Event {
+    val character = codePoint.toChar()
 
-    var title: String
-    var targetResolution: Vector2f
-    var windowSize: Vector2f
-    var fullScreen: Boolean
-    var vsync: Boolean
-    var refreshRate: Int?
-
-    fun getPrimaryMonitorResolution(): Vector2f
-    fun getActualWindowSize(): Vector2f
-    fun reconfigure()
-    fun swapBuffers()
-
-    fun enableKeyboardEvents(enable: Boolean)
-    fun enableTextEvents(enable: Boolean)
-    fun enableMouseEvents(enable: Boolean)
-    fun enableMouseButtonEvents(enable: Boolean)
-    fun enableScrollEvents(enable: Boolean)
-    fun setCursorMode(mode: CursorMode)
-    fun pollEvents()
-    fun getNextEvent() : Event?
-
-    fun close()
-    fun shouldClose(): Boolean
+    companion object {
+        fun valueOf(codePoint: Int): TextEvent {
+            return TextEvent(codePoint, getTimeMillis())
+        }
+    }
 }

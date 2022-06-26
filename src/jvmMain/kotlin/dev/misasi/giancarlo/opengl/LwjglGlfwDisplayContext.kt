@@ -27,7 +27,12 @@ package dev.misasi.giancarlo.opengl
 
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.events.EventQueue
-import dev.misasi.giancarlo.events.input.gestures.detector.GestureDetector
+import dev.misasi.giancarlo.events.input.keyboard.KeyEvent
+import dev.misasi.giancarlo.events.input.mouse.CursorMode
+import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
+import dev.misasi.giancarlo.events.input.mouse.MouseEvent
+import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
+import dev.misasi.giancarlo.events.input.text.TextEvent
 import dev.misasi.giancarlo.math.Vector2f
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -37,16 +42,15 @@ import org.lwjgl.system.MemoryStack.stackPop
 import org.lwjgl.system.MemoryStack.stackPush
 
 class LwjglGlfwDisplayContext(
-    detectors: Set<GestureDetector>,
     override var title: String,
     override var targetResolution: Vector2f,
     override var windowSize: Vector2f,
     override var fullScreen: Boolean,
     override var vsync: Boolean,
-    override var refreshRate: Int
+    override var refreshRate: Int?,
+    private val events: EventQueue
 ) : DisplayContext {
     private val window: Long
-    private val events: EventQueue = EventQueue(detectors)
 
     init {
         // Setup an error callback. The default implementation
@@ -95,6 +99,24 @@ class LwjglGlfwDisplayContext(
         GL.createCapabilities()
     }
 
+    override fun getPrimaryMonitorResolution(): Vector2f {
+        val mode = glfwGetVideoMode(glfwGetPrimaryMonitor())!!
+        return Vector2f(mode.width().toFloat(), mode.height().toFloat())
+    }
+
+    override fun getActualWindowSize(): Vector2f {
+        val stack: MemoryStack
+        try {
+            stack = stackPush()
+            val pWidth = stack.mallocInt(1)
+            val pHeight = stack.mallocInt(1)
+            glfwGetWindowSize(window, pWidth, pHeight)
+            return Vector2f(pWidth.get(0).toFloat(), pHeight.get(0).toFloat())
+        } finally {
+            stackPop()
+        }
+    }
+
     override fun reconfigure() {
         val primaryMonitor = glfwGetPrimaryMonitor()
         val mode = glfwGetVideoMode(primaryMonitor)!!
@@ -114,8 +136,39 @@ class LwjglGlfwDisplayContext(
 
         glfwSetWindowTitle(window, title)
         glfwSetWindowSize(window, windowSize.x.toInt(), windowSize.y.toInt())
-        glfwSetWindowMonitor(window, monitor, x.toInt(), y.toInt(), windowSize.x.toInt(), windowSize.y.toInt(), refreshRate)
+        glfwSetWindowMonitor(window, monitor, x.toInt(), y.toInt(), windowSize.x.toInt(), windowSize.y.toInt(), refreshRate ?: GLFW_DONT_CARE)
         glfwSwapInterval(if (vsync) 1 else 0)
+    }
+
+    override fun enableKeyboardEvents(enable: Boolean) {
+        glfwSetKeyCallback(window, if (enable) ::keyboardEventHandler else null)
+    }
+
+    override fun enableTextEvents(enable: Boolean) {
+        glfwSetCharCallback(window, if (enable) ::textEventHandler else null)
+    }
+
+    override fun enableMouseEvents(enable: Boolean) {
+        glfwSetCursorPosCallback(window, if (enable) ::mouseEventHandler else null)
+    }
+
+    override fun enableMouseButtonEvents(enable: Boolean) {
+        glfwSetMouseButtonCallback(window, if (enable) ::mouseButtonEventHandler else null)
+    }
+
+    override fun enableScrollEvents(enable: Boolean) {
+        glfwSetScrollCallback(window, if (enable) ::scrollEventHandler else null)
+    }
+
+    override fun setCursorMode(mode: CursorMode) {
+        if (mode == CursorMode.FPS) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
+            if (glfwRawMouseMotionSupported()) {
+                glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+            }
+        } else {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL)
+        }
     }
 
     override fun swapBuffers() {
@@ -138,21 +191,23 @@ class LwjglGlfwDisplayContext(
         return glfwWindowShouldClose(window)
     }
 
-    override fun getPrimaryMonitorResolution(): Vector2f {
-        val mode = glfwGetVideoMode(glfwGetPrimaryMonitor())!!
-        return Vector2f(mode.width().toFloat(), mode.height().toFloat())
+    private fun keyboardEventHandler(window: Long, keyCode: Int, scanCode: Int, actionCode: Int, modifierCode: Int) {
+        events.pushEvent(KeyEvent.valueOf(keyCode, scanCode, actionCode, modifierCode))
     }
 
-    override fun getActualWindowSize(): Vector2f {
-       val stack: MemoryStack
-       try {
-           stack = stackPush()
-           val pWidth = stack.mallocInt(1)
-           val pHeight = stack.mallocInt(1)
-           glfwGetWindowSize(window, pWidth, pHeight)
-           return Vector2f(pWidth.get(0).toFloat(), pHeight.get(0).toFloat())
-       } finally {
-           stackPop()
-       }
+    private fun textEventHandler(window: Long, codePoint: Int) {
+        events.pushEvent(TextEvent.valueOf(codePoint))
+    }
+
+    private fun mouseEventHandler(window: Long, x: Double, y: Double) {
+        events.pushEvent(MouseEvent.valueOf(x, y))
+    }
+
+    private fun mouseButtonEventHandler(window: Long, buttonCode: Int, actionCode: Int, modifierCode: Int) {
+        events.pushEvent(MouseButtonEvent.valueOf(buttonCode, actionCode, modifierCode))
+    }
+
+    private fun scrollEventHandler(window: Long, x: Double, y: Double) {
+        events.pushEvent(ScrollEvent.valueOf(x, y))
     }
 }

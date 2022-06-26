@@ -28,9 +28,8 @@ package dev.misasi.giancarlo.events
 import dev.misasi.giancarlo.events.input.gestures.GestureEvent
 import dev.misasi.giancarlo.events.input.gestures.detector.GestureDetector
 import dev.misasi.giancarlo.events.input.touch.TouchEvent
-import dev.misasi.giancarlo.events.lifecycle.LifecycleEvent
 import dev.misasi.giancarlo.opengl.Viewport
-import java.util.Queue
+import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
 class EventQueue (
@@ -38,11 +37,11 @@ class EventQueue (
 ) {
     private val events: Queue<Event> = LinkedBlockingQueue()
 
-    fun pushLifecycleEvent(stage: LifecycleEvent.Stage, data: Any? = null) {
-        events.add(LifecycleEvent(stage, data))
+    fun pushEvent(event: Event) {
+        events.add(event)
     }
 
-    fun pushTouchEvent(viewport: Viewport, touchEvent: TouchEvent) {
+    fun pushGestureEvent(viewport: Viewport, touchEvent: TouchEvent) {
          events.addAll(detectors
              .asSequence()
              .mapNotNull { it.detect(touchEvent) }

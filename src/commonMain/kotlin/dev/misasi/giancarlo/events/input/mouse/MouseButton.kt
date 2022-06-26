@@ -23,35 +23,20 @@
  *
  */
 
-package dev.misasi.giancarlo.opengl
+package dev.misasi.giancarlo.events.input.mouse
 
-import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.events.input.mouse.CursorMode
-import dev.misasi.giancarlo.math.Vector2f
+enum class MouseButton (val value: Int) {
+    LEFT (0),
+    RIGHT (1),
+    MIDDLE (2),
+    BUTTON_4 (3),
+    BUTTON_5 (4),
+    BUTTON_6 (5),
+    BUTTON_7 (6),
+    BUTTON_8 (7);
 
-interface DisplayContext {
-
-    var title: String
-    var targetResolution: Vector2f
-    var windowSize: Vector2f
-    var fullScreen: Boolean
-    var vsync: Boolean
-    var refreshRate: Int?
-
-    fun getPrimaryMonitorResolution(): Vector2f
-    fun getActualWindowSize(): Vector2f
-    fun reconfigure()
-    fun swapBuffers()
-
-    fun enableKeyboardEvents(enable: Boolean)
-    fun enableTextEvents(enable: Boolean)
-    fun enableMouseEvents(enable: Boolean)
-    fun enableMouseButtonEvents(enable: Boolean)
-    fun enableScrollEvents(enable: Boolean)
-    fun setCursorMode(mode: CursorMode)
-    fun pollEvents()
-    fun getNextEvent() : Event?
-
-    fun close()
-    fun shouldClose(): Boolean
+    companion object {
+        private val VALUES = values()
+        fun valueOf(value: Int) = VALUES.firstOrNull { it.value == value }
+    }
 }

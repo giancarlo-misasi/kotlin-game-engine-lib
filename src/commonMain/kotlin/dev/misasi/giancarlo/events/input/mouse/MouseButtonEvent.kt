@@ -23,35 +23,26 @@
  *
  */
 
-package dev.misasi.giancarlo.opengl
+package dev.misasi.giancarlo.events.input.mouse
 
+import dev.misasi.giancarlo.crash
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.events.input.mouse.CursorMode
-import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.events.input.keyboard.KeyModifier
+import dev.misasi.giancarlo.getTimeMillis
 
-interface DisplayContext {
+data class MouseButtonEvent (
+    val button: MouseButton,
+    val action: MouseButtonAction,
+    val modifier: KeyModifier?,
+    val time: Long
+) : Event {
 
-    var title: String
-    var targetResolution: Vector2f
-    var windowSize: Vector2f
-    var fullScreen: Boolean
-    var vsync: Boolean
-    var refreshRate: Int?
-
-    fun getPrimaryMonitorResolution(): Vector2f
-    fun getActualWindowSize(): Vector2f
-    fun reconfigure()
-    fun swapBuffers()
-
-    fun enableKeyboardEvents(enable: Boolean)
-    fun enableTextEvents(enable: Boolean)
-    fun enableMouseEvents(enable: Boolean)
-    fun enableMouseButtonEvents(enable: Boolean)
-    fun enableScrollEvents(enable: Boolean)
-    fun setCursorMode(mode: CursorMode)
-    fun pollEvents()
-    fun getNextEvent() : Event?
-
-    fun close()
-    fun shouldClose(): Boolean
+    companion object {
+        fun valueOf(buttonCode: Int, actionCode: Int, modifierCode: Int): MouseButtonEvent {
+            val button = MouseButton.valueOf(buttonCode) ?: crash("Unknown mbtn value: $buttonCode, $actionCode, $modifierCode")
+            val action = MouseButtonAction.valueOf(actionCode) ?: crash("Unknown mbtn value: $buttonCode, $actionCode, $modifierCode")
+            val modifier = KeyModifier.valueOf(modifierCode)
+            return MouseButtonEvent(button, action, modifier, getTimeMillis())
+        }
+    }
 }

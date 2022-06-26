@@ -25,36 +25,47 @@
 
 import dev.misasi.giancarlo.*
 import dev.misasi.giancarlo.drawing.*
+import dev.misasi.giancarlo.events.EventQueue
 import dev.misasi.giancarlo.events.SystemClock
 import dev.misasi.giancarlo.events.input.gestures.detector.PanDetector
 import dev.misasi.giancarlo.events.input.gestures.detector.PinchDetector
 import dev.misasi.giancarlo.events.input.gestures.detector.SingleTapDetector
+import dev.misasi.giancarlo.events.input.keyboard.Key
+import dev.misasi.giancarlo.events.input.keyboard.KeyAction
+import dev.misasi.giancarlo.events.input.keyboard.KeyEvent
+import dev.misasi.giancarlo.events.input.mouse.*
+import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
 import dev.misasi.giancarlo.math.Point4
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.opengl.*
 
 fun main() {
-    println("Hello")
-
     val clock = SystemClock()
+
     val gestureDetectors = setOf(
         PanDetector(),
         SingleTapDetector(),
         PinchDetector()
     )
+    val eventQueue = EventQueue(gestureDetectors)
 
     val context = LwjglGlfwDisplayContext(
-        gestureDetectors,
         "title",
         Vector2f(1920f, 1080f),
         Vector2f(1920f, 1080f),
         false,
         false,
-        60
+        60,
+        eventQueue
     )
 
-    val gl = LwjglOpenGl()
+    context.enableKeyboardEvents(true)
+    context.enableTextEvents(true)
+    context.enableMouseEvents(true)
+    context.enableMouseButtonEvents(true)
+    context.enableScrollEvents(true)
 
+    val gl = LwjglOpenGl()
     val targetResolution = Vector2f(1920f, 1080f)
     val program = createProgram(gl, "/programs/Material.program")
 //    val vboStatic = createVertexBuffer(gl, "/buffers/Static.buffer")
@@ -63,8 +74,8 @@ fun main() {
     val atlasOverworld = createAtlas(gl, "/atlases/Overworld.atlas")
     val gfx = GraphicsBuffer(vboDynamic)
     val viewport = Viewport(gl, targetResolution, targetResolution)
-    val camera = Camera()//.copy(zoom = 4f)
-    val mvp = viewport.getModelViewProjection(camera)
+    var camera = Camera()//.copy(zoom = 4f)
+    var mvp = viewport.getModelViewProjection(camera)
 
     // Draw static things
 //    gfx.write(
@@ -95,6 +106,9 @@ fun main() {
     val purple = atlasOverworld.getMaterial("FloorPurple")
     val tree = atlasOverworld.getMaterial("Tree")
 
+    var mousePressing = false
+    var lastMousePos = Vector2f()
+
     // Draw loop
     gl.setClearColor(Rgba8.BLACK)
     while (!context.shouldClose()) {
@@ -117,13 +131,59 @@ fun main() {
         gfx.write(Vector2f(355f, 312f), tree)
         gfx.write(Vector2f(512f, 800f), tree)
         gfx.write(Vector2f(725f, 256f), tree)
+
+        animation.update(clock.elapsedMillis)
         gfx.write(Vector2f(64f, 64f), animation.currentFrame())
 
         vboDynamic.update(gfx.directBuffer)
+        mvp = viewport.getModelViewProjection(camera)
         program.draw(gfx, mapOf("uMvp" to mvp, "uEffect" to 0))
 
         context.swapBuffers()
         context.pollEvents()
+
+        do {
+            val event = context.getNextEvent() ?: break
+            if (event is KeyEvent) {
+                if (event.key == Key.KEY_F && event.action == KeyAction.RELEASE) {
+                    context.setCursorMode(CursorMode.FPS)
+                } else if (event.key == Key.KEY_N && event.action == KeyAction.RELEASE) {
+                    context.setCursorMode(CursorMode.NORMAL)
+                }
+            }
+
+            if (event is ScrollEvent) {
+                if (event.offset.y > 0) {
+                    camera = camera.copy(zoom = camera.zoom.times(event.offset.y * 1.1f))
+                } else if (event.offset.y < 0) {
+                    camera = camera.copy(zoom = camera.zoom.div(-event.offset.y * 1.1f))
+                }
+            }
+
+            // TODO: Mouse events should have gestures to make it easy to determine how far the mouse has moved
+            if (event is MouseButtonEvent) {
+                if (event.button == MouseButton.LEFT) {
+                    if (event.action == MouseButtonAction.PRESS) {
+                        mousePressing = true
+                    } else if (event.action == MouseButtonAction.RELEASE) {
+                        mousePressing = false
+                    }
+                }
+            }
+
+            if (event is MouseEvent) {
+                val delta = lastMousePos.minus(event.position)
+                if (mousePressing) {
+                    camera = camera.copy(position = camera.position.plus(delta.scale(0.5f)))
+                }
+
+                lastMousePos = event.position
+            }
+
+            println(event)
+        } while (true)
+
+        clock.update()
     }
 }
 
