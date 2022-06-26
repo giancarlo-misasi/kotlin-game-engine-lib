@@ -1,0 +1,16 @@
+General
+/textures/General.png
+Black 0 0 128 128
+PlayerWalkDown 250
+PlayerWalkDown1 0 129 105 120
+PlayerWalkDown2 106 129 105 120
+PlayerWalkLeft 250
+PlayerWalkLeft1 258 0 105 120
+PlayerWalkLeft2 212 129 105 120
+PlayerWalkRight 250
+PlayerWalkRight1 364 0 105 120
+PlayerWalkRight2 318 121 105 120
+PlayerWalkUp 250
+PlayerWalkUp1 0 250 105 120
+PlayerWalkUp2 106 250 105 120
+White 129 0 128 128

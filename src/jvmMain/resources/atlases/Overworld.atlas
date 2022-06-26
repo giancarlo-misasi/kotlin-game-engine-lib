@@ -1,0 +1,25 @@
+Overworld
+/textures/Overworld.png
+BigRock 0 0 32 32
+BigTree 33 0 32 32
+BigTreeStump 66 0 32 32
+CliffInnerCorner 0 33 16 16
+CliffOuterCorner 17 33 16 16
+CliffWall 34 33 16 16
+FloorBlue 51 33 16 16
+FloorCliff 250
+FloorCliff1 99 0 16 16
+FloorCliff2 68 33 16 16
+FloorCliff3 99 17 16 16
+FloorGrass 85 34 16 16
+FloorOrange 102 34 16 16
+FloorPurple 0 50 16 16
+FloorRed 17 50 16 16
+FloorSand 0 67 16 16
+FloorTeal 17 67 16 16
+FloorYellow 0 84 16 16
+Rock 34 50 16 16
+Stairs 17 84 16 16
+Tree 34 67 16 16
+TreeStump 51 50 16 16
+Water 51 67 16 16

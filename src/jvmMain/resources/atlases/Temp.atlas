@@ -1,0 +1,10 @@
+Temp
+/textures/Temp.png
+Down 0 0 16 16
+DownLocked 17 0 16 16
+Left 34 0 16 16
+LeftLocked 0 17 16 16
+Right 17 17 16 16
+RightLocked 0 34 16 16
+Up 17 34 16 16
+UpLocked 34 17 16 16

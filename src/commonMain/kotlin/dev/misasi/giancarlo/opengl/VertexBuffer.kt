@@ -33,8 +33,8 @@ class VertexBuffer (
     val vertexBufferHandle: Int = gl.createVbo(usage, maxBytes);
 
     enum class Usage {
-        Static,
-        Dynamic,
-        Stream
+        STATIC,
+        DYNAMIC,
+        STREAM
     }
 }

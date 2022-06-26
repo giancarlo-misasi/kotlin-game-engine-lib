@@ -39,6 +39,12 @@ repositories {
 val kotlinStdlibVersion = "1.7.0"
 val lwjglVersion = "3.3.1"
 val hostOs: OperatingSystem = OperatingSystem.current()
+val hostOsName = when {
+    hostOs.isWindows -> "windows"
+    hostOs.isLinux -> "linux"
+    hostOs.isMacOsX -> "macos"
+    else -> throw GradleException("Host OS is not supported.")
+}
 
 
 kotlin {
@@ -68,20 +74,16 @@ kotlin {
                 implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinStdlibVersion")
 
                 // https://www.lwjgl.org/customize
-                // implementation(project.dependencies.platform("$lwjglBase:lwjgl-bom:$lwjglVersion"))
-                val lwjglModules = arrayOf("lwjgl", "lwjgl-opengl", "lwjgl-glfw")
-                val lwjglClassifier = when {
-                    hostOs.isWindows -> "natives-windows"
-                    hostOs.isLinux -> "natives-linux"
-                    hostOs.isMacOsX -> "natives-macos"
-                    else -> throw GradleException("Host OS is not supported in lwjgl.")
-                }
-                lwjglModules.map { "org.lwjgl:$it:$lwjglVersion" }.forEach {
+                arrayOf("lwjgl", "lwjgl-opengl", "lwjgl-glfw").map { "org.lwjgl:$it:$lwjglVersion" }.forEach {
                     implementation(it)
-                    runtimeOnly("$it:$lwjglClassifier")
+                    runtimeOnly("$it:natives-$hostOsName")
                 }
             }
         }
-        val jvmTest by getting
+        val jvmTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
     }
 }

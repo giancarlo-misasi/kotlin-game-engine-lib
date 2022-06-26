@@ -26,7 +26,7 @@
 package dev.misasi.giancarlo
 
 import dev.misasi.giancarlo.drawing.Bitmap
-import java.io.File
+import java.io.BufferedReader
 import javax.imageio.ImageIO
 import kotlin.system.exitProcess
 
@@ -34,30 +34,21 @@ fun getTimeMillis(): Long {
     return System.currentTimeMillis()
 }
 
-fun listFiles(path: String): List<String> {
-    return File(path).walk().map { it.absolutePath }.toList()
+fun getResourceAsLines(path: String): List<String> = object {}.javaClass.getResourceAsStream(path).use {
+    return it?.bufferedReader()?.use(BufferedReader::readLines).orEmpty()
 }
 
-fun readFileToString(path: String): String {
-    return File(path).readText()
+fun getResourceAsString(path: String): String? = object {}.javaClass.getResourceAsStream(path).use {
+    return it?.bufferedReader()?.use(BufferedReader::readText)
 }
 
-fun readFileToLines(path: String): List<String> {
-    return File(path).readLines()
-}
-
-fun readFileToBytes(path: String): ByteArray {
-    return File(path).readBytes()
-}
-
-fun readFileToBitmap(path: String): Bitmap {
-    // Read the image
-    val bufferedImage = ImageIO.read(File(path))
-
-    // Read the pixels
+fun getResourceAsBitmap(path: String): Bitmap? = object {}.javaClass.getResourceAsStream(path).use {
+    if (it == null) {
+        return null
+    }
+    val bufferedImage = ImageIO.read(it)
     val pixels = IntArray(bufferedImage.width * bufferedImage.height)
     bufferedImage.getRGB(0, 0, bufferedImage.width, bufferedImage.height, pixels, 0, bufferedImage.width);
-
     return Bitmap(pixels, bufferedImage.width, bufferedImage.height)
 }
 

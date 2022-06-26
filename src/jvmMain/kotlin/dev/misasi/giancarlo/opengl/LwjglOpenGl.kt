@@ -40,9 +40,9 @@ class LwjglOpenGl : OpenGl {
     )
 
     private val vertexBufferUsageMapping = mapOf(
-        VertexBuffer.Usage.Static to GL_STATIC_DRAW,
-        VertexBuffer.Usage.Dynamic to GL_DYNAMIC_DRAW,
-        VertexBuffer.Usage.Stream to GL_STREAM_DRAW
+        VertexBuffer.Usage.STATIC to GL_STATIC_DRAW,
+        VertexBuffer.Usage.DYNAMIC to GL_DYNAMIC_DRAW,
+        VertexBuffer.Usage.STREAM to GL_STREAM_DRAW
     )
 
     override fun createProgram(): Int {
@@ -217,9 +217,9 @@ class LwjglOpenGl : OpenGl {
         return handle
     }
 
-    private fun glGenHandle(glGenOperation: () -> Unit, tag: () -> String): Int {
+    private fun glGenHandle(glGenOperation: (IntArray) -> Unit, tag: () -> String): Int {
         val handleArray = IntArray(1)
-        glVerify { glGenOperation() }
+        glVerify { glGenOperation(handleArray) }
         if (handleArray[0] == 0) {
             crash("Failed to create ${tag()}.")
         }

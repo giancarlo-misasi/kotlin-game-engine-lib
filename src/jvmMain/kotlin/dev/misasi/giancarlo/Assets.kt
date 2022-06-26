@@ -1,4 +1,4 @@
-/*
+package dev.misasi.giancarlo/*
  * MIT License
  *
  * Copyright (c) 2022 Giancarlo Misasi

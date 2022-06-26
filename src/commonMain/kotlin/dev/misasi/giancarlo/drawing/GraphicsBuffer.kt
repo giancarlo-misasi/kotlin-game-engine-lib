@@ -143,14 +143,14 @@ class GraphicsBuffer  (
 
     companion object {
         // 2 triangles of 3 points each with 6 floats, 144 bytes per rect
-        private const val ENTITY_SIZE: Int = 144
+        const val ENTITY_SIZE: Int = 144
 
         // This will inform the shader that texture coordinates should be used
         // If not provided, the color provided will be used
-        private const val USE_TEXTURE_COORDINATES: Float = -1f
+        const val USE_TEXTURE_COORDINATES: Float = -1f
 
         // When rendering materials, allow user to make them
         // transparent (on top of their existing transparency)
-        private const val NO_ALPHA: Float = -1f;
+        const val NO_ALPHA: Float = -1f;
     }
 }
