@@ -3,6 +3,6 @@ VERTEX /shaders/MaterialVertex.glsl
 FRAGMENT /shaders/MaterialFragment.glsl
 uMvp
 uEffect
-aXy 2 0 24
-aUvOrRgb 3 8 24
-aAlpha 1 20 24
+aXy FLOAT 2 0 24
+aUvOrRgb FLOAT 3 8 24
+aAlpha FLOAT 1 20 24

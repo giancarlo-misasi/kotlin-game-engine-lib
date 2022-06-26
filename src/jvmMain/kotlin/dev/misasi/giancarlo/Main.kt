@@ -61,7 +61,7 @@ fun main() {
     val vboDynamic = createVertexBuffer(gl, "/buffers/Dynamic.buffer")
     val atlasGeneral = createAtlas(gl, "/atlases/General.atlas")
     val atlasOverworld = createAtlas(gl, "/atlases/Overworld.atlas")
-    val gfx = GraphicsBuffer(10000)
+    val gfx = GraphicsBuffer(vboDynamic)
     val viewport = Viewport(gl, targetResolution, targetResolution)
     val camera = Camera()//.copy(zoom = 4f)
     val mvp = viewport.getModelViewProjection(camera)
@@ -91,6 +91,8 @@ fun main() {
     // Draw dynamic things
     val animation = Animation(atlasGeneral.getMaterialSet("PlayerWalkDown"))
     val grass = atlasOverworld.getMaterial("FloorGrass")
+    val orange = atlasOverworld.getMaterial("FloorOrange")
+    val purple = atlasOverworld.getMaterial("FloorPurple")
     val tree = atlasOverworld.getMaterial("Tree")
 
     // Draw loop
@@ -101,7 +103,13 @@ fun main() {
         gfx.clear()
         for (x in 0..1920 step 16) {
             for (y in 0..1080 step 16) {
-                gfx.write(Vector2f(x.toFloat(), y.toFloat()), grass)
+                if (x < 800) {
+                    gfx.write(Vector2f(x.toFloat(), y.toFloat()), grass)
+                } else if (x < 1600) {
+                    gfx.write(Vector2f(x.toFloat(), y.toFloat()), orange)
+                } else {
+                    gfx.write(Vector2f(x.toFloat(), y.toFloat()), purple)
+                }
             }
         }
 
@@ -111,17 +119,8 @@ fun main() {
         gfx.write(Vector2f(725f, 256f), tree)
         gfx.write(Vector2f(64f, 64f), animation.currentFrame())
 
-        gl.bindVbo(vboDynamic.vertexBufferHandle)
-        gl.updateVboData(vboDynamic.vertexBufferHandle, gfx.directBuffer)
-
-        // TODO: GraphicsBuffer is currently per VBO because we need DrawOrders...
-        // Is that the desired behavior?
-        program.draw(
-            gl, mapOf(
-                "uMvp" to mvp,
-                "uEffect" to 0
-            ), gfx.drawOrders, vboDynamic
-        )
+        vboDynamic.update(gfx.directBuffer)
+        program.draw(gfx, mapOf("uMvp" to mvp, "uEffect" to 0))
 
         context.swapBuffers()
         context.pollEvents()
@@ -150,7 +149,7 @@ private fun createProgram(gl: OpenGl, path: String): Program {
         .map { it[0] }
         .toList()
     val attributes = lineData
-        .filter { it.size == 4 }
+        .filter { it.size == 5 }
         .map { createAttribute(it) }
         .toList()
 
@@ -211,10 +210,11 @@ private fun createMaterialSet(materials: Map<String, Material>, data: List<Strin
 
 private fun createAttribute(data: List<String>): Attribute {
     val name = data[0]
-    val count = data[1].toInt()
-    val strideOffset = data[2].toInt()
-    val totalStride = data[3].toInt()
-    return Attribute(name, count, strideOffset, totalStride)
+    val type = Attribute.Type.valueOf(data[1])
+    val count = data[2].toInt()
+    val strideOffset = data[3].toInt()
+    val totalStride = data[4].toInt()
+    return Attribute(name, type, count, strideOffset, totalStride)
 }
 
 private fun createVertexBuffer(gl: OpenGl, path: String): VertexBuffer {

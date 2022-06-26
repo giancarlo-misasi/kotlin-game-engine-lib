@@ -26,6 +26,7 @@
 package dev.misasi.giancarlo
 
 import dev.misasi.giancarlo.drawing.Bitmap
+import dev.misasi.giancarlo.drawing.Rgba8
 import java.io.BufferedReader
 import javax.imageio.ImageIO
 import kotlin.system.exitProcess
@@ -47,9 +48,9 @@ fun getResourceAsBitmap(path: String): Bitmap? = object {}.javaClass.getResource
         return null
     }
     val bufferedImage = ImageIO.read(it)
-    val pixels = IntArray(bufferedImage.width * bufferedImage.height)
-    bufferedImage.getRGB(0, 0, bufferedImage.width, bufferedImage.height, pixels, 0, bufferedImage.width);
-    return Bitmap(pixels, bufferedImage.width, bufferedImage.height)
+    val argb = IntArray(bufferedImage.width * bufferedImage.height)
+    bufferedImage.getRGB(0, 0, bufferedImage.width, bufferedImage.height, argb, 0, bufferedImage.width);
+    return Bitmap(argb, Rgba8.Format.BGRA, bufferedImage.width, bufferedImage.height)
 }
 
 fun crash(message: String): Nothing {

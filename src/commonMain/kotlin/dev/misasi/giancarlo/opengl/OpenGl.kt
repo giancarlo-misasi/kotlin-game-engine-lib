@@ -35,12 +35,12 @@ interface OpenGl {
 
     // Program
     fun createProgram(): Int
-    fun linkProgram(program: Int): String?
+    fun linkProgram(program: Int)
     fun bindProgram(program: Int): Int
 
     // Shader
     fun createShader(type: Shader.Type): Int
-    fun compileShader(shader: Int, source: String): String?
+    fun compileShader(shader: Int, source: String)
     fun attachShader(program: Int, shader: Int)
     fun detachShader(program: Int, shader: Int)
     fun deleteShader(shader: Int)
@@ -52,7 +52,7 @@ interface OpenGl {
     // Attributes
     fun getAttributeLocation(program: Int, name: String): Int
     fun enableVertexAttributeArray(attribute: Int)
-    fun setVertexAttributePointerFV(attribute: Int, opts: Attribute)
+    fun setVertexAttributePointer(attribute: Int, opts: Attribute)
 
     // Vertex buffers
     fun createVbo(usage: VertexBuffer.Usage, maxBytes: Int): Int
@@ -60,7 +60,7 @@ interface OpenGl {
     fun updateVboData(vbo: Int, data: DirectByteBuffer, byteOffset: Int = 0)
 
     // Textures
-    fun createTexture2d(width: Int, height: Int, data: DirectByteBuffer): Int
+    fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectByteBuffer): Int
     fun bindTexture2d(texture: Int): Int
     fun setActiveTextureUnit(target: Int)
 
@@ -72,4 +72,8 @@ interface OpenGl {
     fun drawTriangles(triangleOffset: Int, triangleCount: Int)
     fun setClearColor(color: Rgba8)
     fun clear()
+
+    // Debugging
+    fun getCurrentHandle(attribute: Int): Int
+    fun getErrorMessage(): String?
 }

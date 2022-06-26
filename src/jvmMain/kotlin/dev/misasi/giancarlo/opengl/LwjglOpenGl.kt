@@ -34,151 +34,175 @@ import org.lwjgl.opengl.GL20.*
 
 class LwjglOpenGl : OpenGl {
 
-    private val shaderTypeMapping = mapOf(
-        Shader.Type.VERTEX to GL_VERTEX_SHADER,
-        Shader.Type.FRAGMENT to GL_FRAGMENT_SHADER
-    )
+    companion object {
 
-    private val vertexBufferUsageMapping = mapOf(
-        VertexBuffer.Usage.STATIC to GL_STATIC_DRAW,
-        VertexBuffer.Usage.DYNAMIC to GL_DYNAMIC_DRAW,
-        VertexBuffer.Usage.STREAM to GL_STREAM_DRAW
-    )
+        private val programTag = "PROGRAM"
+        private val shaderTag = "SHADER"
+        private val vboTag = "VBO"
 
-    override fun createProgram(): Int {
-        return glCreateHandle(::glCreateProgram) { "PROGRAM" }
+        private val shaderTypeMapping = mapOf(
+            Shader.Type.VERTEX to GL_VERTEX_SHADER,
+            Shader.Type.FRAGMENT to GL_FRAGMENT_SHADER
+        )
+
+        private val vertexBufferUsageMapping = mapOf(
+            VertexBuffer.Usage.STATIC to GL_STATIC_DRAW,
+            VertexBuffer.Usage.DYNAMIC to GL_DYNAMIC_DRAW,
+            VertexBuffer.Usage.STREAM to GL_STREAM_DRAW
+        )
+
+        private val vertexAttributeTypeMapping = mapOf(
+            Attribute.Type.FLOAT to GL_FLOAT,
+            Attribute.Type.INT to GL_INT
+        )
+
+        private val textureFormat = mapOf(
+            Rgba8.Format.BGRA to GL_BGRA,
+            Rgba8.Format.RGBA to GL_RGBA
+        )
     }
 
-    override fun linkProgram(program: Int): String? {
-        glVerify { glLinkProgram(program) }
+    override fun createProgram(): Int {
+        return glVerifyCreate(this, ::glCreateProgram) { programTag }
+    }
 
-        val status = IntArray(1)
-        glVerify { glGetProgramiv(program, GL_LINK_STATUS, status) }
-
-        return if (status[0] == GL_FALSE) {
-            glVerify<String> { glGetProgramInfoLog(program) }
-        } else {
-            null
-        }
+    override fun linkProgram(program: Int) {
+        glVerify(this) { glLinkProgram(program) }
+        glVerifyStatus(this, ::glGetProgramiv, program, GL_LINK_STATUS, ::glGetProgramInfoLog);
     }
 
     override fun bindProgram(program: Int): Int {
-        glVerify { glUseProgram(program) }
+        glVerify(this) { glUseProgram(program) }
         return program
     }
 
     override fun createShader(type: Shader.Type): Int {
-        return glCreateHandle({ glCreateShader(shaderTypeMapping[type]!!) }) { "VERTEX" }
+        val shaderType = shaderTypeMapping[type]!!;
+        return glVerifyCreate(this, { glCreateShader(shaderType) }) { shaderTag }
     }
 
-    override fun compileShader(shader: Int, source: String): String? {
-        glVerify { glShaderSource(shader, source) }
-        glVerify { glCompileShader(shader) }
-
-        val status = IntArray(1)
-        glVerify { glGetShaderiv(shader, GL_COMPILE_STATUS, status) }
-
-        return if (status[0] == GL_FALSE) {
-            glVerify<String> { glGetShaderInfoLog(shader) }
-        } else {
-            null
-        }
+    override fun compileShader(shader: Int, source: String) {
+        glVerify(this) { glShaderSource(shader, source) }
+        glVerify(this) { glCompileShader(shader) }
+        glVerifyStatus(this, ::glGetShaderiv, shader, GL_COMPILE_STATUS, ::glGetShaderInfoLog);
     }
 
     override fun attachShader(program: Int, shader: Int) {
-        glVerify { glAttachShader(program, shader) }
+        glVerify(this) { glAttachShader(program, shader) }
     }
 
     override fun detachShader(program: Int, shader: Int) {
-        glVerify { glDetachShader(program, shader) }
+        glVerify(this) { glDetachShader(program, shader) }
     }
 
     override fun deleteShader(shader: Int) {
-        glVerify { glDeleteShader(shader) }
+        glVerify(this) { glDeleteShader(shader) }
     }
 
     override fun getUniformLocation(program: Int, name: String): Int {
-        glVerifyProgramBound(program)
-        return glVerify<Int> { glGetUniformLocation(program, name) }
+        glVerifyBound(this, GL_CURRENT_PROGRAM, program) { programTag }
+        return glVerify<Int>(this) { glGetUniformLocation(program, name) }
     }
 
     override fun setUniform(program: Int, uniform: Int, value: Any) {
-        glVerifyProgramBound(program)
-
+        glVerifyBound(this, GL_CURRENT_PROGRAM, program) { programTag }
         when (value) {
-            is Matrix4f ->  glVerify { glUniformMatrix4fv(uniform, false, value.data) }
-            is Int -> glVerify { glUniform1i(uniform, value) }
+            is Matrix4f -> glVerify(this) { glUniformMatrix4fv(uniform, false, value.data) }
+            is Int -> glVerify(this) { glUniform1i(uniform, value) }
             else -> crash("Cannot set uniform, type '${value.javaClass}' not supported.")
         }
     }
 
     override fun getAttributeLocation(program: Int, name: String): Int {
-        glVerifyProgramBound(program)
-        return glVerify<Int> { glGetAttribLocation(program, name) }
+        glVerifyBound(this, GL_CURRENT_PROGRAM, program) { programTag }
+        return glVerify<Int>(this) { glGetAttribLocation(program, name) }
     }
 
     override fun enableVertexAttributeArray(attribute: Int) {
-        glVerify { glEnableVertexAttribArray(attribute) }
+        glVerify(this) { glEnableVertexAttribArray(attribute) }
     }
 
-    override fun setVertexAttributePointerFV(attribute: Int, opts: Attribute) {
-        glVerify { glVertexAttribPointer(attribute, opts.count, GL_FLOAT, false, opts.totalStride, opts.strideOffset.toLong()) }
+    override fun setVertexAttributePointer(attribute: Int, opts: Attribute) {
+        val type = vertexAttributeTypeMapping[opts.type]!!
+        glVerify(this) {
+            glVertexAttribPointer(
+                attribute,
+                opts.count,
+                type,
+                opts.normalized,
+                opts.totalStride,
+                opts.strideOffset.toLong()
+            )
+        }
     }
 
     override fun createVbo(usage: VertexBuffer.Usage, maxBytes: Int): Int {
-        val vbo = bindVbo(glGenHandle(::glGenBuffers) { "VBO" })
-        glVerify { glBufferData(GL_ARRAY_BUFFER, maxBytes.toLong(), vertexBufferUsageMapping[usage]!!) }
+        val vbo = bindVbo(glVerifyGenerate(this, ::glGenBuffers) { "VBO" })
+        glVerify(this) { glBufferData(GL_ARRAY_BUFFER, maxBytes.toLong(), vertexBufferUsageMapping[usage]!!) }
         return vbo
     }
 
     override fun bindVbo(vbo: Int): Int {
-        glVerify { glBindBuffer(GL_ARRAY_BUFFER, vbo) }
+        glVerify(this) { glBindBuffer(GL_ARRAY_BUFFER, vbo) }
         return vbo
     }
 
     override fun updateVboData(vbo: Int, data: DirectByteBuffer, byteOffset: Int) {
-        glVerifyVboBound(vbo)
-        glVerify { glBufferSubData(GL_ARRAY_BUFFER, byteOffset.toLong(), data.byteBuffer) }
+        glVerifyBound(this, GL_ARRAY_BUFFER_BINDING, vbo) { vboTag }
+        glVerify(this) { glBufferSubData(GL_ARRAY_BUFFER, byteOffset.toLong(), data.byteBuffer) }
     }
 
-    override fun createTexture2d(width: Int, height: Int, data: DirectByteBuffer): Int {
-        val texture = bindTexture2d(glGenHandle(::glGenTextures) { "TEX2D" })
-        glVerify { glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.byteBuffer) }
-        glVerify { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) }
-        glVerify { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST) }
-        glVerify { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE) }
-        glVerify { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE) }
+    override fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectByteBuffer): Int {
+        val texture = bindTexture2d(glVerifyGenerate(this, ::glGenTextures) { "TEX2D" })
+        val format = textureFormat[format]!!
+        glVerify(this) {
+            glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RGBA,
+                width,
+                height,
+                0,
+                format,
+                GL_UNSIGNED_BYTE,
+                data.byteBuffer
+            )
+        }
+        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) }
+        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST) }
+        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE) }
+        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE) }
         return texture
     }
 
     override fun bindTexture2d(texture: Int): Int {
-        glVerify { glBindTexture(GL_TEXTURE_2D, texture) }
+        glVerify(this) { glBindTexture(GL_TEXTURE_2D, texture) }
         return texture
     }
 
     override fun setActiveTextureUnit(target: Int) {
-        glVerify { glActiveTexture(GL_TEXTURE0 + target) }
+        glVerify(this) { glActiveTexture(GL_TEXTURE0 + target) }
     }
 
     override fun setViewport(x: Int, y: Int, width: Int, height: Int) {
-        glVerify { glViewport(0, 0, width, height) }
+        glVerify(this) { glViewport(0, 0, width, height) }
     }
 
     override fun setScissor(x: Int, y: Int, width: Int, height: Int) {
-        glVerify { glEnable(GL_SCISSOR_TEST) }
-        glVerify { glScissor(x, y, width, height) }
+        glVerify(this) { glEnable(GL_SCISSOR_TEST) }
+        glVerify(this) { glScissor(x, y, width, height) }
     }
 
     override fun drawTriangles(triangleOffset: Int, triangleCount: Int) {
         val offset = 3 * triangleOffset
         val vertexCount = 3 * triangleCount
-        glVerify { glDrawArrays(GL_TRIANGLES, offset, vertexCount) }
+        glVerify(this) { glDrawArrays(GL_TRIANGLES, offset, vertexCount) }
     }
 
     override fun setClearColor(color: Rgba8) {
-        glVerify { glEnable(GL_BLEND) }
-        glVerify { glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) }
-        glVerify {
+        glVerify(this) { glEnable(GL_BLEND) }
+        glVerify(this) { glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) }
+        glVerify(this) {
             glClearColor(
                 color.floatR,
                 color.floatG,
@@ -189,76 +213,18 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun clear() {
-        glVerify { glClear(GL_COLOR_BUFFER_BIT) }
+        glVerify(this) { glClear(GL_COLOR_BUFFER_BIT) }
     }
 
     override fun enable(target: Int) {
-        glVerify { glEnable(target) }
+        glVerify(this) { glEnable(target) }
     }
 
-
-    private inline fun <T> glVerify(glOperation: () -> T): T {
-        val result = glOperation()
-        glCheckError()
-        return result
-    }
-
-    private inline fun glVerify(glOperation: () -> Unit) {
-        glOperation()
-        glCheckError()
-    }
-
-
-    private fun glCreateHandle(glCreateOperation: () -> Int, tag: () -> String): Int {
-        val handle = glVerify<Int> { glCreateOperation() }
-        if (handle == 0) {
-            crash("Failed to create ${tag()}.")
-        }
-        return handle
-    }
-
-    private fun glGenHandle(glGenOperation: (IntArray) -> Unit, tag: () -> String): Int {
-        val handleArray = IntArray(1)
-        glVerify { glGenOperation(handleArray) }
-        if (handleArray[0] == 0) {
-            crash("Failed to create ${tag()}.")
-        }
-        return handleArray[0]
-    }
-
-    private fun glVerifyProgramBound(handle: Int) {
-        glVerifyBound(GL_CURRENT_PROGRAM, handle) { "PROGRAM" }
-    }
-
-    private fun glVerifyVboBound(handle: Int) {
-        glVerifyBound(GL_ARRAY_BUFFER_BINDING, handle) { "VBO" }
-    }
-
-    private fun glVerifyVertexAttributeEnabled(handle: Int) {
-        val enabled = IntArray(1)
-        glVerify { glGetVertexAttribiv(handle, GL_VERTEX_ATTRIB_ARRAY_ENABLED, enabled) }
-        if (enabled[0] != 1) {
-            crash("[VA] $handle is not enabled.")
-        }
-    }
-
-    private fun glVerifyBound(name: Int, handle: Int, tag: () -> String) {
-        val currentHandle = IntArray(1)
-        glVerify { glGetIntegerv(name, currentHandle) }
-        if (currentHandle[0] != handle) {
-            crash("[${tag()}] ${currentHandle[0]} was bound instead of $handle.")
-        }
-    }
-
-    private fun glCheckError() {
-        val errorCode = glGetError();
-        if (errorCode != GL_NO_ERROR) {
-            crash(glGetErrorMessage(errorCode))
-        }
-    }
-
-    private fun glGetErrorMessage(errorCode: Int): String {
-        when (errorCode) {
+    override fun getErrorMessage(): String? {
+        when (val errorCode = glGetError()) {
+            GL_NO_ERROR -> {
+                return null
+            }
             GL_INVALID_ENUM -> {
                 return "OGL Error: Invalid enum parameter."
             }
@@ -278,5 +244,11 @@ class LwjglOpenGl : OpenGl {
                 return "OGL Error: $errorCode"
             }
         }
+    }
+
+    override fun getCurrentHandle(attribute: Int): Int {
+        val handle = IntArray(1)
+        glVerify(this) { glGetIntegerv(attribute, handle) }
+        return handle[0]
     }
 }

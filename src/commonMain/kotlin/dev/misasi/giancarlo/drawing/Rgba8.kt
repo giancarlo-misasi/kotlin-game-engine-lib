@@ -33,6 +33,11 @@ data class Rgba8 (
     val b: Int = 0,
     val a: Int = 255
 ) {
+    enum class Format {
+        RGBA,
+        BGRA
+    }
+
     init {
         checkRange(r)
         checkRange(g)

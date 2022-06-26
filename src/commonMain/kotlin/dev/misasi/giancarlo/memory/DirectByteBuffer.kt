@@ -28,7 +28,7 @@ package dev.misasi.giancarlo.memory
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class DirectByteBuffer (
+class DirectByteBuffer(
     capacityInBytes: Int
 ) {
     var sizeInBytes: Int = 0
@@ -38,19 +38,30 @@ class DirectByteBuffer (
         .allocateDirect(capacityInBytes)
         .order(ByteOrder.nativeOrder())
 
-    fun putFloat(value: Float) : DirectByteBuffer {
+    fun putFloat(value: Float): DirectByteBuffer {
         byteBuffer.putFloat(sizeInBytes, value)
         sizeInBytes += FLOAT_SIZE
         return this
     }
 
-    fun putInt(value: Int) : DirectByteBuffer {
+    fun putIntArray(value: IntArray): DirectByteBuffer {
+        value.forEach { putInt(it) }
+        return this
+    }
+
+    fun putInt(value: Int): DirectByteBuffer {
         byteBuffer.putInt(sizeInBytes, value)
         sizeInBytes += INT_SIZE
         return this
     }
 
-    fun clear() : DirectByteBuffer {
+    fun putByte(value: Byte): DirectByteBuffer {
+        byteBuffer.put(value);
+        sizeInBytes++
+        return this
+    }
+
+    fun clear(): DirectByteBuffer {
         sizeInBytes = 0
         return this
     }

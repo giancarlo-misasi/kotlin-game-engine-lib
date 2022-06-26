@@ -30,7 +30,7 @@ import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector3f
 
 class Viewport (
-    gl: OpenGl,
+    private val gl: OpenGl,
     val targetResolution: Vector2f,
     val actualScreenSize: Vector2f
 ) {

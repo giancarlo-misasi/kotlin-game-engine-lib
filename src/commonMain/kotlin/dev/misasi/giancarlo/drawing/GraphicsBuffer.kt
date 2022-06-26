@@ -30,11 +30,12 @@ import dev.misasi.giancarlo.math.Rotation
 import dev.misasi.giancarlo.math.Rotation.None
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.memory.DirectByteBuffer
+import dev.misasi.giancarlo.opengl.VertexBuffer
 
 class GraphicsBuffer  (
-    maxEntities: Int
+    private val vertexBuffer: VertexBuffer,
 ) {
-    val directBuffer: DirectByteBuffer = DirectByteBuffer(maxEntities * ENTITY_SIZE)
+    val directBuffer: DirectByteBuffer = DirectByteBuffer(vertexBuffer.maxBytes)
     val drawOrders: MutableList<DrawOrder> = mutableListOf()
 
     fun write(position: Vector2f, material: Material, rotation: Rotation = None, alpha: Float = NO_ALPHA) {
@@ -64,6 +65,14 @@ class GraphicsBuffer  (
             Point4.create(position, size),
             color
         )
+    }
+
+    fun bind() {
+        vertexBuffer.bind()
+    }
+
+    fun update() {
+        vertexBuffer.update(directBuffer)
     }
 
     fun clear() {

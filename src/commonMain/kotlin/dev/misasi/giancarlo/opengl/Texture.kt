@@ -32,7 +32,7 @@ class Texture(
     gl: OpenGl,
     private val bitmap: Bitmap
 ) {
-    val textureHandle: Int = gl.createTexture2d(bitmap.width, bitmap.height, bitmap.data)
+    val textureHandle: Int = gl.createTexture2d(bitmap.width, bitmap.height, bitmap.format, bitmap.data)
 
     init {
         bitmap.clear() // free up the memory

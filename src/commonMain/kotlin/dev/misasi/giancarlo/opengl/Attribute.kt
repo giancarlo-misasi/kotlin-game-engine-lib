@@ -29,13 +29,15 @@ import dev.misasi.giancarlo.crash
 
 data class Attribute (
     val name : String,
+    val type: Type,
     val count: Int,
     val strideOffset: Int,
     val totalStride: Int,
     val normalized: Boolean = false
 ) {
     enum class Type {
-        FLOAT
+        FLOAT,
+        INT
     }
 
     init {
