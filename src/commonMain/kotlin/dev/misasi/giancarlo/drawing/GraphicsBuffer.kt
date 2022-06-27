@@ -35,7 +35,7 @@ import dev.misasi.giancarlo.opengl.VertexBuffer
 class GraphicsBuffer  (
     private val vertexBuffer: VertexBuffer,
 ) {
-    val directBuffer: DirectByteBuffer = DirectByteBuffer(vertexBuffer.maxBytes)
+    private val directBuffer: DirectByteBuffer = DirectByteBuffer(vertexBuffer.maxBytes)
     val drawOrders: MutableList<DrawOrder> = mutableListOf()
 
     fun write(position: Vector2f, material: Material, rotation: Rotation = None, alpha: Float = NO_ALPHA) {

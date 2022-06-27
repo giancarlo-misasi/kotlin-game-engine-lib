@@ -40,7 +40,7 @@ data class Vector3f (val x: Float = 0f, val y: Float = 0f, val z: Float = 0f) {
     }
 
     val inverseLength by lazy {
-        1f / length
+        if (length == 0f) 0f else 1f / length
     }
 
     val normal by lazy {

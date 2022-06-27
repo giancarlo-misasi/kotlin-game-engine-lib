@@ -35,11 +35,20 @@ import dev.misasi.giancarlo.events.input.keyboard.KeyAction
 import dev.misasi.giancarlo.events.input.keyboard.KeyEvent
 import dev.misasi.giancarlo.events.input.mouse.*
 import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
-import dev.misasi.giancarlo.math.Point4
-import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.math.*
 import dev.misasi.giancarlo.opengl.*
 
 fun main() {
+    var r1 = Rectangle(Vector2f(200f, 200f))
+    var r2 = Rectangle(Vector2f(5f, 5f), Vector2f(10f, 10f))
+    val inter1 = Intersection.intersection(r1, r1)
+
+    var c1 = Circle(Vector2f(), 50f)
+    var c2 = Circle(Vector2f(5f, 5f), 5f)
+    val inter2 = Intersection.intersection(c1, c2)
+
+    val inter3 = Intersection.intersection(r1, c2)
+
     val clock = SystemClock()
 
     val gestureDetectors = setOf(
@@ -60,7 +69,7 @@ fun main() {
     )
 
     context.enableKeyboardEvents(true)
-    context.enableTextEvents(true)
+//    context.enableTextEvents(true)
     context.enableMouseEvents(true)
     context.enableMouseButtonEvents(true)
     context.enableScrollEvents(true)
@@ -68,11 +77,12 @@ fun main() {
     val gl = LwjglOpenGl()
     val targetResolution = Vector2f(1920f, 1080f)
     val program = createProgram(gl, "/programs/Material.program")
-//    val vboStatic = createVertexBuffer(gl, "/buffers/Static.buffer")
     val vboDynamic = createVertexBuffer(gl, "/buffers/Dynamic.buffer")
+    val vboDynamic2 = createVertexBuffer(gl, "/buffers/Dynamic.buffer")
     val atlasGeneral = createAtlas(gl, "/atlases/General.atlas")
     val atlasOverworld = createAtlas(gl, "/atlases/Overworld.atlas")
     val gfx = GraphicsBuffer(vboDynamic)
+    val gfx2 = GraphicsBuffer(vboDynamic2)
     val viewport = Viewport(gl, targetResolution, targetResolution)
     var camera = Camera()//.copy(zoom = 4f)
     var mvp = viewport.getModelViewProjection(camera)
@@ -114,6 +124,9 @@ fun main() {
     while (!context.shouldClose()) {
         gl.clear()
 
+        mvp = viewport.getModelViewProjection(camera)
+        animation.update(clock.elapsedMillis)
+
         gfx.clear()
         for (x in 0..1920 step 16) {
             for (y in 0..1080 step 16) {
@@ -126,18 +139,27 @@ fun main() {
                 }
             }
         }
-
         gfx.write(Vector2f(128f, 296f), tree)
         gfx.write(Vector2f(355f, 312f), tree)
         gfx.write(Vector2f(512f, 800f), tree)
         gfx.write(Vector2f(725f, 256f), tree)
-
-        animation.update(clock.elapsedMillis)
         gfx.write(Vector2f(64f, 64f), animation.currentFrame())
+        gfx.update()
 
-        vboDynamic.update(gfx.directBuffer)
-        mvp = viewport.getModelViewProjection(camera)
         program.draw(gfx, mapOf("uMvp" to mvp, "uEffect" to 0))
+
+        // draw the rect and circle we test intersection with
+        c1 = c1.moveTo(lastMousePos)
+        val inter5 = Intersection.intersection(c1, r1)
+
+        gfx2.clear()
+        gfx2.write(r1.tl, r1.size, if (inter5 != null) Rgba8.RED else Rgba8.GREEN)
+        gfx2.write(c1.position.minus(Vector2f(c1.radius, c1.radius)), Vector2f(c1.diameter, c1.diameter), Rgba8.YELLOW_GREEN)
+        gfx2.write(c1.position.minus(Vector2f(c1.radius, c1.radius)).plus(inter5 ?: Vector2f()), Vector2f(c1.diameter, c1.diameter), Rgba8.PURPLE)
+
+        gfx2.update()
+
+        program.draw(gfx2, mapOf("uMvp" to mvp, "uEffect" to 0))
 
         context.swapBuffers()
         context.pollEvents()
@@ -169,6 +191,10 @@ fun main() {
                         mousePressing = false
                     }
                 }
+
+                if (event.button == MouseButton.RIGHT && event.action == MouseButtonAction.RELEASE) {
+                    r1 = r1.moveTo(lastMousePos)
+                }
             }
 
             if (event is MouseEvent) {
@@ -180,7 +206,7 @@ fun main() {
                 lastMousePos = event.position
             }
 
-            println(event)
+//            println(event)
         } while (true)
 
         clock.update()

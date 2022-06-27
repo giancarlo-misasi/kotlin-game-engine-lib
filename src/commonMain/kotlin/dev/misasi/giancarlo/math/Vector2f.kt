@@ -39,7 +39,7 @@ data class Vector2f (val x: Float = 0f, val y: Float = 0f) {
     }
 
     val inverseLength by lazy {
-        1f / length
+        if (length == 0f) 0f else 1f / length
     }
 
     val aspectRatio by lazy {
