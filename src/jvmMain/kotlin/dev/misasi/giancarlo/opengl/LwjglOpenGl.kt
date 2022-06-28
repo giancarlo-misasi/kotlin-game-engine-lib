@@ -193,9 +193,12 @@ class LwjglOpenGl : OpenGl {
         glVerify(this) { glScissor(x, y, width, height) }
     }
 
-    override fun drawTriangles(triangleOffset: Int, triangleCount: Int) {
-        val offset = 3 * triangleOffset
-        val vertexCount = 3 * triangleCount
+    override fun drawLines(offset: Int, vertexCount: Int) {
+        glVerify(this) { glDrawArrays(GL_LINES, offset, vertexCount) }
+    }
+
+
+    override fun drawTriangles(offset: Int, vertexCount: Int) {
         glVerify(this) { glDrawArrays(GL_TRIANGLES, offset, vertexCount) }
     }
 

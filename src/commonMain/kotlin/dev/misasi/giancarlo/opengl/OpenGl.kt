@@ -69,7 +69,8 @@ interface OpenGl {
     fun setScissor(x: Int, y: Int, width: Int, height: Int)
 
     // Draw
-    fun drawTriangles(triangleOffset: Int, triangleCount: Int)
+    fun drawLines(offset: Int, vertexCount: Int)
+    fun drawTriangles(offset: Int, vertexCount: Int)
     fun setClearColor(color: Rgba8)
     fun clear()
 

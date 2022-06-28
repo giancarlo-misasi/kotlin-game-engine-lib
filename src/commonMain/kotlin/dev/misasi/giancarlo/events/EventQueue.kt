@@ -27,6 +27,7 @@ package dev.misasi.giancarlo.events
 
 import dev.misasi.giancarlo.events.input.gestures.GestureEvent
 import dev.misasi.giancarlo.events.input.gestures.detector.GestureDetector
+import dev.misasi.giancarlo.events.input.mouse.MouseEvent
 import dev.misasi.giancarlo.events.input.touch.TouchEvent
 import dev.misasi.giancarlo.opengl.Viewport
 import java.util.*
@@ -39,6 +40,10 @@ class EventQueue (
 
     fun pushEvent(event: Event) {
         events.add(event)
+    }
+
+    fun pushMouseEvent(viewport: Viewport, event: MouseEvent) {
+        events.add(adjustToViewport(viewport, event))
     }
 
     fun pushGestureEvent(viewport: Viewport, touchEvent: TouchEvent) {
@@ -58,9 +63,6 @@ class EventQueue (
         }
     }
 
-    private fun adjustToViewport(viewport: Viewport, gestureEvent: GestureEvent) : GestureEvent {
-        return gestureEvent.copy(
-            position = viewport.adjustToBounds(gestureEvent.position)
-        )
-    }
+    private fun adjustToViewport(viewport: Viewport, event: MouseEvent) = event.copy(position = viewport.adjustToBounds(event.position))
+    private fun adjustToViewport(viewport: Viewport, event: GestureEvent) = event.copy(position = viewport.adjustToBounds(event.position))
 }

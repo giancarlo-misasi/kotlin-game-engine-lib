@@ -33,9 +33,9 @@ import dev.misasi.giancarlo.memory.DirectByteBuffer
 import dev.misasi.giancarlo.opengl.VertexBuffer
 
 class GraphicsBuffer  (
-    private val vertexBuffer: VertexBuffer,
+    maxBytes: Int,
 ) {
-    private val directBuffer: DirectByteBuffer = DirectByteBuffer(vertexBuffer.maxBytes)
+    private val directBuffer: DirectByteBuffer = DirectByteBuffer(maxBytes)
     val drawOrders: MutableList<DrawOrder> = mutableListOf()
 
     fun write(position: Vector2f, material: Material, rotation: Rotation = None, alpha: Float = NO_ALPHA) {
@@ -55,7 +55,7 @@ class GraphicsBuffer  (
 
     fun write(position: Vector2f, size: Vector2f, color: Rgba8) {
         val drawOrder = drawOrders.lastOrNull()
-        if (drawOrder == null || color != drawOrder.color) {
+        if (drawOrder == null || color != drawOrder.color || drawOrder.type != DrawOrder.Type.SQUARE) {
             drawOrders.add(DrawOrder(color))
         } else {
             drawOrders[drawOrders.lastIndex] = drawOrder.copy(count = drawOrder.count + 1)
@@ -67,11 +67,21 @@ class GraphicsBuffer  (
         )
     }
 
-    fun bind() {
-        vertexBuffer.bind()
+    fun writeLine(point1: Vector2f, point2: Vector2f, color: Rgba8) {
+        val drawOrder = drawOrders.lastOrNull()
+        if (drawOrder == null || color != drawOrder.color || drawOrder.type != DrawOrder.Type.LINE) {
+            drawOrders.add(DrawOrder(DrawOrder.Type.LINE, color))
+        } else {
+            drawOrders[drawOrders.lastIndex] = drawOrder.copy(count = drawOrder.count + 1)
+        }
+
+        write(point1)
+        write(color)
+        write(point2)
+        write(color)
     }
 
-    fun update() {
+    fun updateVertexBuffer(vertexBuffer: VertexBuffer) {
         vertexBuffer.update(directBuffer)
     }
 

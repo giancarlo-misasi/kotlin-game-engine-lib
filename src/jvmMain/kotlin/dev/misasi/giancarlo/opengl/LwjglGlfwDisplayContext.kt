@@ -51,6 +51,8 @@ class LwjglGlfwDisplayContext(
     private val events: EventQueue
 ) : DisplayContext {
     private val window: Long
+    private val gl: OpenGl
+    private val viewport: Viewport
 
     init {
         // Setup an error callback. The default implementation
@@ -97,7 +99,17 @@ class LwjglGlfwDisplayContext(
         // creates the GLCapabilities instance and makes the OpenGL
         // bindings available for use.
         GL.createCapabilities()
+
+        // Now let's create the OpenGL instance
+        gl = LwjglOpenGl()
+
+        // Setup the viewport for events
+        val actualScreenSize = if (fullScreen) targetResolution else getActualWindowSize()
+        viewport = Viewport(gl, targetResolution, actualScreenSize)
     }
+
+    override fun getOpenGl() = gl
+    override fun getViewport() = viewport
 
     override fun getPrimaryMonitorResolution(): Vector2f {
         val mode = glfwGetVideoMode(glfwGetPrimaryMonitor())!!
@@ -200,7 +212,7 @@ class LwjglGlfwDisplayContext(
     }
 
     private fun mouseEventHandler(window: Long, x: Double, y: Double) {
-        events.pushEvent(MouseEvent.valueOf(x, y))
+        events.pushMouseEvent(viewport, MouseEvent.valueOf(x, y))
     }
 
     private fun mouseButtonEventHandler(window: Long, buttonCode: Int, actionCode: Int, modifierCode: Int) {

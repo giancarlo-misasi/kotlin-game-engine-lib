@@ -40,14 +40,10 @@ import dev.misasi.giancarlo.opengl.*
 
 fun main() {
     var r1 = Rectangle(Vector2f(200f, 200f))
-    var r2 = Rectangle(Vector2f(5f, 5f), Vector2f(10f, 10f))
-    val inter1 = Intersection.intersection(r1, r1)
-
     var c1 = Circle(Vector2f(), 50f)
-    var c2 = Circle(Vector2f(5f, 5f), 5f)
-    val inter2 = Intersection.intersection(c1, c2)
 
-    val inter3 = Intersection.intersection(r1, c2)
+    val result = Physics.dynamicElasticCollision(Vector2f(10f, -1f), 1f, Vector2f(-1f, 0f), 1f, Vector2f(-1f, 0f))
+
 
     val clock = SystemClock()
 
@@ -74,18 +70,17 @@ fun main() {
     context.enableMouseButtonEvents(true)
     context.enableScrollEvents(true)
 
-    val gl = LwjglOpenGl()
-    val targetResolution = Vector2f(1920f, 1080f)
+    val gl = context.getOpenGl()
+    val viewport = context.getViewport()
     val program = createProgram(gl, "/programs/Material.program")
     val vboDynamic = createVertexBuffer(gl, "/buffers/Dynamic.buffer")
     val vboDynamic2 = createVertexBuffer(gl, "/buffers/Dynamic.buffer")
     val atlasGeneral = createAtlas(gl, "/atlases/General.atlas")
     val atlasOverworld = createAtlas(gl, "/atlases/Overworld.atlas")
-    val gfx = GraphicsBuffer(vboDynamic)
-    val gfx2 = GraphicsBuffer(vboDynamic2)
-    val viewport = Viewport(gl, targetResolution, targetResolution)
+    val gfx = GraphicsBuffer(vboDynamic.maxBytes)
+    val gfx2 = GraphicsBuffer(vboDynamic2.maxBytes)
     var camera = Camera()//.copy(zoom = 4f)
-    var mvp = viewport.getModelViewProjection(camera)
+    var mvp: Matrix4f
 
     // Draw static things
 //    gfx.write(
@@ -126,6 +121,7 @@ fun main() {
 
         mvp = viewport.getModelViewProjection(camera)
         animation.update(clock.elapsedMillis)
+        program.updateUniforms(mapOf("uMvp" to mvp, "uEffect" to 0))
 
         gfx.clear()
         for (x in 0..1920 step 16) {
@@ -144,9 +140,9 @@ fun main() {
         gfx.write(Vector2f(512f, 800f), tree)
         gfx.write(Vector2f(725f, 256f), tree)
         gfx.write(Vector2f(64f, 64f), animation.currentFrame())
-        gfx.update()
-
-        program.draw(gfx, mapOf("uMvp" to mvp, "uEffect" to 0))
+        gfx.updateVertexBuffer(vboDynamic)
+        program.enableAttributes()
+        program.draw(gfx.drawOrders)
 
         // draw the rect and circle we test intersection with
         c1 = c1.moveTo(lastMousePos)
@@ -156,10 +152,14 @@ fun main() {
         gfx2.write(r1.tl, r1.size, if (inter5 != null) Rgba8.RED else Rgba8.GREEN)
         gfx2.write(c1.position.minus(Vector2f(c1.radius, c1.radius)), Vector2f(c1.diameter, c1.diameter), Rgba8.YELLOW_GREEN)
         gfx2.write(c1.position.minus(Vector2f(c1.radius, c1.radius)).plus(inter5 ?: Vector2f()), Vector2f(c1.diameter, c1.diameter), Rgba8.PURPLE)
+        gfx2.writeLine(Vector2f(), Vector2f(1920f, 1080f), Rgba8.RED) // Draw a big diagonal line to test
+        gfx2.writeLine(Vector2f(0f, 100f), Vector2f(1920f, 0f), Rgba8.RED) // Draw a big diagonal line to test
+        gfx2.writeLine(Vector2f(0f, 200f), Vector2f(1920f, 0f), Rgba8.RED) // Draw a big diagonal line to test
+        gfx2.writeLine(Vector2f(0f, 300f), Vector2f(1920f, 0f), Rgba8.RED) // Draw a big diagonal line to test
 
-        gfx2.update()
-
-        program.draw(gfx2, mapOf("uMvp" to mvp, "uEffect" to 0))
+        gfx2.updateVertexBuffer(vboDynamic2)
+        program.enableAttributes()
+        program.draw(gfx2.drawOrders)
 
         context.swapBuffers()
         context.pollEvents()

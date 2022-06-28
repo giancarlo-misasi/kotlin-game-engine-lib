@@ -27,13 +27,23 @@ package dev.misasi.giancarlo.drawing
 
 data class DrawOrder (
     val count: Int = 1,
+    val type: Type = Type.SQUARE,
     val textureHandle: Int?,
     val color: Rgba8?
 ) {
-    constructor(textureHandle: Int) : this(1, textureHandle, null)
-    constructor(color: Rgba8) : this(1, null, color)
+    constructor(textureHandle: Int) : this(1, Type.SQUARE, textureHandle, null)
+    constructor(color: Rgba8) : this(1, Type.SQUARE, null, color)
+    constructor(type: Type, color: Rgba8) : this(1, type, null, color)
 
-    val numberOfTriangles by lazy {
-        2 * count
+    enum class Type {
+        LINE,
+        SQUARE
+    }
+
+    val numberOfVertex by lazy {
+        when (type) {
+            Type.SQUARE -> 3 * 2 * count
+            Type.LINE -> 2 * count
+        }
     }
 }

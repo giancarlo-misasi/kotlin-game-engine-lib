@@ -25,6 +25,7 @@
 
 package dev.misasi.giancarlo.opengl
 
+import dev.misasi.giancarlo.drawing.DrawOrder
 import dev.misasi.giancarlo.drawing.GraphicsBuffer
 
 class Program (
@@ -69,38 +70,39 @@ class Program (
         gl.bindProgram(programHandle)
     }
 
-    fun draw(
-        graphics: GraphicsBuffer,
-        uniformValues: Map<String, Any>,
-        triangleOffset: Int = 0
-    ) : Int {
-        // Setup uniform values
+    fun updateUniforms(uniformValues: Map<String, Any>) {
         uniformValues.forEach {
             gl.setUniform(programHandle, uniformsMap[it.key]!!, it.value)
         }
+    }
 
-        // Bind the buffer we will associate attributes to
-        graphics.bind()
-
-        // Enable the attributes
+    fun enableAttributes() {
         attributesMap.forEach {
             gl.enableVertexAttributeArray(it.key)
             gl.setVertexAttributePointer(it.key, it.value)
         }
+    }
 
-        // TODO: Add mapping between texture handles and units
-        gl.setActiveTextureUnit(0)
-
-        // Draw the tiles (either textures or colored)
+    fun draw(
+        drawOrders: MutableList<DrawOrder>,
+        offset: Int = 0
+    ) : Int {
+        // Draw the tiles (either textures or colors)
         // Tiles are a square which consist of two triangles
-        var totalTriangleOffset = triangleOffset
-        graphics.drawOrders.forEach {
+        var totalOffset = offset
+        drawOrders.forEach {
+            // by default, texture unit 0 is bound
+            // to enable multi-sampling, would need to adjust this
+            // gl.setActiveTextureUnit(0)
             it.textureHandle?.let { t -> gl.bindTexture2d(t) }
-            gl.drawTriangles(totalTriangleOffset, it.numberOfTriangles)
-            totalTriangleOffset += it.numberOfTriangles
+            when (it.type) {
+                DrawOrder.Type.SQUARE -> gl.drawTriangles(totalOffset, it.numberOfVertex)
+                DrawOrder.Type.LINE -> gl.drawLines(totalOffset, it.numberOfVertex)
+            }
+            totalOffset += it.numberOfVertex
         }
 
         // Pass out the offset for future draw calls
-        return totalTriangleOffset
+        return totalOffset
     }
 }

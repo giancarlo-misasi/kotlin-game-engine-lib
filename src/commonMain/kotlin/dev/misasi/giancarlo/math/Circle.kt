@@ -26,8 +26,8 @@
 package dev.misasi.giancarlo.math
 
 data class Circle (
-    val position: Vector2f,
-    val radius: Float
+    val position: Vector2f = Vector2f(),
+    val radius: Float = 0f
 ) {
     val diameter by lazy {
         2f * radius
@@ -45,7 +45,8 @@ data class Circle (
         return move(to.minus(position))
     }
 
-//    fun contains(point: Vector2f): Boolean {
-//        // TODO
-//    }
+    fun contains(point: Vector2f): Boolean {
+        val delta = position.minus(point)
+        return delta.lengthSquared < radiusSquared
+    }
 }
