@@ -127,19 +127,19 @@ fun main() {
         for (x in 0..1920 step 16) {
             for (y in 0..1080 step 16) {
                 if (x < 800) {
-                    gfx.write(Vector2f(x.toFloat(), y.toFloat()), grass)
+                    gfx.writeSprite(Vector2f(x.toFloat(), y.toFloat()), grass)
                 } else if (x < 1600) {
-                    gfx.write(Vector2f(x.toFloat(), y.toFloat()), orange)
+                    gfx.writeSprite(Vector2f(x.toFloat(), y.toFloat()), orange)
                 } else {
-                    gfx.write(Vector2f(x.toFloat(), y.toFloat()), purple)
+                    gfx.writeSprite(Vector2f(x.toFloat(), y.toFloat()), purple)
                 }
             }
         }
-        gfx.write(Vector2f(128f, 296f), tree)
-        gfx.write(Vector2f(355f, 312f), tree)
-        gfx.write(Vector2f(512f, 800f), tree)
-        gfx.write(Vector2f(725f, 256f), tree)
-        gfx.write(Vector2f(64f, 64f), animation.currentFrame())
+        gfx.writeSprite(Vector2f(128f, 296f), tree)
+        gfx.writeSprite(Vector2f(355f, 312f), tree)
+        gfx.writeSprite(Vector2f(512f, 800f), tree)
+        gfx.writeSprite(Vector2f(725f, 256f), tree)
+        gfx.writeSprite(Vector2f(64f, 64f), animation.currentFrame())
         gfx.updateVertexBuffer(vboDynamic)
         program.enableAttributes()
         program.draw(gfx.drawOrders)
@@ -149,13 +149,14 @@ fun main() {
         val inter5 = Intersection.intersection(c1, r1)
 
         gfx2.clear()
-        gfx2.write(r1.tl, r1.size, if (inter5 != null) Rgba8.RED else Rgba8.GREEN)
-        gfx2.write(c1.position.minus(Vector2f(c1.radius, c1.radius)), Vector2f(c1.diameter, c1.diameter), Rgba8.YELLOW_GREEN)
-        gfx2.write(c1.position.minus(Vector2f(c1.radius, c1.radius)).plus(inter5 ?: Vector2f()), Vector2f(c1.diameter, c1.diameter), Rgba8.PURPLE)
+        gfx2.writeCircle(c1.position, c1.radius, Rgba8.YELLOW_GREEN)
+        gfx2.writeRectangle(r1.tl, r1.size, if (inter5 != null) Rgba8.RED else Rgba8.GREEN)
+        gfx2.writeCircle(c1.position.plus(inter5 ?: Vector2f()), c1.radius, Rgba8.PURPLE)
         gfx2.writeLine(Vector2f(), Vector2f(1920f, 1080f), Rgba8.RED) // Draw a big diagonal line to test
         gfx2.writeLine(Vector2f(0f, 100f), Vector2f(1920f, 0f), Rgba8.RED) // Draw a big diagonal line to test
         gfx2.writeLine(Vector2f(0f, 200f), Vector2f(1920f, 0f), Rgba8.RED) // Draw a big diagonal line to test
         gfx2.writeLine(Vector2f(0f, 300f), Vector2f(1920f, 0f), Rgba8.RED) // Draw a big diagonal line to test
+//        gfx2.writeCircle(lastMousePos, 150f, Rgba8.ORANGE)
 
         gfx2.updateVertexBuffer(vboDynamic2)
         program.enableAttributes()

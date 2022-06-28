@@ -31,16 +31,18 @@ import dev.misasi.giancarlo.math.Rotation.None
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.memory.DirectByteBuffer
 import dev.misasi.giancarlo.opengl.VertexBuffer
+import kotlin.math.cos
+import kotlin.math.sin
 
-class GraphicsBuffer  (
+class GraphicsBuffer(
     maxBytes: Int,
 ) {
     private val directBuffer: DirectByteBuffer = DirectByteBuffer(maxBytes)
     val drawOrders: MutableList<DrawOrder> = mutableListOf()
 
-    fun write(position: Vector2f, material: Material, rotation: Rotation = None, alpha: Float = NO_ALPHA) {
+    fun writeSprite(position: Vector2f, material: Material, rotation: Rotation = None, alpha: Float = NO_ALPHA) {
         val drawOrder = drawOrders.lastOrNull()
-        if (drawOrder == null || material.textureHandle != drawOrder.textureHandle) {
+        if (drawOrder == null || drawOrder.isDifferent(DrawOrder.Type.SQUARE, material.textureHandle)) {
             drawOrders.add(DrawOrder(material.textureHandle))
         } else {
             drawOrders[drawOrders.lastIndex] = drawOrder.copy(count = drawOrder.count + 1)
@@ -53,10 +55,40 @@ class GraphicsBuffer  (
         )
     }
 
-    fun write(position: Vector2f, size: Vector2f, color: Rgba8) {
+    fun writeLine(point1: Vector2f, point2: Vector2f, color: Rgba8) {
         val drawOrder = drawOrders.lastOrNull()
-        if (drawOrder == null || color != drawOrder.color || drawOrder.type != DrawOrder.Type.SQUARE) {
-            drawOrders.add(DrawOrder(color))
+        if (drawOrder == null || drawOrder.isDifferent(DrawOrder.Type.LINE, color = color)) {
+            drawOrders.add(DrawOrder(DrawOrder.Type.LINE, color))
+        } else {
+            drawOrders[drawOrders.lastIndex] = drawOrder.copy(count = drawOrder.count + 1)
+        }
+
+        write(point1)
+        write(color)
+        write(point2)
+        write(color)
+    }
+
+    fun writeTriangle(point1: Vector2f, point2: Vector2f, point3: Vector2f, color: Rgba8) {
+        val drawOrder = drawOrders.lastOrNull()
+        if (drawOrder == null || drawOrder.isDifferent(DrawOrder.Type.TRIANGLE, color = color)) {
+            drawOrders.add(DrawOrder(DrawOrder.Type.TRIANGLE, color))
+        } else {
+            drawOrders[drawOrders.lastIndex] = drawOrder.copy(count = drawOrder.count + 1)
+        }
+
+        write(point1)
+        write(color)
+        write(point2)
+        write(color)
+        write(point3)
+        write(color)
+    }
+
+    fun writeRectangle(position: Vector2f, size: Vector2f, color: Rgba8) {
+        val drawOrder = drawOrders.lastOrNull()
+        if (drawOrder == null || drawOrder.isDifferent(DrawOrder.Type.SQUARE, color = color)) {
+            drawOrders.add(DrawOrder(DrawOrder.Type.SQUARE, color))
         } else {
             drawOrders[drawOrders.lastIndex] = drawOrder.copy(count = drawOrder.count + 1)
         }
@@ -67,18 +99,19 @@ class GraphicsBuffer  (
         )
     }
 
-    fun writeLine(point1: Vector2f, point2: Vector2f, color: Rgba8) {
-        val drawOrder = drawOrders.lastOrNull()
-        if (drawOrder == null || color != drawOrder.color || drawOrder.type != DrawOrder.Type.LINE) {
-            drawOrders.add(DrawOrder(DrawOrder.Type.LINE, color))
-        } else {
-            drawOrders[drawOrders.lastIndex] = drawOrder.copy(count = drawOrder.count + 1)
+    fun writeCircle(position: Vector2f, radius: Float, color: Rgba8) {
+        val numberOfPointsToUse = 16
+        val points = (0 until numberOfPointsToUse).map {
+            Vector2f(
+                (position.x + (radius * cos(it * TWO_PI / numberOfPointsToUse))).toFloat(),
+                (position.y + (radius * sin(it * TWO_PI / numberOfPointsToUse))).toFloat()
+            )
         }
 
-        write(point1)
-        write(color)
-        write(point2)
-        write(color)
+        val triangles = points.zipWithNext().plus(Pair(points.last(), points.first()))
+        triangles.forEach {
+            writeTriangle(position, it.first, it.second, color)
+        }
     }
 
     fun updateVertexBuffer(vertexBuffer: VertexBuffer) {
@@ -171,5 +204,8 @@ class GraphicsBuffer  (
         // When rendering materials, allow user to make them
         // transparent (on top of their existing transparency)
         const val NO_ALPHA: Float = -1f;
+
+        // 2 PI
+        const val TWO_PI = 2 * kotlin.math.PI
     }
 }

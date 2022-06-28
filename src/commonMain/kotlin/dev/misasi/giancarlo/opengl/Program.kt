@@ -96,8 +96,9 @@ class Program (
             // gl.setActiveTextureUnit(0)
             it.textureHandle?.let { t -> gl.bindTexture2d(t) }
             when (it.type) {
-                DrawOrder.Type.SQUARE -> gl.drawTriangles(totalOffset, it.numberOfVertex)
                 DrawOrder.Type.LINE -> gl.drawLines(totalOffset, it.numberOfVertex)
+                DrawOrder.Type.TRIANGLE -> gl.drawTriangles(totalOffset, it.numberOfVertex)
+                DrawOrder.Type.SQUARE -> gl.drawTriangles(totalOffset, it.numberOfVertex)
             }
             totalOffset += it.numberOfVertex
         }
