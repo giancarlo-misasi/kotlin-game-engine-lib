@@ -29,26 +29,30 @@ import dev.misasi.giancarlo.crash
 import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.math.Matrix4f
 import dev.misasi.giancarlo.memory.DirectByteBuffer
-import org.lwjgl.opengl.ARBFramebufferObject.GL_INVALID_FRAMEBUFFER_OPERATION
-import org.lwjgl.opengl.GL20.*
+import org.lwjgl.opengl.GL30.*
 
 class LwjglOpenGl : OpenGl {
 
     companion object {
-
-        private val programTag = "PROGRAM"
-        private val shaderTag = "SHADER"
-        private val vboTag = "VBO"
-
         private val shaderTypeMapping = mapOf(
             Shader.Type.VERTEX to GL_VERTEX_SHADER,
             Shader.Type.FRAGMENT to GL_FRAGMENT_SHADER
         )
 
-        private val vertexBufferUsageMapping = mapOf(
-            VertexBuffer.Usage.STATIC to GL_STATIC_DRAW,
-            VertexBuffer.Usage.DYNAMIC to GL_DYNAMIC_DRAW,
-            VertexBuffer.Usage.STREAM to GL_STREAM_DRAW
+        private val bufferTypeMapping = mapOf(
+            Buffer.Type.VERTEX to GL_ARRAY_BUFFER,
+            Buffer.Type.INDEX to GL_ELEMENT_ARRAY_BUFFER
+        )
+
+        private val bufferBindingMapping = mapOf(
+            Buffer.Type.VERTEX to GL_ARRAY_BUFFER_BINDING,
+            Buffer.Type.INDEX to GL_ELEMENT_ARRAY_BUFFER_BINDING
+        )
+
+        private val bufferUsageMapping = mapOf(
+            Buffer.Usage.STATIC to GL_STATIC_DRAW,
+            Buffer.Usage.DYNAMIC to GL_DYNAMIC_DRAW,
+            Buffer.Usage.STREAM to GL_STREAM_DRAW
         )
 
         private val vertexAttributeTypeMapping = mapOf(
@@ -63,7 +67,7 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun createProgram(): Int {
-        return glVerifyCreate(this, ::glCreateProgram) { programTag }
+        return glVerifyCreate(this, ::glCreateProgram) { "PROGRAM" }
     }
 
     override fun linkProgram(program: Int) {
@@ -78,7 +82,7 @@ class LwjglOpenGl : OpenGl {
 
     override fun createShader(type: Shader.Type): Int {
         val shaderType = shaderTypeMapping[type]!!;
-        return glVerifyCreate(this, { glCreateShader(shaderType) }) { shaderTag }
+        return glVerifyCreate(this, { glCreateShader(shaderType) }) { "SHADER(${type.name})" }
     }
 
     override fun compileShader(shader: Int, source: String) {
@@ -100,12 +104,12 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun getUniformLocation(program: Int, name: String): Int {
-        glVerifyBound(this, GL_CURRENT_PROGRAM, program) { programTag }
+        glVerifyBound(this, GL_CURRENT_PROGRAM, program) { "PROGRAM<$program>" }
         return glVerify<Int>(this) { glGetUniformLocation(program, name) }
     }
 
     override fun setUniform(program: Int, uniform: Int, value: Any) {
-        glVerifyBound(this, GL_CURRENT_PROGRAM, program) { programTag }
+        glVerifyBound(this, GL_CURRENT_PROGRAM, program) { "PROGRAM<$program>" }
         when (value) {
             is Matrix4f -> glVerify(this) { glUniformMatrix4fv(uniform, false, value.data) }
             is Int -> glVerify(this) { glUniform1i(uniform, value) }
@@ -114,7 +118,7 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun getAttributeLocation(program: Int, name: String): Int {
-        glVerifyBound(this, GL_CURRENT_PROGRAM, program) { programTag }
+        glVerifyBound(this, GL_CURRENT_PROGRAM, program) { "PROGRAM<$program>" }
         return glVerify<Int>(this) { glGetAttribLocation(program, name) }
     }
 
@@ -122,34 +126,47 @@ class LwjglOpenGl : OpenGl {
         glVerify(this) { glEnableVertexAttribArray(attribute) }
     }
 
-    override fun setVertexAttributePointer(attribute: Int, opts: Attribute) {
-        val type = vertexAttributeTypeMapping[opts.type]!!
+    override fun setVertexAttributePointer(handle: Int, attribute: Attribute, totalStride: Int) {
+        val t = vertexAttributeTypeMapping[attribute.spec.type]!!
         glVerify(this) {
             glVertexAttribPointer(
-                attribute,
-                opts.count,
-                type,
-                opts.normalized,
-                opts.totalStride,
-                opts.strideOffset.toLong()
+                handle,
+                attribute.spec.count,
+                t,
+                attribute.spec.normalized,
+                totalStride,
+                attribute.strideOffset.toLong()
             )
         }
     }
 
-    override fun createVbo(usage: VertexBuffer.Usage, maxBytes: Int): Int {
-        val vbo = bindVbo(glVerifyGenerate(this, ::glGenBuffers) { "VBO" })
-        glVerify(this) { glBufferData(GL_ARRAY_BUFFER, maxBytes.toLong(), vertexBufferUsageMapping[usage]!!) }
+    override fun createBuffer(type: Buffer.Type, usage: Buffer.Usage, maxBytes: Int): Int {
+        val t = bufferTypeMapping[type]!!
+        val u = bufferUsageMapping[usage]!!
+        val vbo = bindBuffer(glVerifyGenerate(this, ::glGenBuffers) { "BUFFER(${type.name})[${usage.name}]" }, type)
+        glVerify(this) { glBufferData(t, maxBytes.toLong(), u) }
         return vbo
     }
 
-    override fun bindVbo(vbo: Int): Int {
-        glVerify(this) { glBindBuffer(GL_ARRAY_BUFFER, vbo) }
-        return vbo
+    override fun bindBuffer(handle: Int, type: Buffer.Type): Int {
+        val t = bufferTypeMapping[type]!!
+        glVerify(this) { glBindBuffer(t, handle) }
+        return handle
     }
 
-    override fun updateVboData(vbo: Int, data: DirectByteBuffer, byteOffset: Int) {
-        glVerifyBound(this, GL_ARRAY_BUFFER_BINDING, vbo) { vboTag }
+    override fun updateBufferData(handle: Int, type: Buffer.Type, data: DirectByteBuffer, byteOffset: Int) {
+        val b = bufferBindingMapping[type]!!
+        glVerifyBound(this, b, handle) { "BUFFER<$handle>" }
         glVerify(this) { glBufferSubData(GL_ARRAY_BUFFER, byteOffset.toLong(), data.byteBuffer) }
+    }
+
+    override fun createAttributeArray(): Int {
+        return bindAttributeArray(glVerifyGenerate(this, ::glGenVertexArrays) { "VAO" })
+    }
+
+    override fun bindAttributeArray(vao: Int): Int {
+        glVerify(this) { glBindBuffer(GL_VERTEX_ARRAY_BINDING, vao) }
+        return vao
     }
 
     override fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectByteBuffer): Int {

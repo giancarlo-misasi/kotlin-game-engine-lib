@@ -23,8 +23,12 @@
  *
  */
 
+package dev.misasi.giancarlo
+
 import dev.misasi.giancarlo.assets.Assets
-import dev.misasi.giancarlo.drawing.*
+import dev.misasi.giancarlo.drawing.Animation
+import dev.misasi.giancarlo.drawing.GraphicsBuffer2d
+import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.events.EventQueue
 import dev.misasi.giancarlo.events.SystemClock
 import dev.misasi.giancarlo.events.input.keyboard.Key
@@ -33,7 +37,9 @@ import dev.misasi.giancarlo.events.input.keyboard.KeyEvent
 import dev.misasi.giancarlo.events.input.mouse.*
 import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
 import dev.misasi.giancarlo.math.*
-import dev.misasi.giancarlo.opengl.*
+import dev.misasi.giancarlo.opengl.Buffer
+import dev.misasi.giancarlo.opengl.Camera
+import dev.misasi.giancarlo.opengl.LwjglGlfwDisplayContext
 
 fun main() {
     val context = LwjglGlfwDisplayContext(
@@ -53,9 +59,7 @@ fun main() {
 
     val clock = SystemClock()
     val assets = Assets(context.getOpenGl())
-    val program = assets.program("Material")
-    val vbo = assets.buffer("Default")
-    val gfx = GraphicsBuffer(vbo.maxBytes)
+    val gfx = GraphicsBuffer2d(context.getOpenGl(), Buffer.Usage.DYNAMIC, 100000)
     val viewport = context.getViewport()
     var camera = Camera()
     var mvp: Matrix4f
@@ -81,9 +85,12 @@ fun main() {
     while (!context.shouldClose()) {
         gl.clear()
 
-        mvp = viewport.getModelViewProjection(camera)
         animation.update(clock.elapsedMillis)
-        program.updateUniforms(mapOf("uMvp" to mvp, "uEffect" to 0))
+        mvp = viewport.getModelViewProjection(camera)
+
+        gfx.bind()
+        gfx.updateUniform("uMvp", mvp)
+        gfx.updateUniform("uEffect", mvp)
 
         gfx.clear()
         for (x in 0..1920 step 16) {
@@ -102,9 +109,9 @@ fun main() {
         gfx.writeSprite(Vector2f(512f, 800f), tree)
         gfx.writeSprite(Vector2f(725f, 256f), tree)
         gfx.writeSprite(Vector2f(64f, 64f), animation.currentFrame())
-        gfx.updateVertexBuffer(vbo)
-        program.enableAttributes()
-        program.draw(gfx.drawOrders)
+
+        gfx.updateVertexBuffer()
+        gfx.draw()
 
         // draw the rect and circle we test intersection with
         c1 = c1.moveTo(lastMousePos)
@@ -118,9 +125,9 @@ fun main() {
         gfx.writeLine(Vector2f(0f, 100f), Vector2f(1920f, 0f), Rgba8.RED) // Draw a big diagonal line to test
         gfx.writeLine(Vector2f(0f, 200f), Vector2f(1920f, 0f), Rgba8.RED) // Draw a big diagonal line to test
         gfx.writeLine(Vector2f(0f, 300f), Vector2f(1920f, 0f), Rgba8.RED) // Draw a big diagonal line to test
-        gfx.updateVertexBuffer(vbo)
-        program.enableAttributes()
-        program.draw(gfx.drawOrders)
+
+        gfx.updateVertexBuffer()
+        gfx.draw()
 
         context.swapBuffers()
         context.pollEvents()

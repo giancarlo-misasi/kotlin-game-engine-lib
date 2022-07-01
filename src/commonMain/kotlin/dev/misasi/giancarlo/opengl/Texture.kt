@@ -28,10 +28,7 @@ package dev.misasi.giancarlo.opengl
 import dev.misasi.giancarlo.drawing.Bitmap
 import dev.misasi.giancarlo.math.Vector2f
 
-class Texture(
-    gl: OpenGl,
-    private val bitmap: Bitmap
-) {
+class Texture(private val gl: OpenGl, private val bitmap: Bitmap) {
     val textureHandle: Int = gl.createTexture2d(bitmap.width, bitmap.height, bitmap.format, bitmap.data)
 
     init {
@@ -48,5 +45,9 @@ class Texture(
 
     val size by lazy {
         Vector2f(width.toFloat(), height.toFloat())
+    }
+
+    fun bind() {
+        gl.bindTexture2d(textureHandle)
     }
 }

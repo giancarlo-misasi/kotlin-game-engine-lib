@@ -25,19 +25,5 @@
 
 package dev.misasi.giancarlo.opengl
 
-data class Attribute(
-    val attributeHandle: Int,
-    val spec: Spec,
-    val strideOffset: Int
-) {
-    data class Spec(val name: String, val type: Type, val count: Int, val normalized: Boolean = false) {
-        val size by lazy {
-            type.size * count
-        }
-    }
-
-    enum class Type(val size: Int) {
-        FLOAT(4),
-        INT(4)
-    }
-}
+class IndexBuffer(gl: OpenGl, usage: Usage, maxBytes: Int)
+    : Buffer(gl, Type.INDEX, usage, maxBytes)

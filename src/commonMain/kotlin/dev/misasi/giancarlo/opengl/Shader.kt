@@ -25,9 +25,25 @@
 
 package dev.misasi.giancarlo.opengl
 
-data class Shader(val type: Type, val source: String) {
+import java.io.Closeable
+
+data class Shader(private val gl: OpenGl, private val programHandle: Int, val spec: Spec) : Closeable {
+    data class Spec(val type: Type, val source: String)
+
     enum class Type {
         VERTEX,
         FRAGMENT
+    }
+
+    val shaderHandle = gl.createShader(spec.type)
+
+    init {
+        gl.compileShader(shaderHandle, spec.source)
+        gl.attachShader(programHandle, shaderHandle)
+    }
+
+    override fun close() {
+        gl.detachShader(programHandle, shaderHandle)
+        gl.deleteShader(shaderHandle)
     }
 }

@@ -25,27 +25,5 @@
 
 package dev.misasi.giancarlo.opengl
 
-import dev.misasi.giancarlo.memory.DirectByteBuffer
-
-class VertexBuffer(
-    private val gl: OpenGl,
-    val usage: Usage,
-    val maxBytes: Int
-) {
-    private val vertexBufferHandle: Int = gl.createVbo(usage, maxBytes);
-
-    enum class Usage {
-        STATIC,
-        DYNAMIC,
-        STREAM
-    }
-
-    fun bind() {
-        gl.bindVbo(vertexBufferHandle)
-    }
-
-    fun update(data: DirectByteBuffer, byteOffset: Int = 0) {
-        bind()
-        gl.updateVboData(vertexBufferHandle, data, byteOffset)
-    }
-}
+class VertexBuffer(gl: OpenGl, usage: Usage, maxBytes: Int)
+    : Buffer(gl, Type.VERTEX, usage, maxBytes)

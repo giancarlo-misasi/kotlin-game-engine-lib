@@ -29,7 +29,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 class DirectByteBuffer(
-    capacityInBytes: Int
+    val capacityInBytes: Int
 ) {
     var sizeInBytes: Int = 0
         private set

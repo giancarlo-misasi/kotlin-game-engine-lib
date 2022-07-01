@@ -25,85 +25,25 @@
 
 package dev.misasi.giancarlo.opengl
 
-import dev.misasi.giancarlo.drawing.DrawOrder
-import dev.misasi.giancarlo.drawing.GraphicsBuffer
-
-class Program (
-    private val gl: OpenGl,
-    shaders: List<Shader>,
-    uniforms: List<String>,
-    attributes: List<Attribute>
-) {
-    private val programHandle: Int = gl.createProgram()
-    private val uniformsMap: Map<String, Int>
-    private val attributesMap: Map<Int, Attribute>
+class Program(private val gl: OpenGl, shaderSpecs: List<Shader.Spec>) {
+    val programHandle: Int = gl.createProgram()
 
     init {
         // Create, compile and attach shaders
-        val shaderHandles = shaders.map {
-            val shader = gl.createShader(it.type)
-            gl.compileShader(shader, it.source)
-            gl.attachShader(programHandle, shader)
-            shader
-        }
+        val shaders = shaderSpecs.map { Shader(gl, programHandle, it) }
 
-        // Link the program
-        gl.linkProgram(programHandle)
-
-        // Cleanup the shader resources
-        shaderHandles.forEach {
-            gl.detachShader(programHandle, it)
-            gl.deleteShader(it)
+        // Link the program and cleanup the shaders
+        try {
+            gl.linkProgram(programHandle)
+        } finally {
+            shaders.forEach { it.close() }
         }
 
         // Bind the program
         bind()
-
-        // Setup uniforms
-        uniformsMap = uniforms.associateWith { gl.getUniformLocation(programHandle, it) }
-
-        // Setup attributes
-        attributesMap = attributes.associateBy { gl.getAttributeLocation(programHandle, it.name) }
     }
 
     fun bind() {
         gl.bindProgram(programHandle)
-    }
-
-    fun updateUniforms(uniformValues: Map<String, Any>) {
-        uniformValues.forEach {
-            gl.setUniform(programHandle, uniformsMap[it.key]!!, it.value)
-        }
-    }
-
-    fun enableAttributes() {
-        attributesMap.forEach {
-            gl.enableVertexAttributeArray(it.key)
-            gl.setVertexAttributePointer(it.key, it.value)
-        }
-    }
-
-    fun draw(
-        drawOrders: MutableList<DrawOrder>,
-        offset: Int = 0
-    ) : Int {
-        // Draw the tiles (either textures or colors)
-        // Tiles are a square which consist of two triangles
-        var totalOffset = offset
-        drawOrders.forEach {
-            // by default, texture unit 0 is bound
-            // to enable multi-sampling, would need to adjust this
-            // gl.setActiveTextureUnit(0)
-            it.textureHandle?.let { t -> gl.bindTexture2d(t) }
-            when (it.type) {
-                DrawOrder.Type.LINE -> gl.drawLines(totalOffset, it.numberOfVertex)
-                DrawOrder.Type.TRIANGLE -> gl.drawTriangles(totalOffset, it.numberOfVertex)
-                DrawOrder.Type.SQUARE -> gl.drawTriangles(totalOffset, it.numberOfVertex)
-            }
-            totalOffset += it.numberOfVertex
-        }
-
-        // Pass out the offset for future draw calls
-        return totalOffset
     }
 }

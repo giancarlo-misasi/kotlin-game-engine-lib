@@ -25,20 +25,36 @@
 
 package dev.misasi.giancarlo.drawing
 
+import dev.misasi.giancarlo.assets.constants.Shaders
 import dev.misasi.giancarlo.math.Point4
 import dev.misasi.giancarlo.math.Rotation
 import dev.misasi.giancarlo.math.Rotation.None
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.memory.DirectByteBuffer
-import dev.misasi.giancarlo.opengl.VertexBuffer
+import dev.misasi.giancarlo.opengl.*
 import kotlin.math.cos
 import kotlin.math.sin
 
-class GraphicsBuffer(
-    maxBytes: Int,
-) {
-    private val directBuffer: DirectByteBuffer = DirectByteBuffer(maxBytes)
-    val drawOrders: MutableList<DrawOrder> = mutableListOf()
+class GraphicsBuffer2d(private val gl: OpenGl, usage: Buffer.Usage, maxEntities: Int) {
+    private val program = Program(gl, Shaders.initGraphicsBuffer2dShaders())
+    private val uniformMap = UniformMap(gl, program, listOf(
+        "uMvp",
+        "uEffect"
+    ))
+    private val attributeArray = AttributeArray(gl, program, listOf(
+        Attribute.Spec("aXy", Attribute.Type.FLOAT, 2),
+        Attribute.Spec("aUvOrRgb", Attribute.Type.FLOAT, 3),
+        Attribute.Spec("aAlpha", Attribute.Type.FLOAT, 1)
+    ))
+    private val directBuffer = DirectByteBuffer(maxEntities * 6 * 6 * 4) // 6 points, 6 floats per point, 4 bytes per float
+    private val vertexBuffer = VertexBuffer(gl, usage, directBuffer.capacityInBytes)
+//    private val indexBuffer = IndexBuffer(gl, usage, maxEntities * 4 * 6 * 4) // 4 points, 6 floats per point, 4 bytes per float
+    private val drawOrders: MutableList<DrawOrder> = mutableListOf()
+
+    init {
+        attributeArray.attach(listOf(vertexBuffer))
+//        attributeArray.attach(listOf(vertexBuffer, indexBuffer))
+    }
 
     fun writeSprite(position: Vector2f, material: Material, rotation: Rotation = None, alpha: Float = NO_ALPHA) {
         val drawOrder = drawOrders.lastOrNull()
@@ -114,8 +130,40 @@ class GraphicsBuffer(
         }
     }
 
-    fun updateVertexBuffer(vertexBuffer: VertexBuffer) {
+    fun bind() {
+        program.bind()
+    }
+
+    fun updateUniform(name: String, value: Any) {
+        uniformMap.update(name, value)
+    }
+
+    fun updateVertexBuffer() {
         vertexBuffer.update(directBuffer)
+    }
+
+    fun draw() {
+        // Bind the attributes and the corresponding buffers
+        attributeArray.bind()
+
+        // Draw the tiles (either textures or colors)
+        // Tiles are a square which consist of two triangles
+        var totalOffset = 0
+        drawOrders.forEach {
+            // by default, texture unit 0 is bound
+            // to enable multi-sampling, would need to adjust this
+            // gl.setActiveTextureUnit(0)
+            it.textureHandle?.let { t -> gl.bindTexture2d(t) }
+            when (it.type) {
+                DrawOrder.Type.LINE -> gl.drawLines(totalOffset, it.numberOfVertex)
+                DrawOrder.Type.TRIANGLE -> gl.drawTriangles(totalOffset, it.numberOfVertex)
+                DrawOrder.Type.SQUARE -> gl.drawTriangles(totalOffset, it.numberOfVertex)
+            }
+            totalOffset += it.numberOfVertex
+        }
+
+        // Unbind the attribute array to avoid modification
+        attributeArray.unbind()
     }
 
     fun clear() {

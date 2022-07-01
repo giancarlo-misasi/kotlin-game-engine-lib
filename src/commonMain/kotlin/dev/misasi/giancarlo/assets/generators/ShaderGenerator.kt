@@ -23,15 +23,17 @@
  *
  */
 
-package dev.misasi.giancarlo.assets.loaders
+package dev.misasi.giancarlo.assets.generators
 
 import dev.misasi.giancarlo.crash
 import dev.misasi.giancarlo.getResourceAsLines
-import dev.misasi.giancarlo.getResourceAsString
 import dev.misasi.giancarlo.opengl.Shader
 
-class ShaderLoader : AssetLoader<Shader> {
-
+/**
+ * Simple packager which reads the current shaders in the resources directory
+ * and prints them out as kotlin variables.
+ */
+class ShaderGenerator {
     companion object {
         private const val PATH = "/shaders/"
         private const val SUFFIX = ".glsl"
@@ -39,15 +41,17 @@ class ShaderLoader : AssetLoader<Shader> {
         private const val FRAGMENT = "Fragment.glsl"
     }
 
-    override fun load(): Map<String, Shader> {
-        val files = getResourceAsLines(PATH)
-        return files.map { it to getSource(it) }
-            .filter { it.second != null }
-            .associate { getName(it.first) to Shader(getType(it.first), it.second!!) }
+    fun generate() {
+        getResourceAsLines(PATH).map { it to PATH.plus(it) }
+            .associate { getName(it.first) to Shader.Spec(getType(it.first), it.second) }
+            .forEach {
+                println(minifySource(it.key, it.value.type, it.value.source))
+            }
     }
 
     private fun getName(fileName: String): String {
         return fileName.removeSuffix(SUFFIX)
+            .replaceFirstChar { it.lowercase() }
     }
 
     private fun getType(fileName: String): Shader.Type {
@@ -60,7 +64,13 @@ class ShaderLoader : AssetLoader<Shader> {
         }
     }
 
-    private fun getSource(fileName: String): String? {
-        return getResourceAsString(PATH.plus(fileName))
+    private fun minifySource(name: String, type: Shader.Type, path: String): String {
+        val lines = getResourceAsLines(path)
+        val version = lines.take(1)[0];
+        val code = version.plus("\\n")
+            .plus(lines.drop(1)
+                .filter { !it.startsWith("//") }
+                .joinToString("") { it.trim() })
+        return "Shader.Spec(Shader.Type.${type.name}, \"$code\"),"
     }
 }

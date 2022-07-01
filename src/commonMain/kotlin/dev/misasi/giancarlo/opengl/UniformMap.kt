@@ -25,19 +25,10 @@
 
 package dev.misasi.giancarlo.opengl
 
-data class Attribute(
-    val attributeHandle: Int,
-    val spec: Spec,
-    val strideOffset: Int
-) {
-    data class Spec(val name: String, val type: Type, val count: Int, val normalized: Boolean = false) {
-        val size by lazy {
-            type.size * count
-        }
-    }
+class UniformMap(private val gl: OpenGl, private val program: Program, uniformNames: List<String>, ) {
+    private val uniforms = uniformNames.associateWith { gl.getUniformLocation(program.programHandle, it) }
 
-    enum class Type(val size: Int) {
-        FLOAT(4),
-        INT(4)
+    fun update(uniformName: String, value: Any) {
+        gl.setUniform(program.programHandle, uniforms[uniformName]!!, value)
     }
 }

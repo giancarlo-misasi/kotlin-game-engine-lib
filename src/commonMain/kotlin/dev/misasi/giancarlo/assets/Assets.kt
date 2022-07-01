@@ -25,16 +25,13 @@
 
 package dev.misasi.giancarlo.assets
 
-import dev.misasi.giancarlo.assets.loaders.*
+import dev.misasi.giancarlo.assets.loaders.AtlasLoader
+import dev.misasi.giancarlo.assets.loaders.TextureLoader
 import dev.misasi.giancarlo.crash
 import dev.misasi.giancarlo.opengl.OpenGl
 
 class Assets (gl: OpenGl) {
-    private val programs = ProgramLoader(gl, ShaderLoader()).load()
     private val atlases = AtlasLoader(TextureLoader(gl)).load()
-    private val buffers = VertexBufferLoader(gl).load()
 
-    fun program(name: String) = programs[name] ?: crash("Program not found")
     fun atlas(name: String) = atlases[name] ?: crash("Atlas not found")
-    fun buffer(name: String) = buffers[name] ?: crash("Buffer not found")
 }

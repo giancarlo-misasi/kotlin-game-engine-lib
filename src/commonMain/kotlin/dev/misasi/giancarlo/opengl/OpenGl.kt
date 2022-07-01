@@ -52,12 +52,15 @@ interface OpenGl {
     // Attributes
     fun getAttributeLocation(program: Int, name: String): Int
     fun enableVertexAttributeArray(attribute: Int)
-    fun setVertexAttributePointer(attribute: Int, opts: Attribute)
+    fun setVertexAttributePointer(handle: Int, attribute: Attribute, totalStride: Int)
 
     // Vertex buffers
-    fun createVbo(usage: VertexBuffer.Usage, maxBytes: Int): Int
-    fun bindVbo(vbo: Int): Int
-    fun updateVboData(vbo: Int, data: DirectByteBuffer, byteOffset: Int = 0)
+    fun createBuffer(type: Buffer.Type, usage: Buffer.Usage, maxBytes: Int): Int
+    fun bindBuffer(handle: Int, type: Buffer.Type): Int
+    fun updateBufferData(handle: Int, type: Buffer.Type, data: DirectByteBuffer, byteOffset: Int = 0)
+
+    fun createAttributeArray(): Int
+    fun bindAttributeArray(vao: Int): Int
 
     // Textures
     fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectByteBuffer): Int

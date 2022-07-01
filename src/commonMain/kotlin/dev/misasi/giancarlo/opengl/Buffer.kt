@@ -23,23 +23,30 @@
  *
  */
 
-package dev.misasi.giancarlo.assets.loaders
+package dev.misasi.giancarlo.opengl
 
-import dev.misasi.giancarlo.getResourceAsLines
-import dev.misasi.giancarlo.opengl.OpenGl
-import dev.misasi.giancarlo.opengl.VertexBuffer
+import dev.misasi.giancarlo.memory.DirectByteBuffer
 
-class VertexBufferLoader (
-    private val gl: OpenGl
-) : AssetLoader<VertexBuffer> {
-
-    companion object {
-        private const val PATH = "/buffers/buffers"
+abstract class Buffer (private val gl: OpenGl, private val type: Type, usage: Usage, maxBytes: Int) {
+    enum class Type {
+        VERTEX,
+        INDEX
     }
 
-    override fun load(): Map<String, VertexBuffer> {
-        val lines = getResourceAsLines(PATH)
-        return getTokens(3, lines)
-            .associate { it[0] to VertexBuffer(gl, VertexBuffer.Usage.valueOf(it[1]), it[2].toInt()) }
+    enum class Usage {
+        STATIC,
+        DYNAMIC,
+        STREAM
+    }
+
+    val bufferHandle: Int = gl.createBuffer(type, usage, maxBytes);
+
+    fun bind() {
+        gl.bindBuffer(bufferHandle, type)
+    }
+
+    fun update(data: DirectByteBuffer, byteOffset: Int = 0) {
+        bind()
+        gl.updateBufferData(bufferHandle, type, data, byteOffset)
     }
 }
