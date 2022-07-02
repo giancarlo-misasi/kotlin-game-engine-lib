@@ -26,11 +26,12 @@
 package dev.misasi.giancarlo
 
 import dev.misasi.giancarlo.assets.Assets
-import dev.misasi.giancarlo.drawing.Animation
+import dev.misasi.giancarlo.drawing.AnimatedMaterial
+import dev.misasi.giancarlo.drawing.Animator
 import dev.misasi.giancarlo.drawing.GraphicsBuffer2d
 import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.events.EventQueue
-import dev.misasi.giancarlo.events.SystemClock
+import dev.misasi.giancarlo.system.Clock
 import dev.misasi.giancarlo.events.input.keyboard.Key
 import dev.misasi.giancarlo.events.input.keyboard.KeyAction
 import dev.misasi.giancarlo.events.input.keyboard.KeyEvent
@@ -57,7 +58,7 @@ fun main() {
     context.enableMouseButtonEvents(true)
     context.enableScrollEvents(true)
 
-    val clock = SystemClock()
+    val clock = Clock()
     val assets = Assets(context.getOpenGl())
     val gfx = GraphicsBuffer2d(context.getOpenGl(), Buffer.Usage.DYNAMIC, 100000)
     val viewport = context.getViewport()
@@ -67,7 +68,7 @@ fun main() {
     // Draw dynamic things
     val atlasGeneral = assets.atlas("General")
     val atlasOverworld = assets.atlas("Overworld")
-    val animation = Animation(atlasGeneral.getMaterialSet("PlayerWalkDown"))
+    val animation = AnimatedMaterial(atlasGeneral.getMaterialSet("PlayerWalkDown"))
     val grass = atlasOverworld.getMaterial("FloorGrass")
     val orange = atlasOverworld.getMaterial("FloorOrange")
     val purple = atlasOverworld.getMaterial("FloorPurple")
@@ -85,8 +86,10 @@ fun main() {
     while (!context.shouldClose()) {
         gl.clear()
 
+        val cp = Animator.getTransitionPosition(Vector2f(), Vector2f(1920f, 0f), 0f)
+
         animation.update(clock.elapsedMillis)
-        mvp = viewport.getModelViewProjection(camera)
+        mvp = viewport.getModelViewProjection(camera.copy(position = cp))
 
         gfx.bind()
         gfx.updateUniform("uMvp", mvp)
@@ -108,10 +111,13 @@ fun main() {
         gfx.writeSprite(Vector2f(355f, 312f), tree)
         gfx.writeSprite(Vector2f(512f, 800f), tree)
         gfx.writeSprite(Vector2f(725f, 256f), tree)
-        gfx.writeSprite(Vector2f(64f, 64f), animation.currentFrame())
+        gfx.writeSprite(Vector2f(200f, 300f), animation)
 
         gfx.updateVertexBuffer()
         gfx.draw()
+
+        mvp = viewport.getModelViewProjection(camera.copy(position = cp))
+        gfx.updateUniform("uMvp", mvp)
 
         // draw the rect and circle we test intersection with
         c1 = c1.moveTo(lastMousePos)

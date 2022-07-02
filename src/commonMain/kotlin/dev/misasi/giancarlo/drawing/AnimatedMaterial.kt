@@ -25,24 +25,32 @@
 
 package dev.misasi.giancarlo.drawing
 
-class Animation (
+import dev.misasi.giancarlo.math.Point4
+import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.system.Timer
+
+class AnimatedMaterial (
     private val materialSet: MaterialSet
-) {
-    private var totalElapsedMillis: Int = 0
+) : Material {
+    private val timer = Timer()
     private var index: Int = 0
 
-    fun currentFrame() : Material = materialSet.frames[index]
+    override fun name(): String = currentFrame().name()
+    override fun textureHandle(): Int = currentFrame().textureHandle()
+    override fun coordinates(): Point4 = currentFrame().coordinates()
+    override fun size(): Vector2f = currentFrame().size()
+    private fun currentFrame() : Material = materialSet.frames[index]
 
     fun update(elapsedMillis: Int) {
-        totalElapsedMillis += elapsedMillis
-        if (totalElapsedMillis >= materialSet.frameDurationMillis) {
-            totalElapsedMillis = 0
+        timer.update(elapsedMillis)
+        if (timer.isComplete(materialSet.frameDurationMillis)) {
+            timer.restart()
             index = (index + 1) % materialSet.frames.size
         }
     }
 
     fun restart() {
-        totalElapsedMillis = 0
+        timer.restart()
         index = 0
     }
 }

@@ -26,8 +26,8 @@
 package dev.misasi.giancarlo.assets.loaders
 
 import dev.misasi.giancarlo.drawing.Atlas
-import dev.misasi.giancarlo.drawing.Material
 import dev.misasi.giancarlo.drawing.MaterialSet
+import dev.misasi.giancarlo.drawing.StaticMaterial
 import dev.misasi.giancarlo.getResourceAsLines
 import dev.misasi.giancarlo.math.Point4
 import dev.misasi.giancarlo.math.Vector2f
@@ -64,7 +64,7 @@ class AtlasLoader (
         }
         val textureName = getTextureName(lines) ?: return null
         val texture = textureMap[textureName] ?: return null
-        val materials = getMaterials(lines, texture)
+        val materials = getStaticMaterials(lines, texture)
         val sets = getSets(lines, materials)
         return Atlas(materials, sets)
     }
@@ -79,32 +79,32 @@ class AtlasLoader (
             .firstOrNull()
     }
 
-    private fun getMaterials(lines: List<String>, texture: Texture): Map<String, Material> {
+    private fun getStaticMaterials(lines: List<String>, texture: Texture): Map<String, StaticMaterial> {
         return getTokensWithPrefix(MATERIAL, 6, lines)
-            .map { createMaterial(it, texture) }
-            .associateBy { it.name }
+            .map { createStaticMaterial(it, texture) }
+            .associateBy { it.name() }
     }
 
-    private fun getSets(lines: List<String>, materials: Map<String, Material>): Map<String, MaterialSet> {
+    private fun getSets(lines: List<String>, materials: Map<String, StaticMaterial>): Map<String, MaterialSet> {
         return getTokensWithPrefix(SET, 3, lines)
             .map { createSet(it, materials) }
             .associateBy { it.name }
     }
 
-    private fun createMaterial(tokens: List<String>, texture: Texture): Material {
+    private fun createStaticMaterial(tokens: List<String>, texture: Texture): StaticMaterial {
         val name = tokens[1]
         val position = Vector2f(tokens[2].toFloat(), tokens[3].toFloat())
         val size = Vector2f(tokens[4].toFloat(), tokens[5].toFloat())
         val uvPosition = position.divide(texture.size)
         val uvSize = size.divide(texture.size)
-        return Material(name, texture.textureHandle, Point4.create(uvPosition, uvSize), size)
+        return StaticMaterial(name, texture.textureHandle, Point4.create(uvPosition, uvSize), size)
     }
 
-    private fun createSet(tokens: List<String>, materials: Map<String, Material>): MaterialSet {
+    private fun createSet(tokens: List<String>, materials: Map<String, StaticMaterial>): MaterialSet {
         val prefix = tokens[1]
         val frames = materials.values
-            .filter { it.name.startsWith(prefix) }
-            .sortedBy { it.name }
+            .filter { it.name().startsWith(prefix) }
+            .sortedBy { it.name() }
         val frameDurationMillis = tokens[2].toInt()
         return MaterialSet(prefix, frames, frameDurationMillis)
     }

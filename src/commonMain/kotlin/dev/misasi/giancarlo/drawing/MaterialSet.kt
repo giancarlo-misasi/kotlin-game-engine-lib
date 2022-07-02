@@ -29,7 +29,7 @@ import dev.misasi.giancarlo.crash
 
 data class MaterialSet (
     val name: String,
-    val frames: List<Material>,
+    val frames: List<StaticMaterial>,
     val frameDurationMillis: Int
 ) {
     init {

@@ -25,6 +25,7 @@
 
 package dev.misasi.giancarlo.ux
 
+import dev.misasi.giancarlo.system.Timer
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.opengl.DisplayContext
 
@@ -41,21 +42,33 @@ abstract class Screen(
 
     var state: State = State.WAITING
         private set
-    private val elapsedMs: Int = 0
+
+    private val timer: Timer = Timer()
+    private val waitMs = 100
+    private val inMs = 100
+    private val outMs = 100
 
     fun update(elapsedMs: Int, transitionOut: Boolean) {
-        if (transitionOut) {
-            if (state != State.HIDDEN) {
-//                state = Stat
-            }
+        timer.update(elapsedMs)
+
+        if (transitionOut && state != State.HIDDEN && state != State.OUT) {
+            state = State.OUT
+            timer.restart()
         } else if (state == State.WAITING) {
-
-        } else if (state != State.ACTIVE) {
-
-        }
-
-        if (state == State.ACTIVE) {
-            onUpdate(elapsedMs);
+            if (timer.isComplete(waitMs)) {
+                state = State.IN
+                timer.restart()
+            }
+        } else if (state == State.IN) {
+            if (timer.isComplete(inMs)) {
+                state = State.ACTIVE
+            }
+        } else if (state == State.OUT) {
+            if (timer.isComplete(outMs)) {
+                state = State.HIDDEN
+            }
+        } else if (state == State.ACTIVE) {
+            onUpdate(elapsedMs)
         }
     }
 

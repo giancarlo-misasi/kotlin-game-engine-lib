@@ -23,12 +23,36 @@
  *
  */
 
-package dev.misasi.giancarlo.ux
+package dev.misasi.giancarlo.system
 
-class ScreenStack {
-    private val screens = mutableListOf<Screen>()
+import dev.misasi.giancarlo.getTimeMillis
+import kotlin.math.min
 
-    fun push(screen: Screen) {
-        screens.add(screen)
+class Clock {
+
+    @Volatile
+    var elapsedMillis = 0
+
+    @Volatile
+    var lastTimeMillis = getTimeMillis()
+
+    @Synchronized
+    fun update() {
+        elapsedMillis = getElapsedMillis(lastTimeMillis)
+        lastTimeMillis += elapsedMillis
+    }
+
+    private fun getElapsedMillis(lastTimeMillis: Long) : Int {
+        val currentTimeMillis = getTimeMillis()
+        val delta = min(currentTimeMillis - lastTimeMillis, MAX_STEP_MILLIS)
+        return if (delta == -1L) {
+            0
+        } else {
+            delta.toInt()
+        }
+    }
+
+    companion object {
+        private const val MAX_STEP_MILLIS: Long = 1000
     }
 }

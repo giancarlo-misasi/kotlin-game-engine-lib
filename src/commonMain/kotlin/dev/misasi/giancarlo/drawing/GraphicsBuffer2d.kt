@@ -58,15 +58,15 @@ class GraphicsBuffer2d(private val gl: OpenGl, usage: Buffer.Usage, maxEntities:
 
     fun writeSprite(position: Vector2f, material: Material, rotation: Rotation = None, alpha: Float = NO_ALPHA) {
         val drawOrder = drawOrders.lastOrNull()
-        if (drawOrder == null || drawOrder.isDifferent(DrawOrder.Type.SQUARE, material.textureHandle)) {
-            drawOrders.add(DrawOrder(material.textureHandle))
+        if (drawOrder == null || drawOrder.isDifferent(DrawOrder.Type.SQUARE, material.textureHandle())) {
+            drawOrders.add(DrawOrder(material.textureHandle()))
         } else {
             drawOrders[drawOrders.lastIndex] = drawOrder.copy(count = drawOrder.count + 1)
         }
 
         write(
-            Point4.create(position, material.size, rotation),
-            material.coordinates,
+            Point4.create(position, material.size(), rotation),
+            material.coordinates(),
             alpha
         )
     }

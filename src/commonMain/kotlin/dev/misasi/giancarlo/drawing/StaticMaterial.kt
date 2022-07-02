@@ -23,12 +23,19 @@
  *
  */
 
-package dev.misasi.giancarlo.ux
+package dev.misasi.giancarlo.drawing
 
-class ScreenStack {
-    private val screens = mutableListOf<Screen>()
+import dev.misasi.giancarlo.math.Point4
+import dev.misasi.giancarlo.math.Vector2f
 
-    fun push(screen: Screen) {
-        screens.add(screen)
-    }
+class StaticMaterial(
+    private val name: String,
+    private val textureHandle: Int,
+    private val coordinates: Point4,
+    private val size: Vector2f
+) : Material {
+    override fun name(): String = name
+    override fun textureHandle(): Int = textureHandle
+    override fun coordinates(): Point4 = coordinates
+    override fun size(): Vector2f = size
 }

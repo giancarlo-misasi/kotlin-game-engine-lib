@@ -23,36 +23,26 @@
  *
  */
 
-package dev.misasi.giancarlo.events
+package dev.misasi.giancarlo.system
 
-import dev.misasi.giancarlo.getTimeMillis
-import kotlin.math.min
+import kotlin.math.max
 
-class SystemClock {
+class Timer {
+    private var totalElapsedMs: Int = 0
 
-    @Volatile
-    var elapsedMillis = 0
-
-    @Volatile
-    private var lastTimeMillis = getTimeMillis()
-
-    @Synchronized
-    fun update() {
-        elapsedMillis = getElapsedMillis(lastTimeMillis)
-        lastTimeMillis += elapsedMillis
+    fun isComplete(durationMs: Int): Boolean {
+        return totalElapsedMs >= durationMs
     }
 
-    private fun getElapsedMillis(lastTimeMillis: Long) : Int {
-        val currentTimeMillis = getTimeMillis()
-        val delta = min(currentTimeMillis - lastTimeMillis, MAX_STEP_MILLIS)
-        return if (delta == -1L) {
-            0
-        } else {
-            delta.toInt()
-        }
+    fun getCompletionPercentage(durationMs: Int): Float {
+        return totalElapsedMs / max(durationMs, totalElapsedMs).toFloat()
     }
 
-    companion object {
-        private const val MAX_STEP_MILLIS: Long = 1000
+    fun update(elapsedMillis: Int) {
+        totalElapsedMs += elapsedMillis
+    }
+
+    fun restart() {
+        totalElapsedMs = 0
     }
 }

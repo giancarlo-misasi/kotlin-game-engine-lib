@@ -45,7 +45,7 @@ class ShaderGenerator {
         getResourceAsLines(PATH).map { it to PATH.plus(it) }
             .associate { getName(it.first) to Shader.Spec(getType(it.first), it.second) }
             .forEach {
-                println(minifySource(it.key, it.value.type, it.value.source))
+                println(minifySource(it.value.type, it.value.source))
             }
     }
 
@@ -64,7 +64,7 @@ class ShaderGenerator {
         }
     }
 
-    private fun minifySource(name: String, type: Shader.Type, path: String): String {
+    private fun minifySource(type: Shader.Type, path: String): String {
         val lines = getResourceAsLines(path)
         val version = lines.take(1)[0];
         val code = version.plus("\\n")
