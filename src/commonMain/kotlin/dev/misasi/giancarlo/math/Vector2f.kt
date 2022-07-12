@@ -98,4 +98,10 @@ data class Vector2f (val x: Float = 0f, val y: Float = 0f) {
                 && y >= lowerBound.y
                 && y <= upperBound.y
     }
+
+    fun toVector2us(): Vector2us {
+        return Vector2us(x.times(65535).toInt().toUShort(), y.times(65535).toInt().toUShort())
+    }
 }
+
+data class Vector2us (val x: UShort = 0u, val y: UShort = 0u)

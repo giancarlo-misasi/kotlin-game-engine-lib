@@ -26,7 +26,8 @@
 package dev.misasi.giancarlo.opengl
 
 import dev.misasi.giancarlo.drawing.Rgba8
-import dev.misasi.giancarlo.memory.DirectByteBuffer
+import dev.misasi.giancarlo.drawing.ShapeType
+import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
 
 interface OpenGl {
 
@@ -56,14 +57,15 @@ interface OpenGl {
 
     // Vertex buffers
     fun createBuffer(type: Buffer.Type, usage: Buffer.Usage, maxBytes: Int): Int
+    fun createBuffer(type: Buffer.Type, usage: Buffer.Usage, data: DirectNativeByteBuffer): Int
     fun bindBuffer(handle: Int, type: Buffer.Type): Int
-    fun updateBufferData(handle: Int, type: Buffer.Type, data: DirectByteBuffer, byteOffset: Int = 0)
+    fun updateBufferData(handle: Int, type: Buffer.Type, data: DirectNativeByteBuffer, byteOffset: Int = 0)
 
     fun createAttributeArray(): Int
     fun bindAttributeArray(vao: Int): Int
 
     // Textures
-    fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectByteBuffer): Int
+    fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectNativeByteBuffer): Int
     fun bindTexture2d(texture: Int): Int
     fun setActiveTextureUnit(target: Int)
 
@@ -72,8 +74,13 @@ interface OpenGl {
     fun setScissor(x: Int, y: Int, width: Int, height: Int)
 
     // Draw
+    fun draw(type: ShapeType, offset: Int, vertexCount: Int)
+    fun drawIndexed(type: ShapeType, offset: Int, vertexCount: Int, indexType: DataType)
     fun drawLines(offset: Int, vertexCount: Int)
+    fun drawLinesIndexed(offset: Int, vertexCount: Int, indexType: DataType)
     fun drawTriangles(offset: Int, vertexCount: Int)
+    fun drawTrianglesIndexed(offset: Int, vertexCount: Int, indexType: DataType)
+
     fun setClearColor(color: Rgba8)
     fun clear()
 

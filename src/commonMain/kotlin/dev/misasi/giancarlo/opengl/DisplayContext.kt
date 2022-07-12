@@ -50,6 +50,7 @@ interface DisplayContext {
     fun enableMouseEvents(enable: Boolean)
     fun enableMouseButtonEvents(enable: Boolean)
     fun enableScrollEvents(enable: Boolean)
+    fun enableResizeEvents(enable: Boolean)
     fun setCursorMode(mode: CursorMode)
     fun pollEvents()
     fun getNextEvent() : Event?

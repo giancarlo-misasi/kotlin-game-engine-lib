@@ -25,9 +25,21 @@
 
 package dev.misasi.giancarlo.opengl
 
-import dev.misasi.giancarlo.memory.DirectByteBuffer
+import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
 
-abstract class Buffer (private val gl: OpenGl, private val type: Type, usage: Usage, maxBytes: Int) {
+abstract class Buffer private constructor(
+    protected val gl: OpenGl,
+    protected val handle: Int,
+    val type: Type,
+    val usage: Usage,
+    val sizeInBytes: Int
+) {
+    constructor(gl: OpenGl, type: Type, usage: Usage, sizeInBytes: Int)
+            : this(gl, gl.createBuffer(type, usage, sizeInBytes), type, usage, sizeInBytes)
+
+    constructor(gl: OpenGl, type: Type, usage: Usage, data: DirectNativeByteBuffer)
+            : this(gl, gl.createBuffer(type, usage, data), type, usage, data.sizeInBytes)
+
     enum class Type {
         VERTEX,
         INDEX
@@ -39,14 +51,6 @@ abstract class Buffer (private val gl: OpenGl, private val type: Type, usage: Us
         STREAM
     }
 
-    val bufferHandle: Int = gl.createBuffer(type, usage, maxBytes);
-
-    fun bind() {
-        gl.bindBuffer(bufferHandle, type)
-    }
-
-    fun update(data: DirectByteBuffer, byteOffset: Int = 0) {
-        bind()
-        gl.updateBufferData(bufferHandle, type, data, byteOffset)
-    }
+    abstract fun bind(): Any
+    abstract fun update(data: DirectNativeByteBuffer, byteOffset: Int = 0): Any
 }

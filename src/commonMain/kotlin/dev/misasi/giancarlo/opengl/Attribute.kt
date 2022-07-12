@@ -30,14 +30,9 @@ data class Attribute(
     val spec: Spec,
     val strideOffset: Int
 ) {
-    data class Spec(val name: String, val type: Type, val count: Int, val normalized: Boolean = false) {
-        val size by lazy {
+    data class Spec(val name: String, val type: DataType, val count: Int, val normalize: Boolean = false) {
+        val sizeInBytes by lazy {
             type.size * count
         }
-    }
-
-    enum class Type(val size: Int) {
-        FLOAT(4),
-        INT(4)
     }
 }

@@ -26,9 +26,10 @@
 package dev.misasi.giancarlo.opengl
 
 class UniformMap(private val gl: OpenGl, private val program: Program, uniformNames: List<String>, ) {
-    private val uniforms = uniformNames.associateWith { gl.getUniformLocation(program.programHandle, it) }
+    private val uniforms = uniformNames.associateWith { program.getUniformHandle(it) }
 
-    fun update(uniformName: String, value: Any) {
-        gl.setUniform(program.programHandle, uniforms[uniformName]!!, value)
+    fun update(uniformName: String, value: Any): UniformMap {
+        program.setUniform(uniforms[uniformName]!!, value)
+        return this
     }
 }

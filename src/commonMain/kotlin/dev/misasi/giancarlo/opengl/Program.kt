@@ -26,15 +26,15 @@
 package dev.misasi.giancarlo.opengl
 
 class Program(private val gl: OpenGl, shaderSpecs: List<Shader.Spec>) {
-    val programHandle: Int = gl.createProgram()
+    private val handle: Int = gl.createProgram()
 
     init {
         // Create, compile and attach shaders
-        val shaders = shaderSpecs.map { Shader(gl, programHandle, it) }
+        val shaders = shaderSpecs.map { Shader(gl, handle, it) }
 
         // Link the program and cleanup the shaders
         try {
-            gl.linkProgram(programHandle)
+            gl.linkProgram(handle)
         } finally {
             shaders.forEach { it.close() }
         }
@@ -43,7 +43,35 @@ class Program(private val gl: OpenGl, shaderSpecs: List<Shader.Spec>) {
         bind()
     }
 
-    fun bind() {
-        gl.bindProgram(programHandle)
+    fun bind(): Program {
+        if (boundHandle != handle) {
+            gl.bindProgram(handle)
+            boundHandle = handle
+        }
+        return this
+    }
+
+    fun getUniformHandle(name: String): Int {
+        return gl.getUniformLocation(handle, name)
+    }
+
+    fun getAttributeHandle(name: String): Int {
+        return gl.getAttributeLocation(handle, name)
+    }
+
+    fun setUniform(uniformHandle: Int, value: Any): Program {
+        gl.setUniform(handle, uniformHandle, value)
+        return this
+    }
+
+    companion object {
+        private var boundHandle = 0
+
+        fun unbind(gl: OpenGl) {
+            if (boundHandle != 0) {
+                gl.bindProgram(0)
+                boundHandle = 0
+            }
+        }
     }
 }

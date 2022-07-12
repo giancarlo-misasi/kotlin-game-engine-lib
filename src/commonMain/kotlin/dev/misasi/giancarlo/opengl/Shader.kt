@@ -35,7 +35,7 @@ data class Shader(private val gl: OpenGl, private val programHandle: Int, val sp
         FRAGMENT
     }
 
-    val shaderHandle = gl.createShader(spec.type)
+    private val shaderHandle = gl.createShader(spec.type)
 
     init {
         gl.compileShader(shaderHandle, spec.source)

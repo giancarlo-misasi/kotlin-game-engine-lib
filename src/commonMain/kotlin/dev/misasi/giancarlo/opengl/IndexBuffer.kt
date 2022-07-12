@@ -25,5 +25,33 @@
 
 package dev.misasi.giancarlo.opengl
 
-class IndexBuffer(gl: OpenGl, usage: Usage, maxBytes: Int)
-    : Buffer(gl, Type.INDEX, usage, maxBytes)
+import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
+
+class IndexBuffer : Buffer {
+    constructor(gl: OpenGl, usage: Usage, maxBytes: Int) : super(gl, Type.INDEX, usage, maxBytes)
+    constructor(gl: OpenGl, usage: Usage, data: DirectNativeByteBuffer) : super(gl, Type.INDEX, usage, data)
+
+    override fun bind(): IndexBuffer {
+        if (boundHandle != handle) {
+            gl.bindBuffer(handle, type)
+            boundHandle = handle
+        }
+        return this
+    }
+
+    override fun update(data: DirectNativeByteBuffer, byteOffset: Int): IndexBuffer {
+        gl.updateBufferData(handle, type, data, byteOffset)
+        return this
+    }
+
+    companion object {
+        private var boundHandle = 0
+
+        fun unbind(gl: OpenGl) {
+            if (boundHandle != 0) {
+                gl.bindBuffer(0, Type.INDEX)
+                boundHandle = 0
+            }
+        }
+    }
+}

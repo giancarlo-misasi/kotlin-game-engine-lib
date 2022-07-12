@@ -33,6 +33,7 @@ import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
 import dev.misasi.giancarlo.events.input.mouse.MouseEvent
 import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
 import dev.misasi.giancarlo.events.input.text.TextEvent
+import dev.misasi.giancarlo.events.input.window.ResizeEvent
 import dev.misasi.giancarlo.math.Vector2f
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -172,6 +173,10 @@ class LwjglGlfwDisplayContext(
         glfwSetScrollCallback(window, if (enable) ::scrollEventHandler else null)
     }
 
+    override fun enableResizeEvents(enable: Boolean) {
+        glfwSetWindowSizeCallback(window, if(enable) ::resizeEventHandler else null)
+    }
+
     override fun setCursorMode(mode: CursorMode) {
         if (mode == CursorMode.FPS) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
@@ -221,5 +226,9 @@ class LwjglGlfwDisplayContext(
 
     private fun scrollEventHandler(window: Long, x: Double, y: Double) {
         events.pushEvent(ScrollEvent.valueOf(x, y))
+    }
+
+    private fun resizeEventHandler(window: Long, x: Int, y: Int) {
+        events.pushEvent(ResizeEvent.valueOf(x, y))
     }
 }

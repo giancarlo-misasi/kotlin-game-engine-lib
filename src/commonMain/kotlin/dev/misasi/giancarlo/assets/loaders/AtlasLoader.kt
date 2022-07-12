@@ -29,7 +29,7 @@ import dev.misasi.giancarlo.drawing.Atlas
 import dev.misasi.giancarlo.drawing.MaterialSet
 import dev.misasi.giancarlo.drawing.StaticMaterial
 import dev.misasi.giancarlo.getResourceAsLines
-import dev.misasi.giancarlo.math.Point4
+import dev.misasi.giancarlo.math.Point4f
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.opengl.Texture
 
@@ -97,7 +97,7 @@ class AtlasLoader (
         val size = Vector2f(tokens[4].toFloat(), tokens[5].toFloat())
         val uvPosition = position.divide(texture.size)
         val uvSize = size.divide(texture.size)
-        return StaticMaterial(name, texture.textureHandle, Point4.create(uvPosition, uvSize), size)
+        return StaticMaterial(name, texture, Point4f.create(uvPosition, uvSize).toPoint4us(), size)
     }
 
     private fun createSet(tokens: List<String>, materials: Map<String, StaticMaterial>): MaterialSet {

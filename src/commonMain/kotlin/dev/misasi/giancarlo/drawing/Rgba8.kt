@@ -45,6 +45,10 @@ data class Rgba8 (
         checkRange(a)
     }
 
+    val packedRgba by lazy {
+        (a shl 24) or (b shl 16) or (g shl 8) or r
+    }
+
     val floatR by lazy {
         r.toFloat() / max.toFloat()
     }

@@ -29,14 +29,23 @@ import dev.misasi.giancarlo.math.Matrix4f
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector3f
 
-class Viewport(gl: OpenGl, private val targetResolution: Vector2f, private val actualScreenSize: Vector2f) {
-    private val adjustedScreenSize: Vector2f = calculateAdjustedScreenSize(targetResolution, actualScreenSize)
-    private val offset: Vector2f = actualScreenSize.minus(adjustedScreenSize).scale(0.5f)
-    private val scale: Vector2f = adjustedScreenSize.divide(targetResolution)
+class Viewport(gl: OpenGl, private var targetResolution: Vector2f, private var actualScreenSize: Vector2f) {
+    private lateinit var adjustedScreenSize: Vector2f
+    private lateinit var offset: Vector2f
+    private lateinit var scale: Vector2f
 
     init {
-        gl.setViewport(0, 0, actualScreenSize.x.toInt(), actualScreenSize.y.toInt())
-        gl.setScissor(offset.x.toInt(), offset.y.toInt(), adjustedScreenSize.x.toInt(), adjustedScreenSize.y.toInt())
+        update(gl)
+    }
+
+    fun setTargetResolution(gl: OpenGl, targetResolution: Vector2f) {
+        this.targetResolution = targetResolution
+        update(gl)
+    }
+
+    fun setActualScreenSize(gl: OpenGl, actualScreenSize: Vector2f) {
+        this.actualScreenSize = actualScreenSize
+        update(gl)
     }
 
     fun withinBounds(point: Vector2f): Boolean {
@@ -60,11 +69,20 @@ class Viewport(gl: OpenGl, private val targetResolution: Vector2f, private val a
         return projection.multiply(view).multiply(model).transpose
     }
 
+    private fun update(gl: OpenGl) {
+        adjustedScreenSize = calculateAdjustedScreenSize(targetResolution, actualScreenSize)
+        offset = actualScreenSize.minus(adjustedScreenSize).scale(0.5f)
+        scale = adjustedScreenSize.divide(targetResolution)
+
+        gl.setViewport(0, 0, actualScreenSize.x.toInt(), actualScreenSize.y.toInt())
+        gl.setScissor(offset.x.toInt(), offset.y.toInt(), adjustedScreenSize.x.toInt(), adjustedScreenSize.y.toInt())
+    }
+
     companion object {
         private fun calculateAdjustedScreenSize(targetResolution: Vector2f, actualScreenSize: Vector2f): Vector2f {
             val requiredScreenHeight = actualScreenSize.x / targetResolution.aspectRatio;
             return if (requiredScreenHeight > actualScreenSize.y) {
-                Vector2f(actualScreenSize.x * targetResolution.aspectRatio, actualScreenSize.y);
+                Vector2f(actualScreenSize.y * targetResolution.aspectRatio, actualScreenSize.y);
             } else {
                 Vector2f(actualScreenSize.x, requiredScreenHeight);
             }

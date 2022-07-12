@@ -23,17 +23,14 @@
  *
  */
 
-package dev.misasi.giancarlo.assets.generators
+package dev.misasi.giancarlo.assets.loaders
 
 import dev.misasi.giancarlo.crash
 import dev.misasi.giancarlo.getResourceAsLines
+import dev.misasi.giancarlo.getResourceAsString
 import dev.misasi.giancarlo.opengl.Shader
 
-/**
- * Simple packager which reads the current shaders in the resources directory
- * and prints them out as kotlin variables.
- */
-class ShaderGenerator {
+class ShaderLoader : AssetLoader<Shader.Spec> {
     companion object {
         private const val PATH = "/shaders/"
         private const val SUFFIX = ".glsl"
@@ -41,12 +38,10 @@ class ShaderGenerator {
         private const val FRAGMENT = "Fragment.glsl"
     }
 
-    fun generate() {
-        getResourceAsLines(PATH).map { it to PATH.plus(it) }
+    override fun load(): Map<String, Shader.Spec> {
+        return getResourceAsLines(PATH)
+            .map { it to getSource(it) }
             .associate { getName(it.first) to Shader.Spec(getType(it.first), it.second) }
-            .forEach {
-                println(minifySource(it.value.type, it.value.source))
-            }
     }
 
     private fun getName(fileName: String): String {
@@ -64,13 +59,7 @@ class ShaderGenerator {
         }
     }
 
-    private fun minifySource(type: Shader.Type, path: String): String {
-        val lines = getResourceAsLines(path)
-        val version = lines.take(1)[0];
-        val code = version.plus("\\n")
-            .plus(lines.drop(1)
-                .filter { !it.startsWith("//") }
-                .joinToString("") { it.trim() })
-        return "Shader.Spec(Shader.Type.${type.name}, \"$code\"),"
+    private fun getSource(fileName: String): String {
+        return getResourceAsString(PATH.plus(fileName)) ?: ""
     }
 }

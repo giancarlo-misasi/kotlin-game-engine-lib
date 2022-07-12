@@ -25,17 +25,13 @@
 
 package dev.misasi.giancarlo.drawing
 
-import dev.misasi.giancarlo.memory.DirectByteBuffer
-
 class Bitmap(
-    pixels: IntArray,
+    val pixels: IntArray,
     val format: Rgba8.Format,
     val width: Int,
     val height: Int
 ) {
-    val data: DirectByteBuffer = DirectByteBuffer(4 * width * height).putIntArray(pixels)
-
-    fun clear() {
-        data.clear()
+    val sizeInBytes by lazy {
+        4 * width * height
     }
 }

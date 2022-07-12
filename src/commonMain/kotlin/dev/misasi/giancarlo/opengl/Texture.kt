@@ -27,12 +27,14 @@ package dev.misasi.giancarlo.opengl
 
 import dev.misasi.giancarlo.drawing.Bitmap
 import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
 
-class Texture(private val gl: OpenGl, private val bitmap: Bitmap) {
-    val textureHandle: Int = gl.createTexture2d(bitmap.width, bitmap.height, bitmap.format, bitmap.data)
+class Texture(private val gl: OpenGl, bitmap: Bitmap) {
+    private val handle: Int
 
     init {
-        bitmap.clear() // free up the memory
+        val data = DirectNativeByteBuffer(bitmap.sizeInBytes).putIntArray(bitmap.pixels)
+        handle = gl.createTexture2d(bitmap.width, bitmap.height, bitmap.format, data)
     }
 
     val width by lazy {
@@ -47,7 +49,22 @@ class Texture(private val gl: OpenGl, private val bitmap: Bitmap) {
         Vector2f(width.toFloat(), height.toFloat())
     }
 
-    fun bind() {
-        gl.bindTexture2d(textureHandle)
+    fun bind(): Texture {
+        if (boundHandle != handle) {
+            gl.bindTexture2d(handle)
+            boundHandle = handle
+        }
+        return this
+    }
+
+    companion object {
+        private var boundHandle = 0
+
+        fun unbind(gl: OpenGl) {
+            if (boundHandle != 0) {
+                gl.bindTexture2d(0)
+                boundHandle = 0
+            }
+        }
     }
 }

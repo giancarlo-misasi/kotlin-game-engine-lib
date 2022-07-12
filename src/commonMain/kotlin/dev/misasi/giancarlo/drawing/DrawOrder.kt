@@ -25,30 +25,98 @@
 
 package dev.misasi.giancarlo.drawing
 
+import dev.misasi.giancarlo.opengl.*
+
 data class DrawOrder(
-    val count: Int = 1,
-    val type: Type = Type.SQUARE,
-    val textureHandle: Int?,
-    val color: Rgba8?
+    val program: Program,
+    val attributeArray: AttributeArray,
+    val shapeType: ShapeType = ShapeType.SQUARE,
+    val texture: Texture? = null,
 ) {
-    constructor(textureHandle: Int) : this(1, Type.SQUARE, textureHandle, null)
-    constructor(type: Type, color: Rgba8) : this(1, type, null, color)
+    var count: Int = 1
 
-    enum class Type {
-        LINE,
-        TRIANGLE,
-        SQUARE
-    }
-
-    val numberOfVertex by lazy {
-        when (type) {
-            Type.LINE -> 2 * count
-            Type.TRIANGLE -> 3 * count
-            Type.SQUARE -> 3 * 2 * count
+    fun vertexCount(): Int {
+        return when (shapeType) {
+            ShapeType.LINE -> 2 * count
+            ShapeType.TRIANGLE -> 3 * count
+            ShapeType.SQUARE -> 3 * 2 * count
+            else -> throw IllegalArgumentException("ShapeType ${shapeType.name} is not supported.")
         }
     }
 
-    fun isDifferent(type: Type, textureHandle: Int? = null, color: Rgba8? = null): Boolean {
-        return this.type != type || this.textureHandle != textureHandle || this.color != color
+    companion object {
+        fun updateDrawOrder(drawOrders: MutableList<DrawOrder>, program: Program, attributeArray: AttributeArray, material: Material) {
+            val current = drawOrders.lastOrNull()
+            if (current == null
+                || current.program != program
+                || current.attributeArray != attributeArray
+                || current.texture != material.texture()
+            ) {
+                drawOrders.add(
+                    DrawOrder(
+                        program,
+                        attributeArray,
+                        texture = material.texture()
+                    )
+                )
+            } else {
+                current.count++
+            }
+        }
+
+        fun updateDrawOrder(drawOrders: MutableList<DrawOrder>, program: Program, attributeArray: AttributeArray, shapeType: ShapeType) {
+            val current = drawOrders.lastOrNull()
+            if (current == null
+                || current.program != program
+                || current.attributeArray != attributeArray
+                || current.shapeType != shapeType
+            ) {
+                drawOrders.add(
+                    DrawOrder(
+                        program,
+                        attributeArray,
+                        shapeType = shapeType
+                    )
+                )
+            } else {
+                current.count++
+            }
+        }
+
+        fun draw(gl: OpenGl, drawOrders: Iterable<DrawOrder>) {
+            var vertexOffset = 0
+            drawOrders.forEach {
+                // Make sure correct state is bound correctly
+                it.program.bind()
+                it.attributeArray.bind()
+                it.texture?.bind()
+
+                // Draw the vertex in the bound buffer
+                val vertexCount = it.vertexCount()
+                gl.draw(it.shapeType, vertexOffset, vertexCount)
+                vertexOffset += vertexCount
+            }
+
+            // Unbind attributes to avoid state modification
+            AttributeArray.unbind(gl)
+        }
+
+        fun drawIndexed(gl: OpenGl, indexType: DataType, drawOrders: Iterable<DrawOrder>) {
+            var vertexOffset = 0
+            drawOrders.forEach {
+                // Make sure correct state is bound correctly
+                it.program.bind()
+                it.attributeArray.bind()
+                it.texture?.bind()
+
+                // Draw the vertex in the bound buffer
+                val vertexCount = it.vertexCount()
+                gl.drawIndexed(it.shapeType, indexType.size * vertexOffset, vertexCount, indexType)
+                vertexOffset += vertexCount
+            }
+
+            // Unbind attributes to avoid state modification
+            AttributeArray.unbind(gl)
+        }
     }
 }

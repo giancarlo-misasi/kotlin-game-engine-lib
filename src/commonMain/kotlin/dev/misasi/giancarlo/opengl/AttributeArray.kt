@@ -26,39 +26,39 @@
 package dev.misasi.giancarlo.opengl
 
 class AttributeArray(private val gl: OpenGl, program: Program, specs: List<Attribute.Spec>) {
-    val attributeArrayHandle: Int = gl.createAttributeArray()
-    private val totalStride = specs.sumOf { it.size }
+    val totalSizeInBytes = specs.sumOf { it.sizeInBytes }
+    private val handle: Int = gl.createAttributeArray()
     private val attributes: List<Attribute> = initializeAttributes(program, specs)
 
-    fun bind() {
-        gl.bindAttributeArray(attributeArrayHandle)
-    }
-
-    fun unbind() {
-        gl.bindAttributeArray(0)
+    fun bind(): AttributeArray {
+        if (boundHandle != handle) {
+            gl.bindAttributeArray(handle)
+            boundHandle = handle
+        }
+        return this
     }
 
     fun attach(buffer: Buffer) {
         bind()
         buffer.bind()
         enableAttributes()
-        unbind()
+        unbind(gl)
     }
 
     fun attach(buffers: List<Buffer>) {
         bind()
         buffers.forEach { it.bind() }
         enableAttributes()
-        unbind()
+        unbind(gl)
     }
 
     private fun initializeAttributes(program: Program, specs: List<Attribute.Spec>): List<Attribute> {
         val attributes = mutableListOf<Attribute>()
         var offset = 0
         for (spec in specs) {
-            val handle = gl.getAttributeLocation(program.programHandle, spec.name)
+            val handle = program.getAttributeHandle(spec.name)
             attributes.add(Attribute(handle, spec, offset))
-            offset += spec.size
+            offset += spec.sizeInBytes
         }
         return attributes.toList()
     }
@@ -66,7 +66,18 @@ class AttributeArray(private val gl: OpenGl, program: Program, specs: List<Attri
     private fun enableAttributes() {
         attributes.forEach {
             gl.enableVertexAttributeArray(it.attributeHandle)
-            gl.setVertexAttributePointer(it.attributeHandle, it, totalStride)
+            gl.setVertexAttributePointer(it.attributeHandle, it, totalSizeInBytes)
+        }
+    }
+
+    companion object {
+        private var boundHandle = -1
+
+        fun unbind(gl: OpenGl) {
+            if (boundHandle != 0) {
+                gl.bindAttributeArray(0)
+                boundHandle = 0
+            }
         }
     }
 }

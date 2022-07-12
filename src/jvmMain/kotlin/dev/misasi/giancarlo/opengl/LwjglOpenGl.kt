@@ -25,11 +25,15 @@
 
 package dev.misasi.giancarlo.opengl
 
+import org.lwjgl.opengl.GL40.*
+
 import dev.misasi.giancarlo.crash
 import dev.misasi.giancarlo.drawing.Rgba8
+import dev.misasi.giancarlo.drawing.ShapeType
 import dev.misasi.giancarlo.math.Matrix4f
-import dev.misasi.giancarlo.memory.DirectByteBuffer
-import org.lwjgl.opengl.GL30.*
+import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
+import java.nio.ByteBuffer
+import java.nio.charset.Charset
 
 class LwjglOpenGl : OpenGl {
 
@@ -56,8 +60,13 @@ class LwjglOpenGl : OpenGl {
         )
 
         private val vertexAttributeTypeMapping = mapOf(
-            Attribute.Type.FLOAT to GL_FLOAT,
-            Attribute.Type.INT to GL_INT
+            DataType.FLOAT to GL_FLOAT,
+            DataType.INT to GL_INT,
+            DataType.UNSIGNED_INT to GL_UNSIGNED_INT,
+            DataType.SHORT to GL_SHORT,
+            DataType.UNSIGNED_SHORT to GL_UNSIGNED_SHORT,
+            DataType.BYTE to GL_BYTE,
+            DataType.UNSIGNED_BYTE to GL_UNSIGNED_BYTE
         )
 
         private val textureFormat = mapOf(
@@ -105,7 +114,22 @@ class LwjglOpenGl : OpenGl {
 
     override fun getUniformLocation(program: Int, name: String): Int {
         glVerifyBound(this, GL_CURRENT_PROGRAM, program) { "PROGRAM<$program>" }
-        return glVerify<Int>(this) { glGetUniformLocation(program, name) }
+        val location = glVerify<Int>(this) { glGetUniformLocation(program, name) }
+        if (location < 0) {
+            val count = IntArray(1)
+            glGetProgramiv(program, GL_ACTIVE_UNIFORMS, count)
+            println("Found ${count[0]} uniforms. Was looking for: $name, but found:")
+            for (i in 0 until count[0]) {
+                val length = IntArray(1)
+                val size = IntArray(1)
+                val type = IntArray(1)
+                val byteBuffer = ByteBuffer.allocateDirect(256)
+                glGetActiveUniform(program, i, length, size, type, byteBuffer)
+                println(getString(byteBuffer, length[0]))
+            }
+            throw IllegalStateException("Missing expected uniform: $name")
+        }
+        return location
     }
 
     override fun setUniform(program: Int, uniform: Int, value: Any) {
@@ -119,7 +143,22 @@ class LwjglOpenGl : OpenGl {
 
     override fun getAttributeLocation(program: Int, name: String): Int {
         glVerifyBound(this, GL_CURRENT_PROGRAM, program) { "PROGRAM<$program>" }
-        return glVerify<Int>(this) { glGetAttribLocation(program, name) }
+        val location = glVerify<Int>(this) { glGetAttribLocation(program, name) }
+        if (location < 0) {
+            val count = IntArray(1)
+            glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, count)
+            println("Found ${count[0]} attributes. Was looking for: $name, but found:")
+            for (i in 0 until count[0]) {
+                val length = IntArray(1)
+                val size = IntArray(1)
+                val type = IntArray(1)
+                val byteBuffer = ByteBuffer.allocateDirect(256)
+                glGetActiveAttrib(program, i, length, size, type, byteBuffer)
+                println(getString(byteBuffer, length[0]))
+            }
+            throw IllegalStateException("Missing expected attribute: $name")
+        }
+        return location
     }
 
     override fun enableVertexAttributeArray(attribute: Int) {
@@ -128,15 +167,27 @@ class LwjglOpenGl : OpenGl {
 
     override fun setVertexAttributePointer(handle: Int, attribute: Attribute, totalStride: Int) {
         val t = vertexAttributeTypeMapping[attribute.spec.type]!!
-        glVerify(this) {
-            glVertexAttribPointer(
-                handle,
-                attribute.spec.count,
-                t,
-                attribute.spec.normalized,
-                totalStride,
-                attribute.strideOffset.toLong()
-            )
+        if (attribute.spec.type == DataType.FLOAT || attribute.spec.normalize) {
+            glVerify(this) {
+                glVertexAttribPointer(
+                    handle,
+                    attribute.spec.count,
+                    t,
+                    attribute.spec.normalize,
+                    totalStride,
+                    attribute.strideOffset.toLong()
+                )
+            }
+        } else {
+            glVerify(this) {
+                glVertexAttribIPointer(
+                    handle,
+                    attribute.spec.count,
+                    t,
+                    totalStride,
+                    attribute.strideOffset.toLong()
+                )
+            }
         }
     }
 
@@ -148,13 +199,21 @@ class LwjglOpenGl : OpenGl {
         return vbo
     }
 
+    override fun createBuffer(type: Buffer.Type, usage: Buffer.Usage, data: DirectNativeByteBuffer): Int {
+        val t = bufferTypeMapping[type]!!
+        val u = bufferUsageMapping[usage]!!
+        val vbo = bindBuffer(glVerifyGenerate(this, ::glGenBuffers) { "BUFFER(${type.name})[${usage.name}]" }, type)
+        glVerify(this) { glBufferData(t, data.byteBuffer, u) }
+        return vbo
+    }
+
     override fun bindBuffer(handle: Int, type: Buffer.Type): Int {
         val t = bufferTypeMapping[type]!!
         glVerify(this) { glBindBuffer(t, handle) }
         return handle
     }
 
-    override fun updateBufferData(handle: Int, type: Buffer.Type, data: DirectByteBuffer, byteOffset: Int) {
+    override fun updateBufferData(handle: Int, type: Buffer.Type, data: DirectNativeByteBuffer, byteOffset: Int) {
         val b = bufferBindingMapping[type]!!
         glVerifyBound(this, b, handle) { "BUFFER<$handle>" }
         glVerify(this) { glBufferSubData(GL_ARRAY_BUFFER, byteOffset.toLong(), data.byteBuffer) }
@@ -165,11 +224,11 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun bindAttributeArray(vao: Int): Int {
-        glVerify(this) { glBindBuffer(GL_VERTEX_ARRAY_BINDING, vao) }
+        glVerify(this) { glBindVertexArray(vao) }
         return vao
     }
 
-    override fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectByteBuffer): Int {
+    override fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectNativeByteBuffer): Int {
         val texture = bindTexture2d(glVerifyGenerate(this, ::glGenTextures) { "TEX2D" })
         val format = textureFormat[format]!!
         glVerify(this) {
@@ -210,13 +269,39 @@ class LwjglOpenGl : OpenGl {
         glVerify(this) { glScissor(x, y, width, height) }
     }
 
+    override fun draw(type: ShapeType, offset: Int, vertexCount: Int) {
+        when (type) {
+            ShapeType.LINE -> drawLines(offset, vertexCount)
+            ShapeType.TRIANGLE -> drawTriangles(offset, vertexCount)
+            ShapeType.SQUARE -> drawTriangles(offset, vertexCount)
+            else -> throw IllegalArgumentException("Draw type ${type.name} not supported.")
+        }
+    }
+
+    override fun drawIndexed(type: ShapeType, offset: Int, vertexCount: Int, indexType: DataType) {
+        when (type) {
+            ShapeType.LINE -> drawLinesIndexed(offset, vertexCount, indexType)
+            ShapeType.TRIANGLE, ShapeType.SQUARE -> drawTrianglesIndexed(offset, vertexCount, indexType)
+            else -> throw IllegalArgumentException("Draw type ${type.name} not supported.")
+        }
+    }
+
     override fun drawLines(offset: Int, vertexCount: Int) {
         glVerify(this) { glDrawArrays(GL_LINES, offset, vertexCount) }
     }
 
+    override fun drawLinesIndexed(offset: Int, vertexCount: Int, indexType: DataType) {
+        val t = vertexAttributeTypeMapping[indexType]!!
+        glVerify(this) { glDrawElements(GL_LINES, vertexCount, t, offset.toLong()) }
+    }
 
     override fun drawTriangles(offset: Int, vertexCount: Int) {
         glVerify(this) { glDrawArrays(GL_TRIANGLES, offset, vertexCount) }
+    }
+
+    override fun drawTrianglesIndexed(offset: Int, vertexCount: Int, indexType: DataType) {
+        val t = vertexAttributeTypeMapping[indexType]!!
+        glVerify(this) { glDrawElements(GL_TRIANGLES, vertexCount, t, offset.toLong()) }
     }
 
     override fun setClearColor(color: Rgba8) {
@@ -233,7 +318,9 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun clear() {
+        glVerify(this) { glDisable(GL_SCISSOR_TEST) }
         glVerify(this) { glClear(GL_COLOR_BUFFER_BIT) }
+        glVerify(this) { glEnable(GL_SCISSOR_TEST) }
     }
 
     override fun enable(target: Int) {
@@ -270,5 +357,15 @@ class LwjglOpenGl : OpenGl {
         val handle = IntArray(1)
         glVerify(this) { glGetIntegerv(attribute, handle) }
         return handle[0]
+    }
+
+    private fun getString(byteBuffer: ByteBuffer, length: Int): String {
+        return if (byteBuffer.remaining() > length) {
+            val bytes = ByteArray(length)
+            byteBuffer.get(bytes)
+            String(bytes, Charset.defaultCharset())
+        } else {
+            throw IllegalStateException("ByteBuffer did not have $length bytes to retrieve string from")
+        }
     }
 }
