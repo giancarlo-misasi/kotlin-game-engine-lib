@@ -23,29 +23,6 @@
  *
  */
 
-package dev.misasi.giancarlo.system
+package dev.misasi.giancarlo.ux
 
-import dev.misasi.giancarlo.getTimeMillis
-import kotlin.math.max
-import kotlin.math.min
-
-class Clock {
-
-    @Volatile
-    var elapsedMillis = 0
-
-    @Volatile
-    var lastTimeMillis = getTimeMillis()
-
-    @Synchronized
-    fun update(): Clock {
-        val currentTimeMillis = getTimeMillis()
-        elapsedMillis = max(0, min(currentTimeMillis - lastTimeMillis, MAX_STEP_MILLIS)).toInt()
-        lastTimeMillis = currentTimeMillis
-        return this
-    }
-
-    companion object {
-        private const val MAX_STEP_MILLIS: Long = 1000
-    }
-}
+data class Transition (val waitMs: Int = 0, val inMs: Int = 0, val outMs: Int = 0)

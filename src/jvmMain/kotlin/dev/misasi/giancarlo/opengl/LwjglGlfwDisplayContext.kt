@@ -52,8 +52,8 @@ class LwjglGlfwDisplayContext(
     private val events: EventQueue
 ) : DisplayContext {
     private val window: Long
-    private val gl: OpenGl
-    private val viewport: Viewport
+    override val gl: OpenGl
+    override val viewport: Viewport
 
     init {
         // Setup an error callback. The default implementation
@@ -75,15 +75,6 @@ class LwjglGlfwDisplayContext(
         // Create the window
         window = glfwCreateWindow(windowSize.x.toInt(), windowSize.y.toInt(), title, monitor, 0)
         check(window != 0L) { "Unable to create window" }
-
-        // Setup a key callback. It will be called every time a key is pressed, repeated or released.
-        glfwSetKeyCallback(window) { window, key, scancode, action, mods ->
-            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-                glfwSetWindowShouldClose(window, true)
-            }
-
-            // TODO Add key events, mouse events and push events into the queue here
-        }
 
         // Make the OpenGL context current
         glfwMakeContextCurrent(window)
@@ -109,8 +100,8 @@ class LwjglGlfwDisplayContext(
         viewport = Viewport(gl, targetResolution, actualScreenSize)
     }
 
-    override fun getOpenGl() = gl
-    override fun getViewport() = viewport
+//    override fun getOpenGl() = gl
+//    override fun getViewport() = viewport
 
     override fun getPrimaryMonitorResolution(): Vector2f {
         val mode = glfwGetVideoMode(glfwGetPrimaryMonitor())!!

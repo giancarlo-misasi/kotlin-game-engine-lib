@@ -25,10 +25,83 @@
 
 package dev.misasi.giancarlo.ux
 
-class ScreenStack {
+import dev.misasi.giancarlo.drawing.Rgba8
+import dev.misasi.giancarlo.opengl.DisplayContext
+import dev.misasi.giancarlo.system.Clock
+
+class ScreenStack (private val context: DisplayContext) {
     private val screens = mutableListOf<Screen>()
+    private val clock = Clock()
+
+    init {
+        context.gl.setClearColor(Rgba8.BLACK)
+    }
 
     fun push(screen: Screen) {
+        screen.onInit(context)
         screens.add(screen)
+    }
+
+    fun update(elapsedMs: Int) {
+        val workList = ArrayDeque(screens)
+        while (!workList.isEmpty()) {
+            val screen = workList.removeLast()
+
+            // Update the screen
+            screen.onUpdate(elapsedMs)
+
+            // Remove the screen once it is hidden
+            if (screen.state == ScreenState.HIDDEN) {
+                screens.remove(screen)
+            }
+        }
+    }
+
+    fun draw() {
+        // Clean the display
+        context.gl.clear()
+
+        // Draw the screens
+        for (screen in screens) {
+            if (screen.state == ScreenState.HIDDEN || screen.state == ScreenState.WAITING) {
+                continue
+            }
+
+            // Draw visible screens
+            screen.onDraw(context)
+        }
+
+        // Swap the buffers so we see the image
+        context.swapBuffers()
+    }
+
+    fun handleEvents() {
+        context.pollEvents()
+        while (true) {
+            val event = context.getNextEvent() ?: break
+            val workList = ArrayDeque(screens)
+            while (!workList.isEmpty()) {
+                val screen = workList.removeLast()
+                if (screen.state == ScreenState.ACTIVE) {
+                    screen.onEvent(context, event)
+                    break // first active screen handles events
+                } else if (screen.state != ScreenState.HIDDEN) {
+                    break // nobody handles events during transition
+                }
+            }
+        }
+    }
+
+    fun runOnce() {
+        update(clock.update().elapsedMillis)
+        draw()
+        handleEvents()
+    }
+
+    fun run() {
+        clock.update() // reset at start
+        while (!context.shouldClose()) {
+            runOnce()
+        }
     }
 }
