@@ -38,6 +38,8 @@ interface OpenGl {
     fun createProgram(): Int
     fun linkProgram(program: Int)
     fun bindProgram(program: Int): Int
+    fun deleteProgram(program: Int)
+
 
     // Shader
     fun createShader(type: Shader.Type): Int
@@ -60,9 +62,12 @@ interface OpenGl {
     fun createBuffer(type: Buffer.Type, usage: Buffer.Usage, data: DirectNativeByteBuffer): Int
     fun bindBuffer(handle: Int, type: Buffer.Type): Int
     fun updateBufferData(handle: Int, type: Buffer.Type, data: DirectNativeByteBuffer, byteOffset: Int = 0)
+    fun deleteBuffer(handle: Int)
+
 
     fun createAttributeArray(): Int
     fun bindAttributeArray(vao: Int): Int
+    fun deleteAttributeArray(vao: Int)
 
     // Textures
     fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectNativeByteBuffer): Int

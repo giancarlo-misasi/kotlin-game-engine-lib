@@ -53,4 +53,5 @@ abstract class Buffer private constructor(
 
     abstract fun bind(): Any
     abstract fun update(data: DirectNativeByteBuffer, byteOffset: Int = 0): Any
+    abstract fun delete()
 }

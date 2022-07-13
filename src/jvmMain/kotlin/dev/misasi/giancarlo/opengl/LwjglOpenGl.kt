@@ -32,7 +32,9 @@ import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.drawing.ShapeType
 import dev.misasi.giancarlo.math.Matrix4f
 import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
+import org.lwjgl.opengl.GL15
 import java.nio.ByteBuffer
+import java.nio.IntBuffer
 import java.nio.charset.Charset
 
 class LwjglOpenGl : OpenGl {
@@ -89,6 +91,10 @@ class LwjglOpenGl : OpenGl {
         return program
     }
 
+    override fun deleteProgram(program: Int) {
+        glVerify(this) { glDeleteProgram(program) }
+    }
+
     override fun createShader(type: Shader.Type): Int {
         val shaderType = shaderTypeMapping[type]!!;
         return glVerifyCreate(this, { glCreateShader(shaderType) }) { "SHADER(${type.name})" }
@@ -136,6 +142,7 @@ class LwjglOpenGl : OpenGl {
         glVerifyBound(this, GL_CURRENT_PROGRAM, program) { "PROGRAM<$program>" }
         when (value) {
             is Matrix4f -> glVerify(this) { glUniformMatrix4fv(uniform, false, value.data) }
+            is Float -> glVerify(this) { glUniform1f(uniform, value) }
             is Int -> glVerify(this) { glUniform1i(uniform, value) }
             else -> crash("Cannot set uniform, type '${value.javaClass}' not supported.")
         }
@@ -219,6 +226,10 @@ class LwjglOpenGl : OpenGl {
         glVerify(this) { glBufferSubData(GL_ARRAY_BUFFER, byteOffset.toLong(), data.byteBuffer) }
     }
 
+    override fun deleteBuffer(handle: Int) {
+        glVerify(this) { glDeleteBuffers(handle) }
+    }
+
     override fun createAttributeArray(): Int {
         return bindAttributeArray(glVerifyGenerate(this, ::glGenVertexArrays) { "VAO" })
     }
@@ -226,6 +237,10 @@ class LwjglOpenGl : OpenGl {
     override fun bindAttributeArray(vao: Int): Int {
         glVerify(this) { glBindVertexArray(vao) }
         return vao
+    }
+
+    override fun deleteAttributeArray(vao: Int) {
+        glVerify(this) { glDeleteVertexArrays(vao) }
     }
 
     override fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectNativeByteBuffer): Int {

@@ -52,6 +52,10 @@ class AttributeArray(private val gl: OpenGl, program: Program, specs: List<Attri
         unbind(gl)
     }
 
+    fun delete() {
+        gl.deleteAttributeArray(handle)
+    }
+
     private fun initializeAttributes(program: Program, specs: List<Attribute.Spec>): List<Attribute> {
         val attributes = mutableListOf<Attribute>()
         var offset = 0

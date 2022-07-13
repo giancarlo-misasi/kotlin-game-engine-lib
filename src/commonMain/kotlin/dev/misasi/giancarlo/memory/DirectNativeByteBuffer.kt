@@ -35,7 +35,7 @@ class DirectNativeByteBuffer(
     capacityInBytes: Int
 ) {
     private var index: Int = 0
-    var byteBuffer: ByteBuffer = ByteBuffer
+    val byteBuffer: ByteBuffer = ByteBuffer
         .allocateDirect(capacityInBytes)
         .order(ByteOrder.nativeOrder())
     val sizeInBytes: Int

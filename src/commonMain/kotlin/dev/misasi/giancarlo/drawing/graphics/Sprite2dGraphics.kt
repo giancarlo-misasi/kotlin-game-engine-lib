@@ -34,7 +34,7 @@ import dev.misasi.giancarlo.opengl.*
 
 class Sprite2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: Int) {
     private val program = Program(gl, Shaders.sprite2d())
-    private val uniformMap = UniformMap(gl, program, listOf("uMvp", "uEffect"))
+    private val uniformMap = UniformMap(gl, program, listOf("uMvp", "uAlpha", "uEffect"))
     private val attributeArray = AttributeArray(
         gl, program, listOf(
             Attribute.Spec("inXy", DataType.FLOAT, 2),
@@ -42,21 +42,22 @@ class Sprite2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEnt
             Attribute.Spec("inAlpha", DataType.FLOAT, 1)
         )
     )
-    private val totalSizeInBytes = 6 * attributeArray.totalSizeInBytes * maxEntities // 6 points, TODO Optimize to 4
     private val indexBuffer: IndexBuffer
+    private val totalSizeInBytes = 4 * attributeArray.totalSizeInBytes * maxEntities
     private val vertexBuffer = VertexBuffer(gl, bufferUsage, totalSizeInBytes)
     private val directBuffer = DirectNativeByteBuffer(totalSizeInBytes)
     private var drawOrders: MutableList<DrawOrder> = mutableListOf()
 
     init {
         val indexes = generateTriangleIndexes(maxEntities)
-        val data = DirectNativeByteBuffer(4 * indexes.size).putInts(indexes)
+        val data = DirectNativeByteBuffer(DataType.INT.size * indexes.size).putInts(indexes)
         indexBuffer = IndexBuffer(gl, Buffer.Usage.STATIC, data)
         attributeArray.attach(listOf(indexBuffer, vertexBuffer))
     }
 
     fun bindProgram() = program.bind()
     fun setModelViewProjection(mvp: Matrix4f) = uniformMap.update("uMvp", mvp)
+    fun setAlpha(alpha: Float) = uniformMap.update("uAlpha", alpha)
     fun setEffect(effect: Int) = uniformMap.update("uEffect", effect)
     fun updateVertexBuffer() = vertexBuffer.bind().update(directBuffer)
     fun draw() = DrawOrder.drawIndexed(gl, DataType.UNSIGNED_INT, drawOrders)
@@ -69,6 +70,14 @@ class Sprite2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEnt
             material.coordinates(),
             alpha?.toFloat()?.div(UByte.MAX_VALUE.toFloat()) ?: -1f
         )
+    }
+
+    fun delete() {
+        attributeArray.delete()
+        indexBuffer.delete()
+        vertexBuffer.delete()
+        program.delete()
+        drawOrders.clear()
     }
 
     private fun putSpriteIndexed(xy: Point4f, uv: Point4us, alpha: Float) {

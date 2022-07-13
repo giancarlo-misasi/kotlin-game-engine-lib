@@ -64,6 +64,10 @@ class Program(private val gl: OpenGl, shaderSpecs: List<Shader.Spec>) {
         return this
     }
 
+    fun delete() {
+        gl.deleteProgram(handle)
+    }
+
     companion object {
         private var boundHandle = 0
 

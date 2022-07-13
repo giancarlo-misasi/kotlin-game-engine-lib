@@ -44,6 +44,10 @@ class VertexBuffer : Buffer {
         return this
     }
 
+    override fun delete() {
+        gl.deleteBuffer(handle)
+    }
+
     companion object {
         private var boundHandle = 0
 
