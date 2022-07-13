@@ -27,7 +27,6 @@ package dev.misasi.giancarlo
 
 import dev.misasi.giancarlo.assets.Assets
 import dev.misasi.giancarlo.drawing.Animator
-import dev.misasi.giancarlo.drawing.Atlas
 import dev.misasi.giancarlo.drawing.graphics.Sprite2dGraphics
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.events.EventQueue
@@ -35,6 +34,7 @@ import dev.misasi.giancarlo.events.input.keyboard.Key
 import dev.misasi.giancarlo.events.input.keyboard.KeyAction
 import dev.misasi.giancarlo.events.input.keyboard.KeyEvent
 import dev.misasi.giancarlo.events.input.mouse.CursorMode
+import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
 import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
 import dev.misasi.giancarlo.events.input.window.ResizeEvent
 import dev.misasi.giancarlo.math.Vector2f
@@ -42,27 +42,35 @@ import dev.misasi.giancarlo.opengl.Buffer
 import dev.misasi.giancarlo.opengl.Camera
 import dev.misasi.giancarlo.opengl.DisplayContext
 import dev.misasi.giancarlo.opengl.LwjglGlfwDisplayContext
-import dev.misasi.giancarlo.ux.*
+import dev.misasi.giancarlo.ux.Screen
+import dev.misasi.giancarlo.ux.ScreenStack
+import dev.misasi.giancarlo.ux.ScreenState
+import dev.misasi.giancarlo.ux.ScreenTransition
 
-class TestScreen : Screen {
-    override val model: Boolean = false
-    override var state: ScreenState = ScreenState.WAITING
+lateinit var screenStack: ScreenStack
 
-    private lateinit var assets: Assets
-    private lateinit var atlasGeneral: Atlas
-    private lateinit var atlasOverworld: Atlas
+class TestScreen (private val assets: Assets, waitMs: Int = 0) : Screen() {
     private lateinit var spriteGfx: Sprite2dGraphics
     private var camera = Camera()
-    private var screenTransition = ScreenTransition(Transition(0, 1000, 1000))
+    private var alpha = -1f
+    private val screenTransition = ScreenTransition(this, mapOf(
+        ScreenState.WAITING to waitMs,
+        ScreenState.IN to 1500,
+        ScreenState.OUT to 1500
+    ))
 
     override fun onInit(context: DisplayContext) {
-        assets = Assets(context.gl)
-        atlasGeneral = assets.atlas("General")
-        atlasOverworld = assets.atlas("Overworld")
+        // So screens have additional state that let us draw everything with variation
+        // i.e. position, alpha
+        // We may want to share instances of these resources, or simply create new for every screen
+        // Possibly have a pool so that we can do loading in case init is slow
+
         spriteGfx = Sprite2dGraphics(context.gl, Buffer.Usage.DYNAMIC, 10000)
 
-        val orange = atlasOverworld.getMaterial("FloorOrange")
-        val purple = atlasOverworld.getMaterial("FloorPurple")
+        val atlasGeneral = assets.atlas("General")
+        val atlasOverworld = assets.atlas("Overworld")
+        val orange = atlasOverworld.material("FloorOrange")
+        val purple = atlasOverworld.material("FloorPurple")
 
         spriteGfx.clear()
         for (x in 0..800 step 16) {
@@ -78,24 +86,38 @@ class TestScreen : Screen {
     }
 
     override fun onUpdate(elapsedMs: Int) {
-        screenTransition.update(this, elapsedMs)
-        val completion = screenTransition.getCompletionPercentage(this)
-        if (completion != null) {
-            if (state == ScreenState.IN) {
-                camera = camera.copy(position = Animator.getTransitionPosition(Vector2f(-800f), Vector2f(), completion))
+        screenTransition.update(elapsedMs)
+
+        val transitionElapsedPercentage = screenTransition.elapsedPercentage()
+        if (transitionElapsedPercentage != null) {
+            when (state) {
+                ScreenState.IN -> alpha = Animator.fadeIn(transitionElapsedPercentage)
+//                ScreenState.IN -> camera = camera.copy(position = Animator.translate(Vector2f(-800f), Vector2f(), transitionElapsedPercentage))
+//                ScreenState.OUT -> camera = camera.copy(position = Animator.translate(Vector2f(), Vector2f(800f), transitionElapsedPercentage))
+                else -> {}
+            }
+            when (state) {
+                ScreenState.OUT -> alpha = Animator.fadeOut(transitionElapsedPercentage)
+                else -> {}
             }
         } else {
             camera = camera.copy(position = Vector2f())
+            alpha = -1f
         }
     }
 
     override fun onDraw(context: DisplayContext) {
         spriteGfx.bindProgram()
         spriteGfx.setModelViewProjection(context.viewport.getModelViewProjection(camera))
+        spriteGfx.setAlpha(alpha)
         spriteGfx.draw()
     }
 
     override fun onEvent(context: DisplayContext, event: Event) {
+        if (event is MouseButtonEvent) {
+            screenStack.push(TestScreen(assets, 1500))
+        }
+
         if (event is KeyEvent) {
             if (event.key == Key.KEY_ESCAPE && event.action == KeyAction.RELEASE) {
                 context.close()
@@ -122,6 +144,10 @@ class TestScreen : Screen {
             context.viewport.setActualScreenSize(context.gl, event.size)
         }
     }
+
+    override fun onDestroy(context: DisplayContext) {
+        spriteGfx.delete()
+    }
 }
 
 fun main() {
@@ -134,14 +160,16 @@ fun main() {
         refreshRate = 60,
         events = EventQueue(setOf())
     )
-
     context.enableKeyboardEvents(true)
     context.enableMouseEvents(true)
     context.enableMouseButtonEvents(true)
     context.enableScrollEvents(true)
     context.enableResizeEvents(true)
 
-    val stack = ScreenStack(context)
-    stack.push(TestScreen())
-    stack.run()
+    val assets = Assets(context.gl)
+
+    // todo improve this variable
+    screenStack = ScreenStack(context)
+    screenStack.push(TestScreen(assets))
+    screenStack.run()
 }

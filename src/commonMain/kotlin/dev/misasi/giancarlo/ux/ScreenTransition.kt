@@ -25,45 +25,35 @@
 
 package dev.misasi.giancarlo.ux
 
-import dev.misasi.giancarlo.system.Timer
+import dev.misasi.giancarlo.system.TimeAccumulator
 
-class ScreenTransition (private val transition: Transition) {
-    private val timer: Timer = Timer()
+class ScreenTransition(
+    private val screen: Screen,
+    private val transitionDurationsMs: Map<ScreenState, Int> = mapOf()
+) {
+    private val accumulator = TimeAccumulator()
 
-    fun restart() = timer.restart()
-
-    fun getCompletionPercentage(screen: Screen): Float? {
-        return when (screen.state) {
-            ScreenState.WAITING -> timer.getCompletionPercentage(transition.waitMs)
-            ScreenState.IN -> timer.getCompletionPercentage(transition.inMs)
-            ScreenState.OUT -> timer.getCompletionPercentage(transition.outMs)
-            else -> null
+    fun elapsedPercentage(): Float? {
+        val durationMs = transitionDurationsMs[screen.state]
+        return if (durationMs != null) {
+            accumulator.elapsedPercentage(durationMs)
+        } else {
+            null
         }
     }
 
-    fun update(screen: Screen, elapsedMs: Int) {
-        timer.update(elapsedMs)
-
-        if (screen.state == ScreenState.WAITING) {
-            if (timer.isComplete(transition.waitMs)) {
-                screen.state = ScreenState.IN
-                timer.restart()
-            }
-        } else if (screen.state == ScreenState.IN) {
-            if (timer.isComplete(transition.inMs)) {
-                screen.state = ScreenState.ACTIVE
-            }
-        } else if (screen.state == ScreenState.OUT) {
-            if (timer.isComplete(transition.outMs)) {
-                screen.state = ScreenState.HIDDEN
+    fun update(elapsedMs: Int) {
+        if (screen.state.hasNext()) {
+            accumulator.update(elapsedMs)
+            val durationMs = transitionDurationsMs[screen.state] ?: 0
+            if (accumulator.hasElapsed(durationMs)) {
+                screen.goToNextState()
+                reset()
             }
         }
     }
 
-    fun hide(screen: Screen) {
-        if (screen.state != ScreenState.HIDDEN && screen.state != ScreenState.OUT) {
-            screen.state = ScreenState.OUT
-            timer.restart()
-        }
+    fun reset() {
+        accumulator.reset()
     }
 }

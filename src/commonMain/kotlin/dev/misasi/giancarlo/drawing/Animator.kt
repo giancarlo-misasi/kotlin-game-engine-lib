@@ -27,23 +27,28 @@ package dev.misasi.giancarlo.drawing
 
 import dev.misasi.giancarlo.math.Vector2f
 import kotlin.math.max
+import kotlin.math.min
 
 class Animator {
     companion object {
-        fun getFadeInAlpha(percentage: Float) : Int {
-            return (255f * (1f - percentage)).toInt()
+        fun fadeIn(percentage: Float) : Float {
+            return max(0f, min(percentage, 1f))
         }
 
-        fun getFadeOutAlpha(percentage: Float) : Int {
-            return (255f * percentage).toInt()
+        fun fadeInByte(percentage: Float) : UByte {
+            return (255f * fadeIn(percentage)).toUInt().toUByte()
         }
 
-        fun getTransitionPosition(start: Vector2f, end: Vector2f, percentage: Float) : Vector2f {
+        fun fadeOut(percentage: Float) : Float {
+            return (1f - max(0f, min(percentage, 1f)))
+        }
+
+        fun fadeOutByte(percentage: Float) : Int {
+            return (255f * fadeOut(percentage)).toInt()
+        }
+
+        fun translate(start: Vector2f, end: Vector2f, percentage: Float) : Vector2f {
             return start.plus(end.minus(start).scale(percentage))
-        }
-
-        fun getPercentage(elapsedMillis: Int, animationDurationMillis: Int) : Float {
-            return elapsedMillis.toFloat() / max(animationDurationMillis, 1).toFloat()
         }
     }
 }

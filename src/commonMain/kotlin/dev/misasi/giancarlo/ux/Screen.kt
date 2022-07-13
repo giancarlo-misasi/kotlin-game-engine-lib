@@ -28,12 +28,23 @@ package dev.misasi.giancarlo.ux
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.opengl.DisplayContext
 
-interface Screen {
-    val model: Boolean
-    var state: ScreenState
+abstract class Screen {
+    var state: ScreenState = ScreenState.WAITING
+        private set
 
-    fun onInit(context: DisplayContext)
-    fun onUpdate(elapsedMs: Int)
-    fun onDraw(context: DisplayContext)
-    fun onEvent(context: DisplayContext, event: Event)
+    fun goToNextState() {
+        state.next()?.let { state = it }
+    }
+
+    fun close() {
+        if (state == ScreenState.ACTIVE) {
+            state = ScreenState.OUT
+        }
+    }
+
+    abstract fun onInit(context: DisplayContext)
+    abstract fun onUpdate(elapsedMs: Int)
+    abstract fun onDraw(context: DisplayContext)
+    abstract fun onEvent(context: DisplayContext, event: Event)
+    abstract fun onDestroy(context: DisplayContext)
 }

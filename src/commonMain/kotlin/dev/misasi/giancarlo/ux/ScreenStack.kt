@@ -44,8 +44,14 @@ class ScreenStack (private val context: DisplayContext) {
 
     fun update(elapsedMs: Int) {
         val workList = ArrayDeque(screens)
+        var transitionOut = false
         while (!workList.isEmpty()) {
             val screen = workList.removeLast()
+
+            // Check if we need to transition
+            if (transitionOut) {
+                screen.close()
+            }
 
             // Update the screen
             screen.onUpdate(elapsedMs)
@@ -53,6 +59,9 @@ class ScreenStack (private val context: DisplayContext) {
             // Remove the screen once it is hidden
             if (screen.state == ScreenState.HIDDEN) {
                 screens.remove(screen)
+                screen.onDestroy(context)
+            } else {
+                transitionOut = true
             }
         }
     }
@@ -93,7 +102,10 @@ class ScreenStack (private val context: DisplayContext) {
     }
 
     fun runOnce() {
-        update(clock.update().elapsedMillis)
+        val elapsedMs = clock.elapsedSinceUpdateMs(1000)
+        clock.update()
+
+        update(elapsedMs)
         draw()
         handleEvents()
     }

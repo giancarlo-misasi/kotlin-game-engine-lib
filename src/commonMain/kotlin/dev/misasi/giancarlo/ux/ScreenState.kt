@@ -30,5 +30,19 @@ enum class ScreenState {
     IN,
     OUT,
     ACTIVE,
-    HIDDEN
+    HIDDEN;
+
+    fun next(): ScreenState? = Companion.next(this)
+    fun hasNext(): Boolean = Companion.hasNext(this)
+
+    companion object {
+        private val transitions: Map<ScreenState, ScreenState> = mapOf(
+            WAITING to IN,
+            IN to ACTIVE,
+            OUT to HIDDEN
+        )
+
+        fun next(currentState: ScreenState): ScreenState? = transitions[currentState]
+        fun hasNext(currentState: ScreenState): Boolean = transitions.containsKey(currentState)
+    }
 }

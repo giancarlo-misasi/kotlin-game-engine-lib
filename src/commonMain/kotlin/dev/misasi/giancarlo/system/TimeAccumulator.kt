@@ -27,22 +27,19 @@ package dev.misasi.giancarlo.system
 
 import kotlin.math.max
 
-class Timer {
-    private var totalElapsedMs: Int = 0
+class TimeAccumulator {
+    private var accumulatedMs: Int = 0
 
-    fun isComplete(durationMs: Int): Boolean {
-        return totalElapsedMs >= durationMs
+    fun hasElapsed(durationMs: Int): Boolean = accumulatedMs >= durationMs
+    fun elapsedPercentage(durationMs: Int): Float = accumulatedMs / max(durationMs, accumulatedMs).toFloat()
+
+    fun update(elapsedMillis: Int): TimeAccumulator {
+        accumulatedMs += elapsedMillis
+        return this
     }
 
-    fun getCompletionPercentage(durationMs: Int): Float {
-        return totalElapsedMs / max(durationMs, totalElapsedMs).toFloat()
-    }
-
-    fun update(elapsedMillis: Int) {
-        totalElapsedMs += elapsedMillis
-    }
-
-    fun restart() {
-        totalElapsedMs = 0
+    fun reset(): TimeAccumulator {
+        accumulatedMs = 0
+        return this
     }
 }

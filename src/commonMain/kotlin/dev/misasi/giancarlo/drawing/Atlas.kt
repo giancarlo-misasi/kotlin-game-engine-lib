@@ -31,12 +31,12 @@ class Atlas (
     private val materials: Map<String, Material>,
     private val materialSets: Map<String, MaterialSet>
 ) {
-    fun getMaterial(name: String) : Material {
+    fun material(name: String) : Material {
         return materials[name]
             ?: crash("Material '$name' not found.")
     }
 
-    fun getMaterialSet(name: String) : MaterialSet {
+    fun materialSet(name: String) : MaterialSet {
         return materialSets[name]
             ?: crash("MaterialSet '$name' not found.")
     }

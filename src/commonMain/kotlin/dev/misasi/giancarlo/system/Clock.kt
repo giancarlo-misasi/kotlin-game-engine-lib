@@ -31,21 +31,17 @@ import kotlin.math.min
 
 class Clock {
 
-    @Volatile
-    var elapsedMillis = 0
+    private val startMs: Long = getTimeMillis()
 
     @Volatile
-    var lastTimeMillis = getTimeMillis()
+    private var lastUpdateMs = startMs
+
+    fun elapsedSinceStartMs(): Long = getTimeMillis() - startMs
+    fun elapsedSinceUpdateMs(maxStepMs: Int): Int = max(0, min(getTimeMillis() - lastUpdateMs, maxStepMs.toLong()).toInt())
+    fun update() = update(getTimeMillis())
 
     @Synchronized
-    fun update(): Clock {
-        val currentTimeMillis = getTimeMillis()
-        elapsedMillis = max(0, min(currentTimeMillis - lastTimeMillis, MAX_STEP_MILLIS)).toInt()
-        lastTimeMillis = currentTimeMillis
-        return this
-    }
-
-    companion object {
-        private const val MAX_STEP_MILLIS: Long = 1000
+    private fun update(currentTimeMs: Long) {
+        this.lastUpdateMs = currentTimeMs
     }
 }

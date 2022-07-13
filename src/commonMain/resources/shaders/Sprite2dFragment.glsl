@@ -8,6 +8,7 @@ const vec3 colorRetro = inverse255 * vec3(140.0, 173.0, 15.0);
 
 // uniforms
 uniform sampler2D uTexture0;
+uniform float uAlpha; // alpha override, applies if >= 0
 uniform int uEffect; // 1 = sepia, 2 = retro
 
 // input
@@ -37,6 +38,11 @@ void main() {
     // apply alpha
     if (inAlpha >= 0.0) {
         c.a = inAlpha;
+    }
+
+    // blend the alpha if override set
+    if (uAlpha >= 0.0) {
+        c.a *= uAlpha;
     }
 
     // apply effects

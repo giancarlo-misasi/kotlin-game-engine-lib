@@ -28,12 +28,12 @@ package dev.misasi.giancarlo.drawing
 import dev.misasi.giancarlo.math.Point4us
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.opengl.Texture
-import dev.misasi.giancarlo.system.Timer
+import dev.misasi.giancarlo.system.TimeAccumulator
 
 class AnimatedMaterial (
     private val materialSet: MaterialSet
 ) : Material {
-    private val timer = Timer()
+    private val accumulator = TimeAccumulator()
     private var index: Int = 0
 
     override fun name(): String = currentFrame().name()
@@ -43,15 +43,15 @@ class AnimatedMaterial (
     private fun currentFrame() : Material = materialSet.frames[index]
 
     fun update(elapsedMillis: Int) {
-        timer.update(elapsedMillis)
-        if (timer.isComplete(materialSet.frameDurationMillis)) {
-            timer.restart()
+        accumulator.update(elapsedMillis)
+        if (accumulator.hasElapsed(materialSet.frameDurationMillis)) {
+            accumulator.reset()
             index = (index + 1) % materialSet.frames.size
         }
     }
 
     fun restart() {
-        timer.restart()
+        accumulator.reset()
         index = 0
     }
 }
