@@ -34,7 +34,9 @@ class ScreenStack (private val context: DisplayContext) {
     private val clock = Clock()
 
     init {
-        context.gl.setClearColor(Rgba8.BLACK)
+//        context.gl.setClearColor(Rgba8.BLACK)
+        context.gl.setClearColor(Rgba8.RED)
+
     }
 
     fun push(screen: Screen) {

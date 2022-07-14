@@ -70,7 +70,7 @@ data class Point4f (val tl: Vector2f, val tr: Vector2f, val br: Vector2f, val bl
     }
 
     fun toPoint4us(): Point4us {
-        return Point4us(tl.toVector2us(), tr.toVector2us(), br.toVector2us(), bl.toVector2us())
+        return Point4us(tl.toNormalizedVector2us(), tr.toNormalizedVector2us(), br.toNormalizedVector2us(), bl.toNormalizedVector2us())
     }
 }
 

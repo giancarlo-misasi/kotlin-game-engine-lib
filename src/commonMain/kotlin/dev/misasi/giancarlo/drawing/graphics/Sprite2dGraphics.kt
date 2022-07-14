@@ -34,7 +34,7 @@ import dev.misasi.giancarlo.opengl.*
 
 class Sprite2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: Int) {
     private val program = Program(gl, Shaders.sprite2d())
-    private val uniformMap = UniformMap(gl, program, listOf("uMvp", "uAlpha", "uEffect"))
+    private val uniformMap = UniformMap(gl, program, listOf("uResolution", "uMvp", "uFxaa", "uAlpha", "uEffect"))
     private val attributeArray = AttributeArray(
         gl, program, listOf(
             Attribute.Spec("inXy", DataType.FLOAT, 2),
@@ -56,7 +56,9 @@ class Sprite2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEnt
     }
 
     fun bindProgram() = program.bind()
+    fun setResolution(resolution: Vector2f) = uniformMap.update("uResolution", resolution)
     fun setModelViewProjection(mvp: Matrix4f) = uniformMap.update("uMvp", mvp)
+    fun setFxaa(enabled: Boolean) = uniformMap.update("uFxaa", enabled)
     fun setAlpha(alpha: Float) = uniformMap.update("uAlpha", alpha)
     fun setEffect(effect: Int) = uniformMap.update("uEffect", effect)
     fun updateVertexBuffer() = vertexBuffer.bind().update(directBuffer)

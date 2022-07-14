@@ -29,22 +29,24 @@ import dev.misasi.giancarlo.math.Matrix4f
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector3f
 
-class Viewport(gl: OpenGl, private var targetResolution: Vector2f, private var actualScreenSize: Vector2f) {
+class Viewport(private val gl: OpenGl, targetResolution: Vector2f, actualScreenSize: Vector2f) {
     private lateinit var adjustedScreenSize: Vector2f
     private lateinit var offset: Vector2f
     private lateinit var scale: Vector2f
 
+    var targetResolution: Vector2f = targetResolution
+        set(value) {
+            field = value
+            update(gl)
+        }
+
+    var actualScreenSize: Vector2f = actualScreenSize
+        set(value) {
+            field = value
+            update(gl)
+        }
+
     init {
-        update(gl)
-    }
-
-    fun setTargetResolution(gl: OpenGl, targetResolution: Vector2f) {
-        this.targetResolution = targetResolution
-        update(gl)
-    }
-
-    fun setActualScreenSize(gl: OpenGl, actualScreenSize: Vector2f) {
-        this.actualScreenSize = actualScreenSize
         update(gl)
     }
 

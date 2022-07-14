@@ -26,15 +26,13 @@
 package dev.misasi.giancarlo.opengl
 
 import org.lwjgl.opengl.GL40.*
-
 import dev.misasi.giancarlo.crash
 import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.drawing.ShapeType
 import dev.misasi.giancarlo.math.Matrix4f
+import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
-import org.lwjgl.opengl.GL15
 import java.nio.ByteBuffer
-import java.nio.IntBuffer
 import java.nio.charset.Charset
 
 class LwjglOpenGl : OpenGl {
@@ -71,6 +69,11 @@ class LwjglOpenGl : OpenGl {
             DataType.UNSIGNED_BYTE to GL_UNSIGNED_BYTE
         )
 
+        private val textureFilter = mapOf(
+            Texture.Filter.NEAREST to GL_NEAREST,
+            Texture.Filter.LINEAR to GL_LINEAR
+        )
+
         private val textureFormat = mapOf(
             Rgba8.Format.BGRA to GL_BGRA,
             Rgba8.Format.RGBA to GL_RGBA
@@ -83,7 +86,7 @@ class LwjglOpenGl : OpenGl {
 
     override fun linkProgram(program: Int) {
         glVerify(this) { glLinkProgram(program) }
-        glVerifyStatus(this, ::glGetProgramiv, program, GL_LINK_STATUS, ::glGetProgramInfoLog);
+        glVerifyStatus(this, ::glGetProgramiv, program, GL_LINK_STATUS, ::glGetProgramInfoLog)
     }
 
     override fun bindProgram(program: Int): Int {
@@ -96,14 +99,14 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun createShader(type: Shader.Type): Int {
-        val shaderType = shaderTypeMapping[type]!!;
+        val shaderType = shaderTypeMapping[type]!!
         return glVerifyCreate(this, { glCreateShader(shaderType) }) { "SHADER(${type.name})" }
     }
 
     override fun compileShader(shader: Int, source: String) {
         glVerify(this) { glShaderSource(shader, source) }
         glVerify(this) { glCompileShader(shader) }
-        glVerifyStatus(this, ::glGetShaderiv, shader, GL_COMPILE_STATUS, ::glGetShaderInfoLog);
+        glVerifyStatus(this, ::glGetShaderiv, shader, GL_COMPILE_STATUS, ::glGetShaderInfoLog)
     }
 
     override fun attachShader(program: Int, shader: Int) {
@@ -142,8 +145,10 @@ class LwjglOpenGl : OpenGl {
         glVerifyBound(this, GL_CURRENT_PROGRAM, program) { "PROGRAM<$program>" }
         when (value) {
             is Matrix4f -> glVerify(this) { glUniformMatrix4fv(uniform, false, value.data) }
+            is Vector2f -> glVerify(this) { glUniform2f(uniform, value.x, value.y) }
             is Float -> glVerify(this) { glUniform1f(uniform, value) }
             is Int -> glVerify(this) { glUniform1i(uniform, value) }
+            is Boolean -> glVerify(this) { glUniform1i(uniform, if (value) 1 else 0) }
             else -> crash("Cannot set uniform, type '${value.javaClass}' not supported.")
         }
     }
@@ -243,9 +248,11 @@ class LwjglOpenGl : OpenGl {
         glVerify(this) { glDeleteVertexArrays(vao) }
     }
 
-    override fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectNativeByteBuffer): Int {
+    override fun createTexture2d(width: Int, height: Int, filter: Texture.Filter, format: Rgba8.Format, data: DirectNativeByteBuffer?): Int {
         val texture = bindTexture2d(glVerifyGenerate(this, ::glGenTextures) { "TEX2D" })
-        val format = textureFormat[format]!!
+        val filterParameter = textureFilter[filter]!!
+        val formatParameter = textureFormat[format]!!
+        val borderColor = Rgba8.RED
         glVerify(this) {
             glTexImage2D(
                 GL_TEXTURE_2D,
@@ -254,15 +261,25 @@ class LwjglOpenGl : OpenGl {
                 width,
                 height,
                 0,
-                format,
+                formatParameter,
                 GL_UNSIGNED_BYTE,
-                data.byteBuffer
+                data?.byteBuffer
             )
         }
-        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) }
-        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST) }
-        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE) }
-        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE) }
+        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterParameter) }
+        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterParameter) }
+        glVerify(this) {
+            glTexParameterfv(
+                GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, floatArrayOf(
+                    borderColor.floatR,
+                    borderColor.floatG,
+                    borderColor.floatB,
+                    borderColor.floatA
+                )
+            )
+        }
+        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER) }
+        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER) }
         return texture
     }
 
@@ -273,6 +290,23 @@ class LwjglOpenGl : OpenGl {
 
     override fun setActiveTextureUnit(target: Int) {
         glVerify(this) { glActiveTexture(GL_TEXTURE0 + target) }
+    }
+
+    override fun createFrameBuffer(): Int {
+        return glVerifyGenerate(this, ::glGenFramebuffers) { "FRAME BUFFER" }
+    }
+
+    override fun bindFrameBuffer(handle: Int): Int {
+        glVerify(this) { glBindFramebuffer(GL_FRAMEBUFFER, handle) }
+        return handle
+    }
+
+    override fun attachTexture(texture: Int) {
+        glVerify (this) { glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0) }
+        val status = glVerify<Int> (this) { glCheckFramebufferStatus(GL_FRAMEBUFFER) }
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            crash("Failed to attach texture $texture to frame buffer.")
+        }
     }
 
     override fun setViewport(x: Int, y: Int, width: Int, height: Int) {
@@ -343,28 +377,14 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun getErrorMessage(): String? {
-        when (val errorCode = glGetError()) {
-            GL_NO_ERROR -> {
-                return null
-            }
-            GL_INVALID_ENUM -> {
-                return "OGL Error: Invalid enum parameter."
-            }
-            GL_INVALID_VALUE -> {
-                return "OGL Error: Invalid value parameter."
-            }
-            GL_INVALID_OPERATION -> {
-                return "OGL Error: Invalid operation."
-            }
-            GL_OUT_OF_MEMORY -> {
-                return "OGL Error: Out of memory."
-            }
-            GL_INVALID_FRAMEBUFFER_OPERATION -> {
-                return "OGL Error: Invalid framebuffer operation."
-            }
-            else -> {
-                return "OGL Error: $errorCode"
-            }
+        return when (val errorCode = glGetError()) {
+            GL_NO_ERROR -> null
+            GL_INVALID_ENUM -> "OGL Error: Invalid enum parameter."
+            GL_INVALID_VALUE -> "OGL Error: Invalid value parameter."
+            GL_INVALID_OPERATION -> "OGL Error: Invalid operation."
+            GL_OUT_OF_MEMORY -> "OGL Error: Out of memory."
+            GL_INVALID_FRAMEBUFFER_OPERATION -> "OGL Error: Invalid framebuffer operation."
+            else -> "OGL Error: $errorCode"
         }
     }
 

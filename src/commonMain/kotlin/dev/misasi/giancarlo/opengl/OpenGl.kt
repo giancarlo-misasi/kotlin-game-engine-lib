@@ -70,9 +70,14 @@ interface OpenGl {
     fun deleteAttributeArray(vao: Int)
 
     // Textures
-    fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectNativeByteBuffer): Int
+    fun createTexture2d(width: Int, height: Int, filter: Texture.Filter, format: Rgba8.Format, data: DirectNativeByteBuffer? = null): Int
     fun bindTexture2d(texture: Int): Int
     fun setActiveTextureUnit(target: Int)
+
+    // Frame buffers
+    fun createFrameBuffer(): Int
+    fun bindFrameBuffer(handle: Int): Int
+    fun attachTexture(texture: Int)
 
     // Viewport
     fun setViewport(x: Int, y: Int, width: Int, height: Int)

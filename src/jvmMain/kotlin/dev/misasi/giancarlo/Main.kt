@@ -27,6 +27,7 @@ package dev.misasi.giancarlo
 
 import dev.misasi.giancarlo.assets.Assets
 import dev.misasi.giancarlo.drawing.Animator
+import dev.misasi.giancarlo.drawing.StaticMaterial
 import dev.misasi.giancarlo.drawing.graphics.Sprite2dGraphics
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.events.EventQueue
@@ -37,11 +38,9 @@ import dev.misasi.giancarlo.events.input.mouse.CursorMode
 import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
 import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
 import dev.misasi.giancarlo.events.input.window.ResizeEvent
+import dev.misasi.giancarlo.math.Point4f
 import dev.misasi.giancarlo.math.Vector2f
-import dev.misasi.giancarlo.opengl.Buffer
-import dev.misasi.giancarlo.opengl.Camera
-import dev.misasi.giancarlo.opengl.DisplayContext
-import dev.misasi.giancarlo.opengl.LwjglGlfwDisplayContext
+import dev.misasi.giancarlo.opengl.*
 import dev.misasi.giancarlo.ux.Screen
 import dev.misasi.giancarlo.ux.ScreenStack
 import dev.misasi.giancarlo.ux.ScreenState
@@ -51,6 +50,8 @@ lateinit var screenStack: ScreenStack
 
 class TestScreen (private val assets: Assets, waitMs: Int = 0) : Screen() {
     private lateinit var spriteGfx: Sprite2dGraphics
+    private lateinit var frameBuffer: FrameBuffer
+    private lateinit var postProcessingGfx: Sprite2dGraphics
     private var camera = Camera()
     private var alpha = -1f
     private val screenTransition = ScreenTransition(this, mapOf(
@@ -71,6 +72,7 @@ class TestScreen (private val assets: Assets, waitMs: Int = 0) : Screen() {
         val atlasOverworld = assets.atlas("Overworld")
         val orange = atlasOverworld.material("FloorOrange")
         val purple = atlasOverworld.material("FloorPurple")
+        val player = atlasGeneral.material("PlayerWalkDown1")
 
         spriteGfx.clear()
         for (x in 0..800 step 16) {
@@ -82,7 +84,22 @@ class TestScreen (private val assets: Assets, waitMs: Int = 0) : Screen() {
                 }
             }
         }
+        spriteGfx.putSprite(Vector2f(100f, 100f), player)
         spriteGfx.updateVertexBuffer()
+
+        val screenSize = context.viewport.actualScreenSize.toVector2i()
+        val postProcessingMaterial = StaticMaterial("postProcessing",
+            Texture(context.gl, screenSize.x, screenSize.y),
+            Point4f.create(Vector2f(), Vector2f(1f, 1f)).toPoint4us(),
+            context.viewport.actualScreenSize
+        )
+
+        frameBuffer = FrameBuffer(context.gl)
+        frameBuffer.attach(postProcessingMaterial.texture())
+        postProcessingGfx = Sprite2dGraphics(context.gl, Buffer.Usage.STATIC, 1)
+        postProcessingGfx.clear()
+        postProcessingGfx.putSprite(Vector2f(), postProcessingMaterial)
+        postProcessingGfx.updateVertexBuffer()
     }
 
     override fun onUpdate(elapsedMs: Int) {
@@ -107,10 +124,19 @@ class TestScreen (private val assets: Assets, waitMs: Int = 0) : Screen() {
     }
 
     override fun onDraw(context: DisplayContext) {
+        frameBuffer.bind()
         spriteGfx.bindProgram()
         spriteGfx.setModelViewProjection(context.viewport.getModelViewProjection(camera))
         spriteGfx.setAlpha(alpha)
         spriteGfx.draw()
+        FrameBuffer.unbind(context.gl)
+
+        postProcessingGfx.bindProgram()
+        postProcessingGfx.setResolution(context.viewport.actualScreenSize)
+        postProcessingGfx.setModelViewProjection(context.viewport.getModelViewProjection(camera))
+//        postProcessingGfx.setFxaa(true)
+        postProcessingGfx.setEffect(2)
+        postProcessingGfx.draw()
     }
 
     override fun onEvent(context: DisplayContext, event: Event) {
@@ -141,7 +167,7 @@ class TestScreen (private val assets: Assets, waitMs: Int = 0) : Screen() {
         }
 
         if (event is ResizeEvent) {
-            context.viewport.setActualScreenSize(context.gl, event.size)
+            context.viewport.actualScreenSize = event.size
         }
     }
 

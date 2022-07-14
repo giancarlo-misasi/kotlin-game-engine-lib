@@ -26,23 +26,20 @@
 package dev.misasi.giancarlo.opengl
 
 import dev.misasi.giancarlo.drawing.Bitmap
+import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
 
-class Texture(private val gl: OpenGl, bitmap: Bitmap) {
-    private val handle: Int
+class Texture private constructor(private val gl: OpenGl, private val handle: Int, val width: Int, val height: Int) {
+    constructor(gl: OpenGl, width: Int, height: Int, format: Rgba8.Format = Rgba8.Format.RGBA, filter: Filter = Filter.NEAREST)
+            : this(gl, gl.createTexture2d(width, height, filter, format), width, height)
 
-    init {
-        val data = DirectNativeByteBuffer(bitmap.sizeInBytes).putIntArray(bitmap.pixels)
-        handle = gl.createTexture2d(bitmap.width, bitmap.height, bitmap.format, data)
-    }
+    constructor(gl: OpenGl, bmp: Bitmap, filter: Filter = Filter.NEAREST)
+            : this(gl, gl.createTexture2d(bmp.width, bmp.height, filter, bmp.format, buffer(bmp)), bmp.width, bmp.height)
 
-    val width by lazy {
-        bitmap.width
-    }
-
-    val height by lazy {
-        bitmap.height
+    enum class Filter {
+        NEAREST,
+        LINEAR
     }
 
     val size by lazy {
@@ -57,6 +54,12 @@ class Texture(private val gl: OpenGl, bitmap: Bitmap) {
         return this
     }
 
+    fun attach() {
+        bind()
+        gl.attachTexture(handle)
+        unbind(gl)
+    }
+
     companion object {
         private var boundHandle = 0
 
@@ -65,6 +68,10 @@ class Texture(private val gl: OpenGl, bitmap: Bitmap) {
                 gl.bindTexture2d(0)
                 boundHandle = 0
             }
+        }
+
+        private fun buffer(bitmap: Bitmap): DirectNativeByteBuffer {
+            return DirectNativeByteBuffer(bitmap.sizeInBytes).putIntArray(bitmap.pixels)
         }
     }
 }
