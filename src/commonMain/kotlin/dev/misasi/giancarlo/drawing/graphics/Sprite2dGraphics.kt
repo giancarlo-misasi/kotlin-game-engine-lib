@@ -57,7 +57,7 @@ class Sprite2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEnt
 
     fun bindProgram() = program.bind()
     fun setResolution(resolution: Vector2f) = uniformMap.update("uResolution", resolution)
-    fun setModelViewProjection(mvp: Matrix4f) = uniformMap.update("uMvp", mvp)
+    fun setMvp(mvp: Matrix4f) = uniformMap.update("uMvp", mvp)
     fun setFxaa(enabled: Boolean) = uniformMap.update("uFxaa", enabled)
     fun setAlpha(alpha: Float) = uniformMap.update("uAlpha", alpha)
     fun setEffect(effect: Int) = uniformMap.update("uEffect", effect)
@@ -65,11 +65,11 @@ class Sprite2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEnt
     fun draw() = DrawOrder.drawIndexed(gl, DataType.UNSIGNED_INT, drawOrders)
     fun clear() = directBuffer.reset().also { drawOrders.clear() }
 
-    fun putSprite(position: Vector2f, material: Material, rotation: Rotation = Rotation.None, alpha: UByte? = null) {
+    fun putSprite(position: Vector2f, size: Vector2f, material: Material, rotation: Rotation? = null, flip: Flip? = null, alpha: UByte? = null) {
         DrawOrder.updateDrawOrder(drawOrders, program, attributeArray, material)
         putSpriteIndexed(
-            Point4f.create(position, material.size(), rotation),
-            material.coordinates(),
+            Point4f.create(position, size, rotation),
+            material.coordinates().flip(flip).toPoint4us(),
             alpha?.toFloat()?.div(UByte.MAX_VALUE.toFloat()) ?: -1f
         )
     }

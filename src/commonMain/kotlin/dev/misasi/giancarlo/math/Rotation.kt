@@ -26,30 +26,21 @@
 package dev.misasi.giancarlo.math
 
 enum class Rotation {
-    None,
-    Rotate90,
-    Rotate180,
-    Rotate270;
+    DEGREES_90,
+    DEGREES_180,
+    DEGREES_270;
 
     companion object {
-        fun fromDirection(facingDirection: Direction) : Rotation {
+        fun fromDirection(facingDirection: Direction) : Rotation? {
             return when (facingDirection) {
-                Direction.Left,
-                Direction.DownLeft -> {
-                    Rotate90
-                }
-                Direction.Up,
-                Direction.UpLeft -> {
-                    Rotate180
-                }
-                Direction.Right,
-                Direction.UpRight -> {
-                    Rotate270
-                }
-                Direction.Down,
-                Direction.DownRight -> {
-                    None
-                }
+                Direction.LEFT,
+                Direction.DOWN_LEFT -> DEGREES_90
+                Direction.UP,
+                Direction.UP_LEFT -> DEGREES_180
+                Direction.RIGHT,
+                Direction.UP_RIGHT -> DEGREES_270
+                Direction.DOWN,
+                Direction.DOWN_RIGHT -> null
             }
         }
     }

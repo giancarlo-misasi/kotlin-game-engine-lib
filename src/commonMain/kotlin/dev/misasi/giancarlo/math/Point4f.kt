@@ -33,39 +33,31 @@ data class Point4f (val tl: Vector2f, val tr: Vector2f, val br: Vector2f, val bl
             return Point4f(position, Vector2f(br.x, position.y), br, Vector2f(position.x, br.y))
         }
 
-        fun create(positionTl: Vector2f, size: Vector2f, rotation: Rotation) : Point4f {
+        fun create(positionTl: Vector2f, size: Vector2f, rotation: Rotation?) : Point4f {
             val br = positionTl.plus(size)
             return when (rotation) {
-                Rotation.None -> {
-                    Point4f(positionTl, Vector2f(br.x, positionTl.y), br, Vector2f(positionTl.x, br.y))
-                }
-                Rotation.Rotate90 -> {
-                    Point4f(Vector2f(br.x, positionTl.y), br, Vector2f(positionTl.x, br.y), positionTl)
-                }
-                Rotation.Rotate180 -> {
-                    Point4f(br, Vector2f(positionTl.x, br.y), positionTl, Vector2f(br.x, positionTl.y))
-                }
-                Rotation.Rotate270 -> {
-                    Point4f(Vector2f(positionTl.x, br.y), positionTl, Vector2f(br.x, positionTl.y), br)
-                }
+                Rotation.DEGREES_90 -> Point4f(Vector2f(br.x, positionTl.y), br, Vector2f(positionTl.x, br.y), positionTl)
+                Rotation.DEGREES_180 -> Point4f(br, Vector2f(positionTl.x, br.y), positionTl, Vector2f(br.x, positionTl.y))
+                Rotation.DEGREES_270 -> Point4f(Vector2f(positionTl.x, br.y), positionTl, Vector2f(br.x, positionTl.y), br)
+                else -> Point4f(positionTl, Vector2f(br.x, positionTl.y), br, Vector2f(positionTl.x, br.y))
             }
         }
     }
 
     fun rotate(rotation: Rotation) : Point4f {
         return when (rotation) {
-            Rotation.None -> {
-                this.copy()
-            }
-            Rotation.Rotate90 -> {
-                Point4f(Vector2f(br.x, tl.y), br, Vector2f(tl.x, br.y), tl)
-            }
-            Rotation.Rotate180 -> {
-                Point4f(br, Vector2f(tl.x, br.y), tl, Vector2f(br.x, tl.y))
-            }
-            Rotation.Rotate270 -> {
-                Point4f(Vector2f(tl.x, br.y), tl, Vector2f(br.x, tl.y), br)
-            }
+            Rotation.DEGREES_90 -> Point4f(Vector2f(br.x, tl.y), br, Vector2f(tl.x, br.y), tl)
+            Rotation.DEGREES_180 -> Point4f(br, Vector2f(tl.x, br.y), tl, Vector2f(br.x, tl.y))
+            Rotation.DEGREES_270 -> Point4f(Vector2f(tl.x, br.y), tl, Vector2f(br.x, tl.y), br)
+            else -> this.copy()
+        }
+    }
+
+    fun flip(flip: Flip?): Point4f {
+        return if (flip == null) {
+            this
+        } else {
+            Point4f(tl.flip(flip), tr.flip(flip), br.flip(flip), bl.flip(flip))
         }
     }
 

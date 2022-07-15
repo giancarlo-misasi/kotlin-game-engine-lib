@@ -97,7 +97,7 @@ class AtlasLoader (
         val size = Vector2f(tokens[4].toFloat(), tokens[5].toFloat())
         val uvPosition = position.divide(texture.size)
         val uvSize = size.divide(texture.size)
-        return StaticMaterial(name, texture, Point4f.create(uvPosition, uvSize).toPoint4us(), size)
+        return StaticMaterial(name, texture, Point4f.create(uvPosition, uvSize))
     }
 
     private fun createSet(tokens: List<String>, materials: Map<String, StaticMaterial>): MaterialSet {

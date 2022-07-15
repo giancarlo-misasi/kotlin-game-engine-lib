@@ -25,9 +25,26 @@
 
 package dev.misasi.giancarlo.opengl
 
+import dev.misasi.giancarlo.math.Matrix4f
 import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.math.Vector3f
 
 data class Camera (
     val position: Vector2f = Vector2f(),
     val zoom: Float = 1f // bigger numbers zoom in, smaller zoom out
-)
+) {
+    fun mvp(targetResolution: Vector2f): Matrix4f = Companion.mvp(targetResolution, position, Vector2f(zoom, zoom))
+
+    companion object {
+        fun mvp(targetResolution: Vector2f, position: Vector2f = Vector2f(), scale: Vector2f = Vector2f(1f, 1f)): Matrix4f {
+            val model = Matrix4f.scale(scale)
+            val view = Matrix4f.lookAt(
+                Vector3f(position, 0.5f),
+                Vector3f(position, 0.0f),
+                Vector3f(0.0f, 1.0f, 0.0f)
+            )
+            val projection = Matrix4f.ortho(targetResolution)
+            return projection.multiply(view).multiply(model).transpose
+        }
+    }
+}

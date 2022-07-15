@@ -60,6 +60,10 @@ class Texture private constructor(private val gl: OpenGl, private val handle: In
         unbind(gl)
     }
 
+    fun delete() {
+        gl.deleteTexture2d(handle)
+    }
+
     companion object {
         private var boundHandle = 0
 

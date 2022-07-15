@@ -25,18 +25,15 @@
 
 package dev.misasi.giancarlo.drawing
 
-import dev.misasi.giancarlo.math.Point4us
-import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.math.Point4f
 import dev.misasi.giancarlo.opengl.Texture
 
 class StaticMaterial(
     private val name: String,
     private val texture: Texture,
-    private val coordinates: Point4us,
-    private val size: Vector2f
+    private val coordinates: Point4f,
 ) : Material {
     override fun name(): String = name
     override fun texture(): Texture = texture
-    override fun coordinates(): Point4us = coordinates
-    override fun size(): Vector2f = size
+    override fun coordinates(): Point4f = coordinates
 }

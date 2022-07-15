@@ -53,7 +53,7 @@ class LwjglGlfwDisplayContext(
 ) : DisplayContext {
     private val window: Long
     override val gl: OpenGl
-    override val viewport: Viewport
+    override val view: Viewport
 
     init {
         // Setup an error callback. The default implementation
@@ -97,7 +97,7 @@ class LwjglGlfwDisplayContext(
 
         // Setup the viewport for events
         val actualScreenSize = if (fullScreen) targetResolution else getActualWindowSize()
-        viewport = Viewport(gl, targetResolution, actualScreenSize)
+        view = Viewport(gl, targetResolution, actualScreenSize)
     }
 
 //    override fun getOpenGl() = gl
@@ -165,7 +165,8 @@ class LwjglGlfwDisplayContext(
     }
 
     override fun enableResizeEvents(enable: Boolean) {
-        glfwSetWindowSizeCallback(window, if(enable) ::resizeEventHandler else null)
+        // OpenGL uses pixels, not screen coordinates, so use framebuffer callback for size
+        glfwSetFramebufferSizeCallback(window, if(enable) ::resizeEventHandler else null)
     }
 
     override fun setCursorMode(mode: CursorMode) {
@@ -208,7 +209,7 @@ class LwjglGlfwDisplayContext(
     }
 
     private fun mouseEventHandler(window: Long, x: Double, y: Double) {
-        events.pushMouseEvent(viewport, MouseEvent.valueOf(x, y))
+        events.pushMouseEvent(view, MouseEvent.valueOf(x, y))
     }
 
     private fun mouseButtonEventHandler(window: Long, buttonCode: Int, actionCode: Int, modifierCode: Int) {

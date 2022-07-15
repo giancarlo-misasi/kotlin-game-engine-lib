@@ -38,7 +38,7 @@ interface DisplayContext {
     var vsync: Boolean
     var refreshRate: Int?
     val gl: OpenGl
-    val viewport: Viewport
+    val view: Viewport
 
     fun getPrimaryMonitorResolution(): Vector2f
     fun getActualWindowSize(): Vector2f

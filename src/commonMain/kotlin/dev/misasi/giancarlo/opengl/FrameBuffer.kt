@@ -3,6 +3,9 @@ package dev.misasi.giancarlo.opengl
 class FrameBuffer (private val gl: OpenGl) {
     private val handle = gl.createFrameBuffer()
 
+    var attachedTexture: Texture? = null
+        private set
+
     fun bind(): FrameBuffer {
         if (boundHandle != handle) {
             gl.bindFrameBuffer(handle)
@@ -14,7 +17,12 @@ class FrameBuffer (private val gl: OpenGl) {
     fun attach(texture: Texture) {
         bind()
         texture.attach()
+        attachedTexture = texture
         unbind(gl)
+    }
+
+    fun delete() {
+        gl.deleteFrameBuffer(handle)
     }
 
     companion object {

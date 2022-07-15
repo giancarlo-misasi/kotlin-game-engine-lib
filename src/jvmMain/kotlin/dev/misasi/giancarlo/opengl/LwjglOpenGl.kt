@@ -292,6 +292,10 @@ class LwjglOpenGl : OpenGl {
         glVerify(this) { glActiveTexture(GL_TEXTURE0 + target) }
     }
 
+    override fun deleteTexture2d(handle: Int) {
+       glVerify(this) { glDeleteTextures(handle) }
+    }
+
     override fun createFrameBuffer(): Int {
         return glVerifyGenerate(this, ::glGenFramebuffers) { "FRAME BUFFER" }
     }
@@ -309,12 +313,19 @@ class LwjglOpenGl : OpenGl {
         }
     }
 
+    override fun deleteFrameBuffer(handle: Int) {
+        glVerify(this) { glDeleteFramebuffers(handle) }
+    }
+
     override fun setViewport(x: Int, y: Int, width: Int, height: Int) {
         glVerify(this) { glViewport(0, 0, width, height) }
     }
 
-    override fun setScissor(x: Int, y: Int, width: Int, height: Int) {
+    override fun enableScissor(enabled: Boolean) {
         glVerify(this) { glEnable(GL_SCISSOR_TEST) }
+    }
+
+    override fun setScissor(x: Int, y: Int, width: Int, height: Int) {
         glVerify(this) { glScissor(x, y, width, height) }
     }
 
@@ -367,9 +378,7 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun clear() {
-        glVerify(this) { glDisable(GL_SCISSOR_TEST) }
         glVerify(this) { glClear(GL_COLOR_BUFFER_BIT) }
-        glVerify(this) { glEnable(GL_SCISSOR_TEST) }
     }
 
     override fun enable(target: Int) {

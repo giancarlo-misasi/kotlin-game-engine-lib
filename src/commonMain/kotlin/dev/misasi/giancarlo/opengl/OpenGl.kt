@@ -73,14 +73,17 @@ interface OpenGl {
     fun createTexture2d(width: Int, height: Int, filter: Texture.Filter, format: Rgba8.Format, data: DirectNativeByteBuffer? = null): Int
     fun bindTexture2d(texture: Int): Int
     fun setActiveTextureUnit(target: Int)
+    fun deleteTexture2d(handle: Int)
 
     // Frame buffers
     fun createFrameBuffer(): Int
     fun bindFrameBuffer(handle: Int): Int
     fun attachTexture(texture: Int)
+    fun deleteFrameBuffer(handle: Int)
 
     // Viewport
     fun setViewport(x: Int, y: Int, width: Int, height: Int)
+    fun enableScissor(enabled: Boolean)
     fun setScissor(x: Int, y: Int, width: Int, height: Int)
 
     // Draw

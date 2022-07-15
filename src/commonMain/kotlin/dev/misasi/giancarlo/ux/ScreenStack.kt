@@ -26,17 +26,27 @@
 package dev.misasi.giancarlo.ux
 
 import dev.misasi.giancarlo.drawing.Rgba8
-import dev.misasi.giancarlo.opengl.DisplayContext
+import dev.misasi.giancarlo.drawing.StaticMaterial
+import dev.misasi.giancarlo.drawing.graphics.Sprite2dGraphics
+import dev.misasi.giancarlo.events.input.window.ResizeEvent
+import dev.misasi.giancarlo.math.Flip
+import dev.misasi.giancarlo.math.Point4f
+import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.opengl.*
 import dev.misasi.giancarlo.system.Clock
 
 class ScreenStack (private val context: DisplayContext) {
-    private val screens = mutableListOf<Screen>()
     private val clock = Clock()
+    private val frameBuffer: FrameBuffer
+    private val postProcessingGfx: Sprite2dGraphics
+    private val screens = mutableListOf<Screen>()
 
     init {
-//        context.gl.setClearColor(Rgba8.BLACK)
-        context.gl.setClearColor(Rgba8.RED)
-
+        context.gl.setClearColor(Rgba8.BLACK)
+        frameBuffer = FrameBuffer(context.gl)
+        frameBuffer.attach(Texture(context.gl, context.view.targetResolution.x.toInt(), context.view.targetResolution.y.toInt(), filter = Texture.Filter.NEAREST))
+        postProcessingGfx = Sprite2dGraphics(context.gl, Buffer.Usage.STATIC, 1)
+        updatePostProcessing()
     }
 
     fun push(screen: Screen) {
@@ -44,7 +54,14 @@ class ScreenStack (private val context: DisplayContext) {
         screens.add(screen)
     }
 
-    fun update(elapsedMs: Int) {
+    fun run() {
+        clock.update() // reset at start
+        while (!context.shouldClose()) {
+            runOnce()
+        }
+    }
+
+    private fun update(elapsedMs: Int) {
         val workList = ArrayDeque(screens)
         var transitionOut = false
         while (!workList.isEmpty()) {
@@ -68,9 +85,16 @@ class ScreenStack (private val context: DisplayContext) {
         }
     }
 
-    fun draw() {
-        // Clean the display
+    private fun draw() {
+        // Attach the frame buffer to handle scaling and post-processing
+        frameBuffer.bind()
+
+        // Clean the frame buffer to avoid artifacts
         context.gl.clear()
+
+        // Set the viewport to the target resolution
+        // everything draws assuming target resolution and then this will scale to fit nicely
+        context.gl.setViewport(0, 0, context.view.targetResolution.x.toInt(), context.view.targetResolution.y.toInt())
 
         // Draw the screens
         for (screen in screens) {
@@ -82,14 +106,27 @@ class ScreenStack (private val context: DisplayContext) {
             screen.onDraw(context)
         }
 
+        // Detach the frame buffer and clear the screen to avoid artifacts
+        FrameBuffer.unbind(context.gl)
+        context.gl.clear()
+
+        // Apply post-processing
+        postProcessingGfx.bindProgram()
+        context.gl.setViewport(0, 0, context.view.actualScreenSize.x.toInt(), context.view.actualScreenSize.y.toInt())
+        postProcessingGfx.draw()
+
         // Swap the buffers so we see the image
         context.swapBuffers()
     }
 
-    fun handleEvents() {
+    private fun handleEvents() {
         context.pollEvents()
         while (true) {
             val event = context.getNextEvent() ?: break
+            if (event is ResizeEvent) {
+                updatePostProcessing()
+            }
+
             val workList = ArrayDeque(screens)
             while (!workList.isEmpty()) {
                 val screen = workList.removeLast()
@@ -103,7 +140,7 @@ class ScreenStack (private val context: DisplayContext) {
         }
     }
 
-    fun runOnce() {
+    private fun runOnce() {
         val elapsedMs = clock.elapsedSinceUpdateMs(1000)
         clock.update()
 
@@ -112,10 +149,18 @@ class ScreenStack (private val context: DisplayContext) {
         handleEvents()
     }
 
-    fun run() {
-        clock.update() // reset at start
-        while (!context.shouldClose()) {
-            runOnce()
-        }
+    private fun updatePostProcessing() {
+        // Update mvp matrix with new screen size
+        postProcessingGfx.bindProgram()
+        postProcessingGfx.setResolution(context.view.actualScreenSize)
+        postProcessingGfx.setMvp(Camera.mvp(context.view.actualScreenSize))
+        postProcessingGfx.setFxaa(true)
+//        postProcessingGfx.setEffect(2)
+
+        // Update the offset and adjusted screen size we will scale to
+        val postProcessingMaterial = StaticMaterial("", frameBuffer.attachedTexture!!, Point4f.create(Vector2f(), Vector2f(1f, 1f)))
+        postProcessingGfx.clear()
+        postProcessingGfx.putSprite(context.view.offset, context.view.adjustedScreenSize, postProcessingMaterial, flip = Flip.VERTICAL)
+        postProcessingGfx.updateVertexBuffer()
     }
 }
