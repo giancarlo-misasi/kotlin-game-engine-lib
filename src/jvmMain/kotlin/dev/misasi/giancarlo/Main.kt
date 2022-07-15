@@ -42,14 +42,9 @@ import dev.misasi.giancarlo.opengl.Buffer
 import dev.misasi.giancarlo.opengl.Camera
 import dev.misasi.giancarlo.opengl.DisplayContext
 import dev.misasi.giancarlo.opengl.LwjglGlfwDisplayContext
-import dev.misasi.giancarlo.ux.Screen
-import dev.misasi.giancarlo.ux.ScreenStack
-import dev.misasi.giancarlo.ux.ScreenState
-import dev.misasi.giancarlo.ux.ScreenTransition
+import dev.misasi.giancarlo.ux.*
 
-lateinit var screenStack: ScreenStack
-
-class TestScreen (private val assets: Assets, waitMs: Int = 0) : Screen() {
+class TestScreen(private val screenStack: ScreenStack, private val assets: Assets, waitMs: Int = 0) : Screen() {
     private lateinit var spriteGfx: Sprite2dGraphics
     private var camera = Camera()
     private var alpha = -1f
@@ -98,13 +93,13 @@ class TestScreen (private val assets: Assets, waitMs: Int = 0) : Screen() {
         val transitionElapsedPercentage = screenTransition.elapsedPercentage()
         if (transitionElapsedPercentage != null) {
             when (state) {
-                ScreenState.IN -> alpha = Animator.fadeIn(transitionElapsedPercentage)
-//                ScreenState.IN -> camera = camera.copy(position = Animator.translate(Vector2f(-800f), Vector2f(), transitionElapsedPercentage))
-//                ScreenState.OUT -> camera = camera.copy(position = Animator.translate(Vector2f(), Vector2f(800f), transitionElapsedPercentage))
+                ScreenState.IN -> camera = camera.copy(position = Animator.translate(Vector2f(-800f), Vector2f(), transitionElapsedPercentage))
+//                ScreenState.IN -> alpha = Animator.fadeIn(transitionElapsedPercentage)
                 else -> {}
             }
             when (state) {
-                ScreenState.OUT -> alpha = Animator.fadeOut(transitionElapsedPercentage)
+                ScreenState.OUT -> camera = camera.copy(position = Animator.translate(Vector2f(), Vector2f(800f), transitionElapsedPercentage))
+//                ScreenState.OUT -> alpha = Animator.fadeOut(transitionElapsedPercentage)
                 else -> {}
             }
         } else {
@@ -126,7 +121,7 @@ class TestScreen (private val assets: Assets, waitMs: Int = 0) : Screen() {
         }
 
         if (event is MouseButtonEvent) {
-            screenStack.push(TestScreen(assets, 1500))
+            screenStack.transitionToScreen(TestScreen(screenStack, assets, 0))
         }
 
         if (event is KeyEvent) {
@@ -160,7 +155,7 @@ class TestScreen (private val assets: Assets, waitMs: Int = 0) : Screen() {
 fun main() {
     val context = LwjglGlfwDisplayContext(
         "title",
-        Vector2f(400f, 300f),
+        Vector2f(800f, 600f),
         Vector2f(800f, 600f),
         fullScreen = false,
         vsync = false,
@@ -176,7 +171,8 @@ fun main() {
     val assets = Assets(context.gl)
 
     // todo improve this variable
-    screenStack = ScreenStack(context)
-    screenStack.push(TestScreen(assets))
+    val screenStack = ScreenStack(context)
+    screenStack.setEffect(Effect.RETRO, true)
+    screenStack.transitionToScreen(TestScreen(screenStack, assets))
     screenStack.run()
 }

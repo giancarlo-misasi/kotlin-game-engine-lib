@@ -39,7 +39,7 @@ import kotlin.math.sin
 
 class Shape2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: Int) {
     private val program = Program(gl, Shaders.shape2d())
-    private val uniformMap = UniformMap(gl, program, listOf("uMvp", "uEffect"))
+    private val uniformMap = UniformMap(gl, program, listOf("uMvp"))
     private val attributeArray = AttributeArray(
         gl, program, listOf(
             Attribute.Spec("inXy", DataType.FLOAT, 2),
@@ -56,10 +56,8 @@ class Shape2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEnti
     }
 
     fun bindProgram() = program.bind()
-    fun setModelViewProjection(mvp: Matrix4f) = uniformMap.update("uMvp", mvp)
-    fun setEffect(effect: Int) = uniformMap.update("uEffect", effect)
-    fun bindVertexBuffer() = vertexBuffer.bind()
-    fun updateVertexBuffer() = vertexBuffer.update(directBuffer)
+    fun setMvp(mvp: Matrix4f) = uniformMap.update("uMvp", mvp)
+    fun updateVertexBuffer() = vertexBuffer.bind().update(directBuffer)
     fun draw() = DrawOrder.draw(gl, drawOrders)
     fun clear() = directBuffer.reset().also { drawOrders.clear() }
 

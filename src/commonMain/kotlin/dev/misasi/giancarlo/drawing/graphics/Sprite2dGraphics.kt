@@ -31,17 +31,16 @@ import dev.misasi.giancarlo.drawing.Material
 import dev.misasi.giancarlo.math.*
 import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
 import dev.misasi.giancarlo.opengl.*
+import dev.misasi.giancarlo.ux.Effect
 
 class Sprite2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: Int) {
     private val program = Program(gl, Shaders.sprite2d())
-    private val uniformMap = UniformMap(gl, program, listOf("uResolution", "uMvp", "uFxaa", "uAlpha", "uEffect"))
-    private val attributeArray = AttributeArray(
-        gl, program, listOf(
+    private val uniformMap = UniformMap(gl, program, listOf("uMvp", "uAlpha") + Effect.uniforms())
+    private val attributeArray = AttributeArray(gl, program, listOf(
             Attribute.Spec("inXy", DataType.FLOAT, 2),
             Attribute.Spec("inUv", DataType.UNSIGNED_SHORT, 2, normalize = true),
             Attribute.Spec("inAlpha", DataType.FLOAT, 1)
-        )
-    )
+    ))
     private val indexBuffer: IndexBuffer
     private val totalSizeInBytes = 4 * attributeArray.totalSizeInBytes * maxEntities
     private val vertexBuffer = VertexBuffer(gl, bufferUsage, totalSizeInBytes)
@@ -56,11 +55,9 @@ class Sprite2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEnt
     }
 
     fun bindProgram() = program.bind()
-    fun setResolution(resolution: Vector2f) = uniformMap.update("uResolution", resolution)
     fun setMvp(mvp: Matrix4f) = uniformMap.update("uMvp", mvp)
-    fun setFxaa(enabled: Boolean) = uniformMap.update("uFxaa", enabled)
     fun setAlpha(alpha: Float) = uniformMap.update("uAlpha", alpha)
-    fun setEffect(effect: Int) = uniformMap.update("uEffect", effect)
+    fun setEffect(effect: Effect, enabled: Boolean) = uniformMap.update(effect.id, enabled)
     fun updateVertexBuffer() = vertexBuffer.bind().update(directBuffer)
     fun draw() = DrawOrder.drawIndexed(gl, DataType.UNSIGNED_INT, drawOrders)
     fun clear() = directBuffer.reset().also { drawOrders.clear() }

@@ -46,10 +46,14 @@ class ScreenStack (private val context: DisplayContext) {
         frameBuffer = FrameBuffer(context.gl)
         frameBuffer.attach(Texture(context.gl, context.view.targetResolution.x.toInt(), context.view.targetResolution.y.toInt(), filter = Texture.Filter.NEAREST))
         postProcessingGfx = Sprite2dGraphics(context.gl, Buffer.Usage.STATIC, 1)
-        updatePostProcessing()
+        updateScreenSize()
     }
 
-    fun push(screen: Screen) {
+    fun setEffect(effect: Effect, enabled: Boolean) {
+        postProcessingGfx.setEffect(effect, enabled)
+    }
+
+    fun transitionToScreen(screen: Screen) {
         screen.onInit(context)
         screens.add(screen)
     }
@@ -124,7 +128,7 @@ class ScreenStack (private val context: DisplayContext) {
         while (true) {
             val event = context.getNextEvent() ?: break
             if (event is ResizeEvent) {
-                updatePostProcessing()
+                updateScreenSize()
             }
 
             val workList = ArrayDeque(screens)
@@ -149,18 +153,20 @@ class ScreenStack (private val context: DisplayContext) {
         handleEvents()
     }
 
-    private fun updatePostProcessing() {
-        // Update mvp matrix with new screen size
+    private fun updateScreenSize() {
         postProcessingGfx.bindProgram()
-        postProcessingGfx.setResolution(context.view.actualScreenSize)
         postProcessingGfx.setMvp(Camera.mvp(context.view.actualScreenSize))
-        postProcessingGfx.setFxaa(true)
-//        postProcessingGfx.setEffect(2)
-
-        // Update the offset and adjusted screen size we will scale to
-        val postProcessingMaterial = StaticMaterial("", frameBuffer.attachedTexture!!, Point4f.create(Vector2f(), Vector2f(1f, 1f)))
         postProcessingGfx.clear()
-        postProcessingGfx.putSprite(context.view.offset, context.view.adjustedScreenSize, postProcessingMaterial, flip = Flip.VERTICAL)
+        postProcessingGfx.putSprite(
+            context.view.offset,
+            context.view.adjustedScreenSize,
+            StaticMaterial("", frameBuffer.attachedTexture!!, postProcessUv),
+            flip = Flip.VERTICAL
+        )
         postProcessingGfx.updateVertexBuffer()
+    }
+
+    companion object {
+        val postProcessUv = Point4f.create(Vector2f(), Vector2f(1f, 1f))
     }
 }
