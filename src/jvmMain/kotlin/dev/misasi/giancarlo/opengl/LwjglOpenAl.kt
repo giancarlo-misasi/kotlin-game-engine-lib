@@ -28,7 +28,7 @@ package dev.misasi.giancarlo.opengl
 import dev.misasi.giancarlo.crash
 import dev.misasi.giancarlo.math.Vector3f
 import dev.misasi.giancarlo.openal.OpenAl
-import dev.misasi.giancarlo.openal.Sound
+import dev.misasi.giancarlo.openal.PcmSound
 import org.lwjgl.openal.AL10.*
 import org.lwjgl.openal.ALC10.*
 import org.lwjgl.stb.STBVorbis
@@ -38,15 +38,9 @@ import org.lwjgl.system.MemoryUtil
 import java.io.Closeable
 import java.nio.ByteBuffer
 import java.nio.IntBuffer
+import java.nio.ShortBuffer
 
 class LwjglOpenAl : OpenAl {
-
-    companion object {
-        val formatMap = mapOf(
-            Sound.Format.MONO16 to AL_FORMAT_MONO16,
-            Sound.Format.STEREO16 to AL_FORMAT_STEREO16
-        )
-    }
 
     override fun init() {
         val byteBuffer: ByteBuffer? = null
@@ -59,31 +53,26 @@ class LwjglOpenAl : OpenAl {
         org.lwjgl.openal.AL.createCapabilities(capabilities)
     }
 
-    override fun convertOgg(byteArray: ByteArray): Sound {
+    override fun convertOgg(byteArray: ByteArray): PcmSound {
         STBVorbisInfo.malloc().use { info ->
             MemoryStack.stackPush().use { stack ->
                 VorbisHandle(byteArray, stack).use { vorbisHandle ->
                     STBVorbis.stb_vorbis_get_info(vorbisHandle.handle, info)
                     val channels = info.channels()
-                    val sampleRate = info.sample_rate()
-                    val format = if (channels == 1) Sound.Format.MONO16 else Sound.Format.STEREO16
-                    val lengthInSamples = STBVorbis.stb_vorbis_stream_length_in_samples(vorbisHandle.handle)
-                    val pcmBuffer = MemoryUtil.memAllocShort(lengthInSamples)
-                    val samplesPerChannel = STBVorbis.stb_vorbis_get_samples_short_interleaved(vorbisHandle.handle, channels, pcmBuffer)
-                    val array = ShortArray(samplesPerChannel)
-                    pcmBuffer.limit(samplesPerChannel)
-                    pcmBuffer.get(array)
-                    return Sound(sampleRate, format, array)
+                    val format = if (channels == 1) PcmSound.Format.MONO16 else PcmSound.Format.STEREO16
+                    val pcmBuffer = MemoryUtil.memAllocShort(channels * STBVorbis.stb_vorbis_stream_length_in_samples(vorbisHandle.handle))
+                    STBVorbis.stb_vorbis_get_samples_short_interleaved(vorbisHandle.handle, channels, pcmBuffer)
+                    return PcmSound(info.sample_rate(), format, toArray(pcmBuffer))
                 }
             }
         }
     }
 
-    override fun createSoundBuffer(sound: Sound): Int {
+    override fun createSoundBuffer(sound: PcmSound): Int {
         val handle = alGenBuffers();
         val format = formatMap[sound.format]!!
-        val data = MemoryUtil.memAllocShort(sound.pcmData.size)
-        data.put(0, sound.pcmData).position(0)
+        val data = MemoryUtil.memAllocShort(sound.data.size)
+        data.put(0, sound.data).position(0)
         alBufferData(handle, format, data, sound.sampleRate)
         return handle
     }
@@ -145,27 +134,37 @@ class LwjglOpenAl : OpenAl {
             val data = ByteBuffer.allocateDirect(bytes.size).put(0, bytes).position(0)
             handle = STBVorbis.stb_vorbis_open_memory(data, error, null)
             if (handle == 0L) {
-                crash("Failed to decode ogg, error = ${errorMap[error[0]] ?: "Unkown error"}")
+                crash("Failed to decode ogg, error = ${errorMap[error[0]] ?: "Unknown error"}")
             }
-            STBVorbis.VORBIS__no_error
         }
 
         override fun close() {
             STBVorbis.stb_vorbis_close(handle)
         }
+    }
 
-        companion object {
-            val errorMap = mapOf(
-                30 to "VORBIS_missing_capture_pattern",
-                31 to "VORBIS_invalid_stream_structure_version",
-                32 to "VORBIS_continued_packet_flag_invalid",
-                33 to "VORBIS_incorrect_stream_serial_number",
-                34 to "VORBIS_invalid_first_page",
-                35 to "VORBIS_bad_packet_type",
-                36 to "VORBIS_cant_find_last_page",
-                37 to "VORBIS_seek_failed",
-                38 to "VORBIS_ogg_skeleton_not_supported"
-            )
+    companion object {
+        val formatMap = mapOf(
+            PcmSound.Format.MONO16 to AL_FORMAT_MONO16,
+            PcmSound.Format.STEREO16 to AL_FORMAT_STEREO16
+        )
+
+        val errorMap = mapOf(
+            30 to "VORBIS missing capture pattern",
+            31 to "VORBIS invalid stream structure version",
+            32 to "VORBIS continued packet flag invalid",
+            33 to "VORBIS incorrect stream serial number",
+            34 to "VORBIS invalid first page",
+            35 to "VORBIS bad packet type",
+            36 to "VORBIS cant find last page",
+            37 to "VORBIS seek failed",
+            38 to "VORBIS ogg skeleton not supported"
+        )
+
+        fun toArray(shortBuffer: ShortBuffer): ShortArray {
+            val array = ShortArray(shortBuffer.limit())
+            shortBuffer.get(array)
+            return array
         }
     }
 }

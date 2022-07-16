@@ -106,9 +106,6 @@ class LwjglGlfwDisplayContext(
         al.init()
     }
 
-//    override fun getOpenGl() = gl
-//    override fun getViewport() = viewport
-
     override fun getPrimaryMonitorResolution(): Vector2f {
         val mode = glfwGetVideoMode(glfwGetPrimaryMonitor())!!
         return Vector2f(mode.width().toFloat(), mode.height().toFloat())

@@ -59,7 +59,6 @@ class TestScreen(
         ScreenState.OUT to 1500
     ))
 
-    private lateinit var walkBuffer: SoundBuffer
     private lateinit var walkSource: SoundSource
 
     override fun onInit(context: DisplayContext) {
@@ -94,8 +93,7 @@ class TestScreen(
         }
         spriteGfx.updateVertexBuffer()
 
-        walkBuffer = SoundBuffer(context.al, assets.sound("dig"))
-        walkSource = SoundSource(context.al, loop = false).attach(walkBuffer)
+        walkSource = SoundSource(context.al).attach(assets.sound("heart container 1"))
         context.al.setListenerPosition(Vector3f())
     }
 

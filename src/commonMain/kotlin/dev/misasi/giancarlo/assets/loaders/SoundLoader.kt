@@ -28,20 +28,25 @@ package dev.misasi.giancarlo.assets.loaders
 import dev.misasi.giancarlo.getResourceAsBytes
 import dev.misasi.giancarlo.getResourceAsLines
 import dev.misasi.giancarlo.openal.OpenAl
-import dev.misasi.giancarlo.openal.Sound
+import dev.misasi.giancarlo.openal.SoundBuffer
 
 class SoundLoader (
     private val al: OpenAl,
-) : AssetLoader<Sound> {
+) : AssetLoader<SoundBuffer> {
     companion object {
         private const val PATH = "/sounds/"
     }
 
-    override fun load(): Map<String, Sound> {
+    override fun load(): Map<String, SoundBuffer> {
         val files = getResourceAsLines(PATH)
         return files.map { it to getResourceAsBytes(PATH.plus(it)) }
             .filter { it.second != null }
-            .associate { getName(it.first) to al.convertOgg(it.second!!) }
+            .associate { getName(it.first) to getBuffer(it.second!!) }
+    }
+
+    private fun getBuffer(byteArray: ByteArray): SoundBuffer {
+        val pcmSound = al.convertOgg(byteArray)
+        return SoundBuffer(al, pcmSound)
     }
 
     private fun getName(fileName: String): String {

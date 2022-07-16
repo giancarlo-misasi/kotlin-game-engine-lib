@@ -31,9 +31,9 @@ interface OpenAl {
 
     fun init()
 
-    fun convertOgg(byteArray: ByteArray): Sound
+    fun convertOgg(byteArray: ByteArray): PcmSound
 
-    fun createSoundBuffer(sound: Sound): Int
+    fun createSoundBuffer(sound: PcmSound): Int
     fun deleteSoundBuffer(handle: Int)
 
     fun createSoundSource(loop: Boolean, relative: Boolean): Int

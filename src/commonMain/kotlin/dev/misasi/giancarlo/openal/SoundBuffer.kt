@@ -25,7 +25,7 @@
 
 package dev.misasi.giancarlo.openal
 
-class SoundBuffer (private val al: OpenAl, sound: Sound) {
+class SoundBuffer (private val al: OpenAl, sound: PcmSound) {
     private val handle: Int = al.createSoundBuffer(sound)
 
     fun attach(soundSourceHandle: Int) {
