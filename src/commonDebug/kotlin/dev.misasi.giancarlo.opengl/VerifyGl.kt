@@ -26,6 +26,7 @@
 package dev.misasi.giancarlo.opengl
 
 import dev.misasi.giancarlo.crash
+import java.nio.ByteBuffer
 
 inline fun <T> glVerify(gl: OpenGl, glOperation: () -> T): T {
     val result = glOperation()
@@ -79,5 +80,12 @@ inline fun glVerifyBound(gl: OpenGl, name: Int, handle: Int, tag: () -> String) 
     val currentHandle = gl.getCurrentHandle(name)
     if (currentHandle != handle) {
         crash("[${tag()}] $currentHandle was bound instead of $handle.")
+    }
+}
+
+inline fun glVerifyEquals(gl: OpenGl, value: Int, glOperation: () -> Int, error: () -> String) {
+    val status = glVerify<Int> (gl) { glOperation() }
+    if (status != value) {
+        crash(error())
     }
 }

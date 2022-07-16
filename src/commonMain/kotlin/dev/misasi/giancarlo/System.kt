@@ -28,6 +28,7 @@ package dev.misasi.giancarlo
 import dev.misasi.giancarlo.drawing.Bitmap
 import dev.misasi.giancarlo.drawing.Rgba8
 import java.io.BufferedReader
+import java.nio.ByteBuffer
 import javax.imageio.ImageIO
 import kotlin.system.exitProcess
 
@@ -41,6 +42,10 @@ fun getResourceAsLines(path: String): List<String> = object {}.javaClass.getReso
 
 fun getResourceAsString(path: String): String? = object {}.javaClass.getResourceAsStream(path).use {
     return it?.bufferedReader()?.use(BufferedReader::readText)
+}
+
+fun getResourceAsBytes(path: String): ByteArray? = object {}.javaClass.getResourceAsStream(path).use {
+    return it?.readAllBytes()
 }
 
 fun getResourceAsBitmap(path: String): Bitmap? = object {}.javaClass.getResourceAsStream(path).use {

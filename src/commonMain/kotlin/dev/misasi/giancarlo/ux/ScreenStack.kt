@@ -44,7 +44,7 @@ class ScreenStack (private val context: DisplayContext) {
     init {
         context.gl.setClearColor(Rgba8.BLACK)
         frameBuffer = FrameBuffer(context.gl)
-        frameBuffer.attach(Texture(context.gl, context.view.targetResolution.x.toInt(), context.view.targetResolution.y.toInt(), filter = Texture.Filter.NEAREST))
+        frameBuffer.attach(Texture(context.gl, context.view.targetResolution.x.toInt(), context.view.targetResolution.y.toInt()))
         postProcessingGfx = Sprite2dGraphics(context.gl, Buffer.Usage.STATIC, 1)
         updateScreenSize()
     }

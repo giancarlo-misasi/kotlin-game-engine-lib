@@ -38,13 +38,18 @@ import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
 import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
 import dev.misasi.giancarlo.events.input.window.ResizeEvent
 import dev.misasi.giancarlo.math.Vector2f
-import dev.misasi.giancarlo.opengl.Buffer
-import dev.misasi.giancarlo.opengl.Camera
-import dev.misasi.giancarlo.opengl.DisplayContext
-import dev.misasi.giancarlo.opengl.LwjglGlfwDisplayContext
+import dev.misasi.giancarlo.math.Vector3f
+import dev.misasi.giancarlo.openal.SoundBuffer
+import dev.misasi.giancarlo.openal.SoundSource
+import dev.misasi.giancarlo.opengl.*
 import dev.misasi.giancarlo.ux.*
 
-class TestScreen(private val screenStack: ScreenStack, private val assets: Assets, waitMs: Int = 0) : Screen() {
+class TestScreen(
+    private val context: DisplayContext,
+    private val screenStack: ScreenStack,
+    private val assets: Assets,
+    waitMs: Int = 0
+) : Screen() {
     private lateinit var spriteGfx: Sprite2dGraphics
     private var camera = Camera()
     private var alpha = -1f
@@ -53,6 +58,9 @@ class TestScreen(private val screenStack: ScreenStack, private val assets: Asset
         ScreenState.IN to 1500,
         ScreenState.OUT to 1500
     ))
+
+    private lateinit var walkBuffer: SoundBuffer
+    private lateinit var walkSource: SoundSource
 
     override fun onInit(context: DisplayContext) {
         // So screens have additional state that let us draw everything with variation
@@ -85,6 +93,10 @@ class TestScreen(private val screenStack: ScreenStack, private val assets: Asset
             }
         }
         spriteGfx.updateVertexBuffer()
+
+        walkBuffer = SoundBuffer(context.al, assets.sound("dig"))
+        walkSource = SoundSource(context.al, loop = false).attach(walkBuffer)
+        context.al.setListenerPosition(Vector3f())
     }
 
     override fun onUpdate(elapsedMs: Int) {
@@ -121,7 +133,8 @@ class TestScreen(private val screenStack: ScreenStack, private val assets: Asset
         }
 
         if (event is MouseButtonEvent) {
-            screenStack.transitionToScreen(TestScreen(screenStack, assets, 0))
+            screenStack.transitionToScreen(TestScreen(context, screenStack, assets, 0))
+            walkSource.play()
         }
 
         if (event is KeyEvent) {
@@ -168,11 +181,11 @@ fun main() {
     context.enableScrollEvents(true)
     context.enableResizeEvents(true)
 
-    val assets = Assets(context.gl)
+    val assets = Assets(context)
 
     // todo improve this variable
     val screenStack = ScreenStack(context)
     screenStack.setEffect(Effect.RETRO, true)
-    screenStack.transitionToScreen(TestScreen(screenStack, assets))
+    screenStack.transitionToScreen(TestScreen(context, screenStack, assets))
     screenStack.run()
 }

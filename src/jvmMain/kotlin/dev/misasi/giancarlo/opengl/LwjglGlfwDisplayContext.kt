@@ -35,6 +35,7 @@ import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
 import dev.misasi.giancarlo.events.input.text.TextEvent
 import dev.misasi.giancarlo.events.input.window.ResizeEvent
 import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.openal.OpenAl
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
@@ -53,6 +54,7 @@ class LwjglGlfwDisplayContext(
 ) : DisplayContext {
     private val window: Long
     override val gl: OpenGl
+    override val al: OpenAl
     override val view: Viewport
 
     init {
@@ -98,6 +100,10 @@ class LwjglGlfwDisplayContext(
         // Setup the viewport for events
         val actualScreenSize = if (fullScreen) targetResolution else getActualWindowSize()
         view = Viewport(gl, targetResolution, actualScreenSize)
+
+        // Initialize sound
+        al = LwjglOpenAl()
+        al.init()
     }
 
 //    override fun getOpenGl() = gl

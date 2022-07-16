@@ -31,15 +31,29 @@ import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
 
 class Texture private constructor(private val gl: OpenGl, private val handle: Int, val width: Int, val height: Int) {
-    constructor(gl: OpenGl, width: Int, height: Int, format: Rgba8.Format = Rgba8.Format.RGBA, filter: Filter = Filter.NEAREST)
-            : this(gl, gl.createTexture2d(width, height, filter, format), width, height)
+    constructor(gl: OpenGl, width: Int, height: Int, format: Rgba8.Format = Rgba8.Format.RGBA)
+            : this(gl, gl.createTexture2d(width, height, format), width, height)
 
-    constructor(gl: OpenGl, bmp: Bitmap, filter: Filter = Filter.NEAREST)
-            : this(gl, gl.createTexture2d(bmp.width, bmp.height, filter, bmp.format, buffer(bmp)), bmp.width, bmp.height)
+    constructor(gl: OpenGl, bmp: Bitmap)
+            : this(gl, gl.createTexture2d(bmp.width, bmp.height, bmp.format, buffer(bmp)), bmp.width, bmp.height)
+
+    init {
+        gl.setTextureMinFilter(Filter.NEAREST)
+        gl.setTextureMagFilter(Filter.NEAREST)
+//        gl.setTextureBorderColor(Rgba8.BLACK)
+        gl.setTextureBorderColor(Rgba8.RED) // for debug
+        gl.setTextureWrapS(Wrap.CLAMP_TO_BORDER)
+        gl.setTextureWrapT(Wrap.CLAMP_TO_BORDER)
+    }
 
     enum class Filter {
         NEAREST,
         LINEAR
+    }
+
+    enum class Wrap {
+        REPEAT,
+        CLAMP_TO_BORDER
     }
 
     val size by lazy {

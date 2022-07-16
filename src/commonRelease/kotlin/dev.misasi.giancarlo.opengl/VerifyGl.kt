@@ -41,3 +41,4 @@ inline fun glVerifyStatus(
     glGetLogOperation: (Int) -> String
 ) {}
 inline fun glVerifyBound(gl: OpenGl, name: Int, handle: Int, tag: () -> String) {}
+inline fun glVerifyEquals(gl: OpenGl, value: Int, glOperation: () -> Int, error: () -> String) {}

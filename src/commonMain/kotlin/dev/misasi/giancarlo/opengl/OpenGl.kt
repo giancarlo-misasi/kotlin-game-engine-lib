@@ -56,6 +56,7 @@ interface OpenGl {
     fun getAttributeLocation(program: Int, name: String): Int
     fun enableVertexAttributeArray(attribute: Int)
     fun setVertexAttributePointer(handle: Int, attribute: Attribute, totalStride: Int)
+    fun setVertexAttributeIPointer(handle: Int, attribute: Attribute, totalStride: Int)
 
     // Vertex buffers
     fun createBuffer(type: Buffer.Type, usage: Buffer.Usage, maxBytes: Int): Int
@@ -70,7 +71,12 @@ interface OpenGl {
     fun deleteAttributeArray(vao: Int)
 
     // Textures
-    fun createTexture2d(width: Int, height: Int, filter: Texture.Filter, format: Rgba8.Format, data: DirectNativeByteBuffer? = null): Int
+    fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectNativeByteBuffer? = null): Int
+    fun setTextureMinFilter(filter: Texture.Filter)
+    fun setTextureMagFilter(filter: Texture.Filter)
+    fun setTextureBorderColor(color: Rgba8)
+    fun setTextureWrapS(wrap: Texture.Wrap)
+    fun setTextureWrapT(wrap: Texture.Wrap)
     fun bindTexture2d(texture: Int): Int
     fun setActiveTextureUnit(target: Int)
     fun deleteTexture2d(handle: Int)

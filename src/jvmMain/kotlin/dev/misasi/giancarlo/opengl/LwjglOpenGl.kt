@@ -38,6 +38,16 @@ import java.nio.charset.Charset
 class LwjglOpenGl : OpenGl {
 
     companion object {
+        private val dataTypeMapping = mapOf(
+            DataType.FLOAT to GL_FLOAT,
+            DataType.INT to GL_INT,
+            DataType.UNSIGNED_INT to GL_UNSIGNED_INT,
+            DataType.SHORT to GL_SHORT,
+            DataType.UNSIGNED_SHORT to GL_UNSIGNED_SHORT,
+            DataType.BYTE to GL_BYTE,
+            DataType.UNSIGNED_BYTE to GL_UNSIGNED_BYTE
+        )
+
         private val shaderTypeMapping = mapOf(
             Shader.Type.VERTEX to GL_VERTEX_SHADER,
             Shader.Type.FRAGMENT to GL_FRAGMENT_SHADER
@@ -59,19 +69,14 @@ class LwjglOpenGl : OpenGl {
             Buffer.Usage.STREAM to GL_STREAM_DRAW
         )
 
-        private val vertexAttributeTypeMapping = mapOf(
-            DataType.FLOAT to GL_FLOAT,
-            DataType.INT to GL_INT,
-            DataType.UNSIGNED_INT to GL_UNSIGNED_INT,
-            DataType.SHORT to GL_SHORT,
-            DataType.UNSIGNED_SHORT to GL_UNSIGNED_SHORT,
-            DataType.BYTE to GL_BYTE,
-            DataType.UNSIGNED_BYTE to GL_UNSIGNED_BYTE
-        )
-
         private val textureFilter = mapOf(
             Texture.Filter.NEAREST to GL_NEAREST,
             Texture.Filter.LINEAR to GL_LINEAR
+        )
+
+        private val textureWrap = mapOf(
+            Texture.Wrap.REPEAT to GL_REPEAT,
+            Texture.Wrap.CLAMP_TO_BORDER to GL_CLAMP_TO_BORDER
         )
 
         private val textureFormat = mapOf(
@@ -125,18 +130,7 @@ class LwjglOpenGl : OpenGl {
         glVerifyBound(this, GL_CURRENT_PROGRAM, program) { "PROGRAM<$program>" }
         val location = glVerify<Int>(this) { glGetUniformLocation(program, name) }
         if (location < 0) {
-            val count = IntArray(1)
-            glGetProgramiv(program, GL_ACTIVE_UNIFORMS, count)
-            println("Found ${count[0]} uniforms. Was looking for: $name, but found:")
-            for (i in 0 until count[0]) {
-                val length = IntArray(1)
-                val size = IntArray(1)
-                val type = IntArray(1)
-                val byteBuffer = ByteBuffer.allocateDirect(256)
-                glGetActiveUniform(program, i, length, size, type, byteBuffer)
-                println(getString(byteBuffer, length[0]))
-            }
-            throw IllegalStateException("Missing expected uniform: $name")
+            verifyProgramState(program, GL_ACTIVE_UNIFORMS, ::glGetActiveUniform) { "Missing uniform: $name" }
         }
         return location
     }
@@ -157,18 +151,7 @@ class LwjglOpenGl : OpenGl {
         glVerifyBound(this, GL_CURRENT_PROGRAM, program) { "PROGRAM<$program>" }
         val location = glVerify<Int>(this) { glGetAttribLocation(program, name) }
         if (location < 0) {
-            val count = IntArray(1)
-            glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, count)
-            println("Found ${count[0]} attributes. Was looking for: $name, but found:")
-            for (i in 0 until count[0]) {
-                val length = IntArray(1)
-                val size = IntArray(1)
-                val type = IntArray(1)
-                val byteBuffer = ByteBuffer.allocateDirect(256)
-                glGetActiveAttrib(program, i, length, size, type, byteBuffer)
-                println(getString(byteBuffer, length[0]))
-            }
-            throw IllegalStateException("Missing expected attribute: $name")
+            verifyProgramState(program, GL_ACTIVE_ATTRIBUTES, ::glGetActiveAttrib) { "Missing attribute: $name" }
         }
         return location
     }
@@ -178,28 +161,29 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun setVertexAttributePointer(handle: Int, attribute: Attribute, totalStride: Int) {
-        val t = vertexAttributeTypeMapping[attribute.spec.type]!!
-        if (attribute.spec.type == DataType.FLOAT || attribute.spec.normalize) {
-            glVerify(this) {
-                glVertexAttribPointer(
-                    handle,
-                    attribute.spec.count,
-                    t,
-                    attribute.spec.normalize,
-                    totalStride,
-                    attribute.strideOffset.toLong()
-                )
-            }
-        } else {
-            glVerify(this) {
-                glVertexAttribIPointer(
-                    handle,
-                    attribute.spec.count,
-                    t,
-                    totalStride,
-                    attribute.strideOffset.toLong()
-                )
-            }
+        val t = dataTypeMapping[attribute.spec.type]!!
+        glVerify(this) {
+            glVertexAttribPointer(
+                handle,
+                attribute.spec.count,
+                t,
+                attribute.spec.normalize,
+                totalStride,
+                attribute.strideOffset.toLong()
+            )
+        }
+    }
+
+    override fun setVertexAttributeIPointer(handle: Int, attribute: Attribute, totalStride: Int) {
+        val t = dataTypeMapping[attribute.spec.type]!!
+        glVerify(this) {
+            glVertexAttribIPointer(
+                handle,
+                attribute.spec.count,
+                t,
+                totalStride,
+                attribute.strideOffset.toLong()
+            )
         }
     }
 
@@ -248,11 +232,9 @@ class LwjglOpenGl : OpenGl {
         glVerify(this) { glDeleteVertexArrays(vao) }
     }
 
-    override fun createTexture2d(width: Int, height: Int, filter: Texture.Filter, format: Rgba8.Format, data: DirectNativeByteBuffer?): Int {
+    override fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectNativeByteBuffer?): Int {
         val texture = bindTexture2d(glVerifyGenerate(this, ::glGenTextures) { "TEX2D" })
-        val filterParameter = textureFilter[filter]!!
         val formatParameter = textureFormat[format]!!
-        val borderColor = Rgba8.RED
         glVerify(this) {
             glTexImage2D(
                 GL_TEXTURE_2D,
@@ -266,21 +248,38 @@ class LwjglOpenGl : OpenGl {
                 data?.byteBuffer
             )
         }
-        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterParameter) }
+        return texture
+    }
+
+    override fun setTextureMinFilter(filter: Texture.Filter) {
+        val filterParameter = textureFilter[filter]!!
         glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterParameter) }
+    }
+
+    override fun setTextureMagFilter(filter: Texture.Filter) {
+        val filterParameter = textureFilter[filter]!!
+        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterParameter) }
+    }
+
+    override fun setTextureBorderColor(color: Rgba8) {
         glVerify(this) {
             glTexParameterfv(
                 GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, floatArrayOf(
-                    borderColor.floatR,
-                    borderColor.floatG,
-                    borderColor.floatB,
-                    borderColor.floatA
+                    color.floatR,
+                    color.floatG,
+                    color.floatB,
+                    color.floatA
                 )
             )
         }
+    }
+
+    override fun setTextureWrapS(wrap: Texture.Wrap) {
         glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER) }
+    }
+
+    override fun setTextureWrapT(wrap: Texture.Wrap) {
         glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER) }
-        return texture
     }
 
     override fun bindTexture2d(texture: Int): Int {
@@ -293,7 +292,7 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun deleteTexture2d(handle: Int) {
-       glVerify(this) { glDeleteTextures(handle) }
+        glVerify(this) { glDeleteTextures(handle) }
     }
 
     override fun createFrameBuffer(): Int {
@@ -306,11 +305,12 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun attachTexture(texture: Int) {
-        glVerify (this) { glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0) }
-        val status = glVerify<Int> (this) { glCheckFramebufferStatus(GL_FRAMEBUFFER) }
-        if (status != GL_FRAMEBUFFER_COMPLETE) {
-            crash("Failed to attach texture $texture to frame buffer.")
-        }
+        glVerify(this) { glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0) }
+        glVerifyEquals(
+            this,
+            GL_FRAMEBUFFER_COMPLETE,
+            { glCheckFramebufferStatus(GL_FRAMEBUFFER) }
+        ) { "Failed to attach texture $texture to frame buffer." }
     }
 
     override fun deleteFrameBuffer(handle: Int) {
@@ -351,7 +351,7 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun drawLinesIndexed(offset: Int, vertexCount: Int, indexType: DataType) {
-        val t = vertexAttributeTypeMapping[indexType]!!
+        val t = dataTypeMapping[indexType]!!
         glVerify(this) { glDrawElements(GL_LINES, vertexCount, t, offset.toLong()) }
     }
 
@@ -360,7 +360,7 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun drawTrianglesIndexed(offset: Int, vertexCount: Int, indexType: DataType) {
-        val t = vertexAttributeTypeMapping[indexType]!!
+        val t = dataTypeMapping[indexType]!!
         glVerify(this) { glDrawElements(GL_TRIANGLES, vertexCount, t, offset.toLong()) }
     }
 
@@ -401,6 +401,25 @@ class LwjglOpenGl : OpenGl {
         val handle = IntArray(1)
         glVerify(this) { glGetIntegerv(attribute, handle) }
         return handle[0]
+    }
+
+    private fun verifyProgramState(
+        program: Int,
+        pname: Int,
+        glGetOperation: (Int, Int, IntArray, IntArray, IntArray, ByteBuffer) -> Unit,
+        error: () -> String
+    ) {
+        val count = IntArray(1)
+        glGetProgramiv(program, pname, count)
+        for (i in 0 until count[0]) {
+            val length = IntArray(1)
+            val size = IntArray(1)
+            val type = IntArray(1)
+            val byteBuffer = ByteBuffer.allocateDirect(256)
+            glGetOperation(program, i, length, size, type, byteBuffer)
+            println(getString(byteBuffer, length[0]))
+        }
+        crash(error())
     }
 
     private fun getString(byteBuffer: ByteBuffer, length: Int): String {

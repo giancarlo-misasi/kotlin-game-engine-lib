@@ -70,7 +70,11 @@ class AttributeArray(private val gl: OpenGl, program: Program, specs: List<Attri
     private fun enableAttributes() {
         attributes.forEach {
             gl.enableVertexAttributeArray(it.attributeHandle)
-            gl.setVertexAttributePointer(it.attributeHandle, it, totalSizeInBytes)
+            if (it.spec.type == DataType.FLOAT || it.spec.normalize) {
+                gl.setVertexAttributePointer(it.attributeHandle, it, totalSizeInBytes)
+            } else {
+                gl.setVertexAttributeIPointer(it.attributeHandle, it, totalSizeInBytes)
+            }
         }
     }
 

@@ -26,12 +26,16 @@
 package dev.misasi.giancarlo.assets
 
 import dev.misasi.giancarlo.assets.loaders.AtlasLoader
+import dev.misasi.giancarlo.assets.loaders.SoundLoader
 import dev.misasi.giancarlo.assets.loaders.TextureLoader
 import dev.misasi.giancarlo.crash
-import dev.misasi.giancarlo.opengl.OpenGl
+import dev.misasi.giancarlo.opengl.DisplayContext
 
-class Assets (gl: OpenGl) {
-    private val atlases = AtlasLoader(TextureLoader(gl)).load()
+class Assets (context: DisplayContext) {
+    private val atlases = AtlasLoader(TextureLoader(context.gl)).load()
+    private val sounds = SoundLoader(context.al).load()
 
     fun atlas(name: String) = atlases[name] ?: crash("Atlas not found")
+
+    fun sound(name: String) = sounds[name] ?: crash("Sound not found")
 }

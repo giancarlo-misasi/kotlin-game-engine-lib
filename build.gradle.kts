@@ -101,7 +101,7 @@ kotlin {
                 dependsOn(that, commonDebug, commonRelease)
 
                 // https://www.lwjgl.org/customize
-                arrayOf("lwjgl", "lwjgl-opengl", "lwjgl-glfw").map { "org.lwjgl:$it:$lwjglVersion" }.forEach {
+                arrayOf("lwjgl", "lwjgl-glfw", "lwjgl-opengl", "lwjgl-openal", "lwjgl-stb").map { "org.lwjgl:$it:$lwjglVersion" }.forEach {
                     implementation(it)
                     runtimeOnly("$it:natives-$hostOsName")
                 }

@@ -28,6 +28,7 @@ package dev.misasi.giancarlo.opengl
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.events.input.mouse.CursorMode
 import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.openal.OpenAl
 
 interface DisplayContext {
 
@@ -38,6 +39,7 @@ interface DisplayContext {
     var vsync: Boolean
     var refreshRate: Int?
     val gl: OpenGl
+    val al: OpenAl
     val view: Viewport
 
     fun getPrimaryMonitorResolution(): Vector2f
