@@ -27,7 +27,7 @@ package dev.misasi.giancarlo.ux
 
 import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.drawing.StaticMaterial
-import dev.misasi.giancarlo.drawing.graphics.Sprite2dGraphics
+import dev.misasi.giancarlo.drawing.programs.Sprite2d
 import dev.misasi.giancarlo.events.input.window.ResizeEvent
 import dev.misasi.giancarlo.math.Flip
 import dev.misasi.giancarlo.math.Point4f
@@ -38,19 +38,15 @@ import dev.misasi.giancarlo.system.Clock
 class ScreenStack (private val context: DisplayContext) {
     private val clock = Clock()
     private val frameBuffer: FrameBuffer
-    private val postProcessingGfx: Sprite2dGraphics
+    private val postProcessingGfx: Sprite2d
     private val screens = mutableListOf<Screen>()
 
     init {
         context.gl.setClearColor(Rgba8.BLACK)
         frameBuffer = FrameBuffer(context.gl)
         frameBuffer.attach(Texture(context.gl, context.view.targetResolution.x.toInt(), context.view.targetResolution.y.toInt()))
-        postProcessingGfx = Sprite2dGraphics(context.gl, Buffer.Usage.STATIC, 1)
+        postProcessingGfx = Sprite2d(context.gl, Buffer.Usage.STATIC, 1)
         updateScreenSize()
-    }
-
-    fun setEffect(effect: Effect, enabled: Boolean) {
-        postProcessingGfx.setEffect(effect, enabled)
     }
 
     fun transitionToScreen(screen: Screen) {

@@ -2,15 +2,22 @@
 
 precision highp float;
 
-// constants
-const vec3 colorRetro = (1.0 / 255.0) * vec3(140.0, 173.0, 15.0);
+const vec3 RETRO_COLOR = (1.0 / 255.0) * vec3(140.0, 173.0, 15.0);
+const vec3 SUNRISE_COLOR = vec3(0.9, 0.7, 0.0);
+const vec3 SUNSET_COLOR = vec3(1.0, 0.67, 0.11);
+const vec3 NIGHT_COLOR = vec3(0.0, 0.08, 0.25);
 
 // uniforms
 uniform sampler2D uTexture0;
+//uniform int uTimeSinceStartMs = 0;
 uniform float uAlpha = -1.0;
 uniform int uSepia = 0;
 uniform int uRetro = 0;
 uniform int uInvert = 0;
+uniform int uDayNight = 0;
+uniform float uDayNightAlpha = 0;
+uniform float uDayNightColorMix = 0;
+uniform int uDayNightColorAm = 0;
 
 // input
 layout (location = 0) in vec2 inUv;
@@ -28,11 +35,17 @@ vec3 sepia(vec3 v) {
 }
 
 vec3 retro(vec3 v) {
-    return colorRetro * sepia(v);
+    return RETRO_COLOR * sepia(v);
 }
 
 vec3 invert(vec3 v) {
     return 1 - v;
+}
+
+vec3 day_night(vec3 v) {
+    vec3 sunColor = uDayNightColorAm == 1 ? SUNRISE_COLOR : SUNSET_COLOR;
+    vec3 dayNightOverlay = mix(sunColor, NIGHT_COLOR, 1.0 - uDayNightColorMix);
+    return mix(v, dayNightOverlay, 1.0 - uDayNightAlpha);
 }
 
 // implementation
@@ -49,6 +62,9 @@ void main() {
     }
 
     // apply effects
+    if (uDayNight == 1) {
+        c.rgb = day_night(c.rgb);
+    }
     if (uSepia == 1) {
         c.rgb = sepia(c.rgb);
     }

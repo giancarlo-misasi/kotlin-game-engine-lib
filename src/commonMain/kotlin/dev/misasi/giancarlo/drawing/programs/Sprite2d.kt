@@ -23,24 +23,42 @@
  *
  */
 
-package dev.misasi.giancarlo.drawing.graphics
+package dev.misasi.giancarlo.drawing.programs
 
 import dev.misasi.giancarlo.assets.constants.Shaders
 import dev.misasi.giancarlo.drawing.DrawOrder
 import dev.misasi.giancarlo.drawing.Material
-import dev.misasi.giancarlo.math.*
 import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
+import dev.misasi.giancarlo.math.*
 import dev.misasi.giancarlo.opengl.*
-import dev.misasi.giancarlo.ux.Effect
+import dev.misasi.giancarlo.ux.effects.DayNight
 
-class Sprite2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: Int) {
-    private val program = Program(gl, Shaders.sprite2d())
-    private val uniformMap = UniformMap(gl, program, listOf("uMvp", "uAlpha") + Effect.uniforms())
-    private val attributeArray = AttributeArray(gl, program, listOf(
+class Sprite2d(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: Int) {
+    enum class Uniform(val id: String) {
+        MVP("uMvp"),
+//        TIME("uTimeSinceStartMs"),
+        ALPHA("uAlpha"),
+        SEPIA("uSepia"),
+        RETRO("uRetro"),
+        INVERT("uInvert"),
+        DAY_NIGHT("uDayNight"),
+        DAY_NIGHT_ALPHA("uDayNightAlpha"),
+        DAY_NIGHT_COLOR_MIX("uDayNightColorMix"),
+        DAY_NIGHT_AM("uDayNightColorAm");
+
+        companion object {
+            fun uniforms(): List<String> = Uniform.values().map { it.id }
+        }
+    }
+
+    private val program = Program(gl, Shaders.sprite2d(), Uniform.uniforms())
+    private val attributeArray = AttributeArray(
+        gl, program, listOf(
             Attribute.Spec("inXy", DataType.FLOAT, 2),
             Attribute.Spec("inUv", DataType.UNSIGNED_SHORT, 2, normalize = true),
             Attribute.Spec("inAlpha", DataType.FLOAT, 1)
-    ))
+        )
+    )
     private val indexBuffer: IndexBuffer
     private val totalSizeInBytes = 4 * attributeArray.totalSizeInBytes * maxEntities
     private val vertexBuffer = VertexBuffer(gl, bufferUsage, totalSizeInBytes)
@@ -55,14 +73,35 @@ class Sprite2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEnt
     }
 
     fun bindProgram() = program.bind()
-    fun setMvp(mvp: Matrix4f) = uniformMap.update("uMvp", mvp)
-    fun setAlpha(alpha: Float) = uniformMap.update("uAlpha", alpha)
-    fun setEffect(effect: Effect, enabled: Boolean) = uniformMap.update(effect.id, enabled)
+    fun setMvp(mvp: Matrix4f) = program.setUniformMatrix4f(Uniform.MVP.id, mvp)
+//    fun setTimeSinceStartMs(ms: Int) = program.setUniformInt(Uniform.TIME.id, ms)
+    fun setAlphaOverride(alpha: Float) = program.setUniformFloat(Uniform.ALPHA.id, alpha)
+    fun setSepia(enabled: Boolean) = program.setUniformBoolean(Uniform.SEPIA.id, enabled)
+    fun setRetro(enabled: Boolean) = program.setUniformBoolean(Uniform.RETRO.id, enabled)
+    fun setInvert(enabled: Boolean) = program.setUniformBoolean(Uniform.INVERT.id, enabled)
+    fun setDayNight(dayNight: DayNight?) {
+       if (dayNight == null) {
+           program.setUniformBoolean(Uniform.DAY_NIGHT.id, false)
+       } else {
+           program.setUniformBoolean(Uniform.DAY_NIGHT.id, true)
+           program.setUniformFloat(Uniform.DAY_NIGHT_ALPHA.id, dayNight.alpha)
+           program.setUniformFloat(Uniform.DAY_NIGHT_COLOR_MIX.id, dayNight.colorMix)
+           program.setUniformBoolean(Uniform.DAY_NIGHT_AM.id, dayNight.am)
+       }
+    }
+
     fun updateVertexBuffer() = vertexBuffer.bind().update(directBuffer)
     fun draw() = DrawOrder.drawIndexed(gl, DataType.UNSIGNED_INT, drawOrders)
     fun clear() = directBuffer.reset().also { drawOrders.clear() }
 
-    fun putSprite(position: Vector2f, size: Vector2f, material: Material, rotation: Rotation? = null, flip: Flip? = null, alpha: UByte? = null) {
+    fun putSprite(
+        position: Vector2f,
+        size: Vector2f,
+        material: Material,
+        rotation: Rotation? = null,
+        flip: Flip? = null,
+        alpha: UByte? = null
+    ) {
         DrawOrder.updateDrawOrder(drawOrders, program, attributeArray, material)
         putSpriteIndexed(
             Point4f.create(position, size, rotation),

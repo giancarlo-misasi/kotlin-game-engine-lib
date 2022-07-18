@@ -27,6 +27,8 @@ package dev.misasi.giancarlo.opengl
 
 import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.drawing.ShapeType
+import dev.misasi.giancarlo.math.Matrix4f
+import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
 
 interface OpenGl {
@@ -50,7 +52,11 @@ interface OpenGl {
 
     // Uniforms
     fun getUniformLocation(program: Int, name: String): Int
-    fun setUniform(program: Int, uniform: Int, value: Any)
+    fun setUniformMatrix4f(program: Int, uniform: Int, value: Matrix4f)
+    fun setUniformVector2f(program: Int, uniform: Int, value: Vector2f)
+    fun setUniform1f(program: Int, uniform: Int, value: Float)
+    fun setUniform1i(program: Int, uniform: Int, value: Int)
+    fun setUniform1b(program: Int, uniform: Int, value: Boolean)
 
     // Attributes
     fun getAttributeLocation(program: Int, name: String): Int

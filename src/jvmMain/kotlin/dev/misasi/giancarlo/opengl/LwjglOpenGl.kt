@@ -135,16 +135,20 @@ class LwjglOpenGl : OpenGl {
         return location
     }
 
-    override fun setUniform(program: Int, uniform: Int, value: Any) {
-        glVerifyBound(this, GL_CURRENT_PROGRAM, program) { "PROGRAM<$program>" }
-        when (value) {
-            is Matrix4f -> glVerify(this) { glUniformMatrix4fv(uniform, false, value.data) }
-            is Vector2f -> glVerify(this) { glUniform2f(uniform, value.x, value.y) }
-            is Float -> glVerify(this) { glUniform1f(uniform, value) }
-            is Int -> glVerify(this) { glUniform1i(uniform, value) }
-            is Boolean -> glVerify(this) { glUniform1i(uniform, if (value) 1 else 0) }
-            else -> crash("Cannot set uniform, type '${value.javaClass}' not supported.")
-        }
+    override fun setUniformMatrix4f(program: Int, uniform: Int, value: Matrix4f) {
+        glVerify(this) { glUniformMatrix4fv(uniform, false, value.data) }
+    }
+    override fun setUniformVector2f(program: Int, uniform: Int, value: Vector2f) {
+        glVerify(this) { glUniform2f(uniform, value.x, value.y) }
+    }
+    override fun setUniform1f(program: Int, uniform: Int, value: Float) {
+        glVerify(this) { glUniform1f(uniform, value) }
+    }
+    override fun setUniform1i(program: Int, uniform: Int, value: Int) {
+        glVerify(this) { glUniform1i(uniform, value) }
+    }
+    override fun setUniform1b(program: Int, uniform: Int, value: Boolean) {
+        glVerify(this) { glUniform1i(uniform, if (value) 1 else 0) }
     }
 
     override fun getAttributeLocation(program: Int, name: String): Int {
@@ -275,11 +279,13 @@ class LwjglOpenGl : OpenGl {
     }
 
     override fun setTextureWrapS(wrap: Texture.Wrap) {
-        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER) }
+        val wrapParameter = textureWrap[wrap]!!
+        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapParameter) }
     }
 
     override fun setTextureWrapT(wrap: Texture.Wrap) {
-        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER) }
+        val wrapParameter = textureWrap[wrap]!!
+        glVerify(this) { glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapParameter) }
     }
 
     override fun bindTexture2d(texture: Int): Int {

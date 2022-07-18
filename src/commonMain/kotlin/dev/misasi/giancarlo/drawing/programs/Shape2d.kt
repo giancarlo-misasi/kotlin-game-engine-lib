@@ -23,7 +23,7 @@
  *
  */
 
-package dev.misasi.giancarlo.drawing.graphics
+package dev.misasi.giancarlo.drawing.programs
 
 import dev.misasi.giancarlo.assets.constants.Shaders
 import dev.misasi.giancarlo.drawing.DrawOrder
@@ -37,9 +37,8 @@ import dev.misasi.giancarlo.opengl.*
 import kotlin.math.cos
 import kotlin.math.sin
 
-class Shape2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: Int) {
-    private val program = Program(gl, Shaders.shape2d())
-    private val uniformMap = UniformMap(gl, program, listOf("uMvp"))
+class Shape2d(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: Int) {
+    private val program = Program(gl, Shaders.shape2d(), listOf("uMvp"))
     private val attributeArray = AttributeArray(
         gl, program, listOf(
             Attribute.Spec("inXy", DataType.FLOAT, 2),
@@ -56,7 +55,7 @@ class Shape2dGraphics(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEnti
     }
 
     fun bindProgram() = program.bind()
-    fun setMvp(mvp: Matrix4f) = uniformMap.update("uMvp", mvp)
+    fun setMvp(mvp: Matrix4f) = program.setUniformMatrix4f(Sprite2d.Uniform.MVP.id, mvp)
     fun updateVertexBuffer() = vertexBuffer.bind().update(directBuffer)
     fun draw() = DrawOrder.draw(gl, drawOrders)
     fun clear() = directBuffer.reset().also { drawOrders.clear() }

@@ -27,7 +27,7 @@ package dev.misasi.giancarlo
 
 import dev.misasi.giancarlo.assets.Assets
 import dev.misasi.giancarlo.drawing.Animator
-import dev.misasi.giancarlo.drawing.graphics.Sprite2dGraphics
+import dev.misasi.giancarlo.drawing.programs.Sprite2d
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.events.EventQueue
 import dev.misasi.giancarlo.events.input.keyboard.Key
@@ -39,10 +39,10 @@ import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
 import dev.misasi.giancarlo.events.input.window.ResizeEvent
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector3f
-import dev.misasi.giancarlo.openal.SoundBuffer
 import dev.misasi.giancarlo.openal.SoundSource
 import dev.misasi.giancarlo.opengl.*
 import dev.misasi.giancarlo.ux.*
+import dev.misasi.giancarlo.ux.effects.DayNight
 
 class TestScreen(
     private val context: DisplayContext,
@@ -50,8 +50,9 @@ class TestScreen(
     private val assets: Assets,
     waitMs: Int = 0
 ) : Screen() {
-    private lateinit var spriteGfx: Sprite2dGraphics
+    private lateinit var spriteGfx: Sprite2d
     private var camera = Camera()
+    private var time = 0
     private var alpha = -1f
     private val screenTransition = ScreenTransition(this, mapOf(
         ScreenState.WAITING to waitMs,
@@ -67,7 +68,7 @@ class TestScreen(
         // We may want to share instances of these resources, or simply create new for every screen
         // Possibly have a pool so that we can do loading in case init is slow
 
-        spriteGfx = Sprite2dGraphics(context.gl, Buffer.Usage.DYNAMIC, 10000)
+        spriteGfx = Sprite2d(context.gl, Buffer.Usage.DYNAMIC, 10000)
 
         val atlasOverworld = assets.atlas("Overworld")
         val orange = atlasOverworld.material("FloorOrange")
@@ -116,12 +117,19 @@ class TestScreen(
             camera = camera.copy(position = Vector2f())
             alpha = -1f
         }
+
+        time += elapsedMs.toFloat().times(60f).toInt() // 24-minute day
+        if (time > 86400000) {
+            time = 0
+        }
     }
 
     override fun onDraw(context: DisplayContext) {
         spriteGfx.bindProgram()
         spriteGfx.setMvp(camera.mvp(context.view.targetResolution))
-        spriteGfx.setAlpha(alpha)
+//        spriteGfx.setTimeSinceStartMs(time)
+        spriteGfx.setAlphaOverride(alpha)
+        spriteGfx.setDayNight(DayNight.calculate(time))
         spriteGfx.draw()
     }
 
@@ -183,7 +191,6 @@ fun main() {
 
     // todo improve this variable
     val screenStack = ScreenStack(context)
-    screenStack.setEffect(Effect.RETRO, true)
     screenStack.transitionToScreen(TestScreen(context, screenStack, assets))
     screenStack.run()
 }
