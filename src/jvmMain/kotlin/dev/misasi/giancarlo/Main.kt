@@ -37,12 +37,16 @@ import dev.misasi.giancarlo.events.input.mouse.CursorMode
 import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
 import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
 import dev.misasi.giancarlo.events.input.window.ResizeEvent
-import dev.misasi.giancarlo.math.Vector2f
-import dev.misasi.giancarlo.math.Vector3f
+import dev.misasi.giancarlo.math.*
 import dev.misasi.giancarlo.openal.SoundSource
 import dev.misasi.giancarlo.opengl.*
 import dev.misasi.giancarlo.ux.*
 import dev.misasi.giancarlo.ux.effects.DayNight
+import kotlin.math.*
+import kotlin.random.Random
+
+val width = 1600
+val height = 1200
 
 class TestScreen(
     private val context: DisplayContext,
@@ -52,7 +56,7 @@ class TestScreen(
 ) : Screen() {
     private lateinit var spriteGfx: Sprite2d
     private var camera = Camera()
-    private var time = 0
+    private var time = 86400000 / 2
     private var alpha = -1f
     private val screenTransition = ScreenTransition(this, mapOf(
         ScreenState.WAITING to waitMs,
@@ -71,27 +75,46 @@ class TestScreen(
         spriteGfx = Sprite2d(context.gl, Buffer.Usage.DYNAMIC, 10000)
 
         val atlasOverworld = assets.atlas("Overworld")
-        val orange = atlasOverworld.material("FloorOrange")
-        val purple = atlasOverworld.material("FloorPurple")
+        val water = atlasOverworld.material("Water")
+        val sand = atlasOverworld.material("FloorSand")
+        val grass = atlasOverworld.material("FloorGrass")
         val tree = atlasOverworld.material("Tree")
+        val purple = atlasOverworld.material("FloorPurple")
 
+        // https://www.redblobgames.com/maps/terrain-from-noise/
+        var min = Float.MAX_VALUE
+        var max = Float.MIN_VALUE
         spriteGfx.clear()
-        for (x in 0..800 step 16) {
-            for (y in 0..600 step 16) {
-               if (x < 400) {
-                    spriteGfx.putSprite(Vector2f(x.toFloat(), y.toFloat()), Vector2f(16f, 16f), orange)
-                } else {
-                    spriteGfx.putSprite(Vector2f(x.toFloat(), y.toFloat()), Vector2f(16f, 16f), purple)
+        val seed = getTimeMillis()
+        val random = Random(seed)
+        val octaves = List(6) { SimplexNoise().shuffle(random.nextLong()) }
+        for (x in 0..width step 16) {
+            for (y in 0..height step 16) {
+                val nx = x / width.toFloat() - 0.5f // center around origin (i.e. -0.5 to 0.5 instead of 0 to 1)
+                val ny = y / width.toFloat() - 0.5f
+                // todo put in aspect ratio?
+                var e = SimplexNoise.fractal(octaves, nx, ny)
+
+                // one way to re-distribute heights
+                e = e.times(1.2f).pow(2.4f)
+                e = constrainValue(0f, 1f, e)
+
+                min = min(e, min)
+                max = max(e, max)
+                val materials = if (e <= 0.3f) {
+                    listOf(water)
+                } else if (e > 0.3f && e <= 0.45f) {
+                    listOf(sand)
+                }  else if (e > 0.45f && e <= 0.7f) {
+                    listOf(grass)
+                }  else {
+                    listOf(grass, tree)
                 }
+
+                materials.forEach { spriteGfx.putSprite(Vector2f(x.toFloat(), y.toFloat()), Vector2f(16f, 16f), it) }
             }
         }
-        for (x in 0..800 step 128) {
-            for (y in 0..600 step 128) {
-                if (x == 0 || y == 0) {
-                    spriteGfx.putSprite(Vector2f(x.toFloat(), y.toFloat()), Vector2f(128f, 128f), tree)
-                }
-            }
-        }
+        println("min: $min, max: $max")
         spriteGfx.updateVertexBuffer()
 
         walkSource = SoundSource(context.al).attach(assets.sound("heart container 1"))
@@ -104,12 +127,12 @@ class TestScreen(
         val transitionElapsedPercentage = screenTransition.elapsedPercentage()
         if (transitionElapsedPercentage != null) {
             when (state) {
-                ScreenState.IN -> camera = camera.copy(position = Animator.translate(Vector2f(-800f), Vector2f(), transitionElapsedPercentage))
+                ScreenState.IN -> camera = camera.copy(position = Animator.translate(Vector2f(-width.toFloat()), Vector2f(), transitionElapsedPercentage))
 //                ScreenState.IN -> alpha = Animator.fadeIn(transitionElapsedPercentage)
                 else -> {}
             }
             when (state) {
-                ScreenState.OUT -> camera = camera.copy(position = Animator.translate(Vector2f(), Vector2f(800f), transitionElapsedPercentage))
+                ScreenState.OUT -> camera = camera.copy(position = Animator.translate(Vector2f(), Vector2f(width.toFloat()), transitionElapsedPercentage))
 //                ScreenState.OUT -> alpha = Animator.fadeOut(transitionElapsedPercentage)
                 else -> {}
             }
@@ -174,8 +197,8 @@ class TestScreen(
 fun main() {
     val context = LwjglGlfwDisplayContext(
         "title",
-        Vector2f(800f, 600f),
-        Vector2f(800f, 600f),
+        Vector2f(width.toFloat(), height.toFloat()),
+        Vector2f(width.toFloat(), height.toFloat()),
         fullScreen = false,
         vsync = false,
         refreshRate = 60,
