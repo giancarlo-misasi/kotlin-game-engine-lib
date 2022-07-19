@@ -6,7 +6,7 @@
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
- * to use, copy, modiy, merge, publish, distribute, sublicense, and/or sell
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
@@ -21,26 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * Original author: Sebastien Rombauts (sebastien.rombauts@gmail.com)
- * Source: https://github.com/SRombauts/SimplexNoise/blob/master/src/SimplexNoise.cpp
- * Converted to Kotlin: Giancarlo Misasi
- *
  */
 
-package dev.misasi.giancarlo.math
+package dev.misasi.giancarlo.noise
 
-import kotlin.random.Random
+import dev.misasi.giancarlo.math.convertRange
+import dev.misasi.giancarlo.math.fastFloor
 import kotlin.math.pow
+import kotlin.random.Random
 
-class SimplexNoise {
+class SimplexNoise : Noise {
     private val permutations = (0 until 256).toMutableList()
 
-    fun shuffle(seed: Long): SimplexNoise {
+    override fun shuffle(seed: Long): Noise {
         permutations.shuffle(Random(seed))
         return this
     }
 
-    fun noise2d(x: Float, y: Float): Float {
+    override fun noise2d(x: Float, y: Float): Float {
         // Skew the input space to determine which simplex cell we're in
         val s = (x + y) * F2 // Hairy factor for 2D
         val i = fastFloor(x + s)
@@ -119,32 +117,6 @@ class SimplexNoise {
         private const val F2 = 0.3660254f // 0.5 * (sqrt(3.0) - 1.0)
         private const val G2 = 0.21132487f // (3.0 - sqrt(3.0)) / 6.0
         private const val RANGE_SCALE = 45.555f // Calculated experimentally by running a large number of iterations and taking average
-
-        /**
-         * @param octaves the noise functions to use (to make successive iterations independent instead of correlated)
-         * @param lacunarity what makes the frequency grow for each successive octave
-         * @param persistence what makes the amplitude shrink (or not) with each successive octave
-         */
-        fun fractal(octaves: Iterable<SimplexNoise>, x: Float, y: Float, lacunarity: Float = 1.99f, persistence: Float = 0.49f): Float {
-            var output = 0f
-            var denominator = 0f
-            var frequency = 1f
-            var amplitude = 1f
-
-            for (octave in octaves) {
-                output += amplitude * octave.noise2d(x * frequency, y * frequency)
-                denominator += amplitude
-                frequency *= lacunarity
-                amplitude *= persistence
-            }
-
-            return output / denominator
-        }
-
-        private fun fastFloor(x: Float): Int {
-            val xi = x.toInt()
-            return if (x < xi) xi - 1 else xi
-        }
 
         private fun grad(hash: Int, x: Float, y: Float): Float {
             val h = hash and 0x3F       // Convert low 3 bits of hash code  // 7

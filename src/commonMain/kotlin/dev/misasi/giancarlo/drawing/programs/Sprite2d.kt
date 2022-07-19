@@ -41,6 +41,8 @@ class Sprite2d(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: I
         SEPIA("uSepia"),
         RETRO("uRetro"),
         INVERT("uInvert"),
+        SHAKE("uShake"),
+        SHAKE_AMOUNT("uShakeAmount"),
         DAY_NIGHT("uDayNight"),
         DAY_NIGHT_ALPHA("uDayNightAlpha"),
         DAY_NIGHT_COLOR_MIX("uDayNightColorMix"),
@@ -79,7 +81,15 @@ class Sprite2d(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: I
     fun setSepia(enabled: Boolean) = program.setUniformBoolean(Uniform.SEPIA.id, enabled)
     fun setRetro(enabled: Boolean) = program.setUniformBoolean(Uniform.RETRO.id, enabled)
     fun setInvert(enabled: Boolean) = program.setUniformBoolean(Uniform.INVERT.id, enabled)
-    fun setDayNight(dayNight: DayNight?) {
+    fun setShake(amount: Vector2f? = null) {
+        if (amount == null) {
+            program.setUniformBoolean(Uniform.SHAKE.id, false)
+        } else {
+            program.setUniformBoolean(Uniform.SHAKE.id, true)
+            program.setUniformVector2f(Uniform.SHAKE_AMOUNT.id, amount)
+        }
+    }
+    fun setDayNight(dayNight: DayNight? = null) {
        if (dayNight == null) {
            program.setUniformBoolean(Uniform.DAY_NIGHT.id, false)
        } else {

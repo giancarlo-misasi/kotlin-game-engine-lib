@@ -23,37 +23,20 @@
  *
  */
 
-package dev.misasi.giancarlo.ux
+package dev.misasi.giancarlo.noise
 
-import dev.misasi.giancarlo.system.TimeAccumulator
+import dev.misasi.giancarlo.math.Vector2f
 
-class ScreenTransition(
-    private val screen: Screen,
-    private val transitionDurationsMs: Map<ScreenState, Long> = mapOf()
-) {
-    private val accumulator = TimeAccumulator()
-
-    fun elapsedPercentage(): Float? {
-        val durationMs = transitionDurationsMs[screen.state]
-        return if (durationMs != null) {
-            accumulator.elapsedPercentage(durationMs)
-        } else {
-            null
-        }
+data class NoiseOctave (private val noiseGenerator: Noise, val frequency: Float, val amplitude: Float) {
+    fun noise2d(points: List<NoisePoint>): Map<Vector2f, Float> {
+        return points.associate { it.position to amplitude * noise2d(it.normalizedPosition.scale(frequency)) }
     }
 
-    fun update(elapsedMs: Long) {
-        if (screen.state.hasNext()) {
-            accumulator.update(elapsedMs)
-            val durationMs = transitionDurationsMs[screen.state] ?: 0
-            if (accumulator.hasElapsed(durationMs)) {
-                screen.goToNextState()
-                reset()
-            }
-        }
+    fun noise2d(point: Vector2f): Float {
+        return noise2d(point.x, point.y)
     }
 
-    fun reset() {
-        accumulator.reset()
+    fun noise2d(x: Float, y: Float): Float {
+        return noiseGenerator.noise2d(x, y)
     }
 }

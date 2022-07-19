@@ -28,12 +28,12 @@ package dev.misasi.giancarlo.system
 import kotlin.math.max
 
 class TimeAccumulator {
-    private var accumulatedMs: Int = 0
+    private var accumulatedMs: Long = 0
 
-    fun hasElapsed(durationMs: Int): Boolean = accumulatedMs >= durationMs
-    fun elapsedPercentage(durationMs: Int): Float = accumulatedMs / max(durationMs, accumulatedMs).toFloat()
+    fun hasElapsed(durationMs: Long): Boolean = accumulatedMs >= durationMs
+    fun elapsedPercentage(durationMs: Long): Float = accumulatedMs / max(durationMs, accumulatedMs).toFloat()
 
-    fun update(elapsedMillis: Int): TimeAccumulator {
+    fun update(elapsedMillis: Long): TimeAccumulator {
         accumulatedMs += elapsedMillis
         return this
     }

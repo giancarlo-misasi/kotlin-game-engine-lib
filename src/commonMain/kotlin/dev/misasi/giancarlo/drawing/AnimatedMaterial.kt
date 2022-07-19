@@ -40,9 +40,9 @@ class AnimatedMaterial (
     override fun coordinates(): Point4f = currentFrame().coordinates()
     private fun currentFrame() : Material = materialSet.frames[index]
 
-    fun update(elapsedMillis: Int) {
+    fun update(elapsedMillis: Long) {
         accumulator.update(elapsedMillis)
-        if (accumulator.hasElapsed(materialSet.frameDurationMillis)) {
+        if (accumulator.hasElapsed(materialSet.frameDurationMillis.toLong())) {
             accumulator.reset()
             index = (index + 1) % materialSet.frames.size
         }

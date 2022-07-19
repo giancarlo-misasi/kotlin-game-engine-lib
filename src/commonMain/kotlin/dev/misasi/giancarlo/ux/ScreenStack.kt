@@ -61,7 +61,7 @@ class ScreenStack (private val context: DisplayContext) {
         }
     }
 
-    private fun update(elapsedMs: Int) {
+    private fun update(elapsedMs: Long) {
         val workList = ArrayDeque(screens)
         var transitionOut = false
         while (!workList.isEmpty()) {

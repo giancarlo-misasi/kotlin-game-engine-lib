@@ -23,37 +23,19 @@
  *
  */
 
-package dev.misasi.giancarlo.ux
+package dev.misasi.giancarlo.ux.effects
 
-import dev.misasi.giancarlo.system.TimeAccumulator
+import dev.misasi.giancarlo.math.Vector2f
+import kotlin.random.Random
 
-class ScreenTransition(
-    private val screen: Screen,
-    private val transitionDurationsMs: Map<ScreenState, Long> = mapOf()
-) {
-    private val accumulator = TimeAccumulator()
-
-    fun elapsedPercentage(): Float? {
-        val durationMs = transitionDurationsMs[screen.state]
-        return if (durationMs != null) {
-            accumulator.elapsedPercentage(durationMs)
-        } else {
-            null
+class Shake {
+    companion object {
+        fun calculate(timeSinceStartMs: Long): Vector2f {
+            val t = timeSinceStartMs % 86400000
+            val r = Random(t)
+            val x = 0.016 * r.nextFloat()
+            val y = 0.016 * r.nextFloat()
+            return Vector2f(x.toFloat(), y.toFloat())
         }
-    }
-
-    fun update(elapsedMs: Long) {
-        if (screen.state.hasNext()) {
-            accumulator.update(elapsedMs)
-            val durationMs = transitionDurationsMs[screen.state] ?: 0
-            if (accumulator.hasElapsed(durationMs)) {
-                screen.goToNextState()
-                reset()
-            }
-        }
-    }
-
-    fun reset() {
-        accumulator.reset()
     }
 }

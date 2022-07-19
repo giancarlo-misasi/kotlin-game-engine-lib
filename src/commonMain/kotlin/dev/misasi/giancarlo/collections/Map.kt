@@ -23,37 +23,19 @@
  *
  */
 
-package dev.misasi.giancarlo.ux
+package dev.misasi.giancarlo.collections
 
-import dev.misasi.giancarlo.system.TimeAccumulator
+fun <K, V : Any> List<Map<K, V>>.mergeReduce(reduce: (V, V) -> V): Map<K, V> =
+    mutableMapOf<K, V>().mergeReduceInPlace(this, reduce)
 
-class ScreenTransition(
-    private val screen: Screen,
-    private val transitionDurationsMs: Map<ScreenState, Long> = mapOf()
-) {
-    private val accumulator = TimeAccumulator()
+fun <K, V : Any> Map<K, V>.mergeReduce(others: List<Map<K, V>>, reduce: (V, V) -> V): Map<K, V> =
+    toMutableMap().mergeReduceInPlace(others, reduce)
 
-    fun elapsedPercentage(): Float? {
-        val durationMs = transitionDurationsMs[screen.state]
-        return if (durationMs != null) {
-            accumulator.elapsedPercentage(durationMs)
-        } else {
-            null
-        }
-    }
+fun <K, V : Any> MutableMap<K, V>.mergeReduceInPlace(others: List<Map<K, V>>, reduce: (V, V) -> V): MutableMap<K, V> =
+    apply { others.forEach { other -> other.forEach { merge(it.key, it.value, reduce) } } }
 
-    fun update(elapsedMs: Long) {
-        if (screen.state.hasNext()) {
-            accumulator.update(elapsedMs)
-            val durationMs = transitionDurationsMs[screen.state] ?: 0
-            if (accumulator.hasElapsed(durationMs)) {
-                screen.goToNextState()
-                reset()
-            }
-        }
-    }
+fun <K, V : Any> Map<K, V>.mergeReduce(vararg others: Map<K, V>, reduce: (V, V) -> V): Map<K, V> =
+    toMutableMap().apply { others.forEach { other -> other.forEach { merge(it.key, it.value, reduce) } } }
 
-    fun reset() {
-        accumulator.reset()
-    }
-}
+fun <K, V : Any> MutableMap<K, V>.mergeReduceInPlace(vararg others: Map<K, V>, reduce: (V, V) -> V): MutableMap<K, V> =
+    apply { others.forEach { other -> other.forEach { merge(it.key, it.value, reduce) } } }

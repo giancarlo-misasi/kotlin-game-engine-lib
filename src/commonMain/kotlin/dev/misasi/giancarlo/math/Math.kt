@@ -25,6 +25,16 @@
 
 package dev.misasi.giancarlo.math
 
+import kotlin.math.pow
+
+const val HALF_PI: Double = Math.PI / 2.0;
+const val TWO_PI: Double = 2.0 * Math.PI;
+
+fun fastFloor(x: Float): Int {
+    val xi = x.toInt()
+    return if (x < xi) xi - 1 else xi
+}
+
 fun convertRange(oldMin: Float, oldMax: Float, newMin: Float, newMax: Float, value: Float): Float {
     val v: Float = if (value < oldMin) {
         oldMin
@@ -43,5 +53,18 @@ fun constrainValue(min: Float, max: Float, value: Float): Float {
         max
     } else {
         value
+    }
+}
+
+fun sin(amplitude: Double, period: Double, horizontal: Double, vertical: Double, x: Long): Double {
+    return amplitude * kotlin.math.sin(period * x - horizontal) + vertical
+}
+
+fun Float.powList(iterations: Int): List<Float> {
+    var v = this
+    return listOf(1f) + (1 until iterations).map {
+        val result = v
+        v *= v
+        result
     }
 }

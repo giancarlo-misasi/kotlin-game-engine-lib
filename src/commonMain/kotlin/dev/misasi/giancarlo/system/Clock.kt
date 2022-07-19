@@ -37,7 +37,7 @@ class Clock {
     private var lastUpdateMs = startMs
 
     fun elapsedSinceStartMs(): Long = getTimeMillis() - startMs
-    fun elapsedSinceUpdateMs(maxStepMs: Int): Int = max(0, min(getTimeMillis() - lastUpdateMs, maxStepMs.toLong()).toInt())
+    fun elapsedSinceUpdateMs(maxStepMs: Long): Long = max(0, min(getTimeMillis() - lastUpdateMs, maxStepMs))
     fun update() = update(getTimeMillis())
 
     @Synchronized

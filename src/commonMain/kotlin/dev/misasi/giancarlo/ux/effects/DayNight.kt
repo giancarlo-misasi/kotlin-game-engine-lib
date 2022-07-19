@@ -25,27 +25,24 @@
 
 package dev.misasi.giancarlo.ux.effects
 
-import kotlin.math.sin
+import dev.misasi.giancarlo.math.HALF_PI
+import dev.misasi.giancarlo.math.TWO_PI
+import dev.misasi.giancarlo.math.sin
 
 class DayNight private constructor(val alpha: Float, val colorMix: Float, val am: Boolean) {
     companion object {
-        private const val HALF_PI: Double = Math.PI / 2.0;
-        private const val TWO_PI: Double = 2.0 * Math.PI;
-        private const val LENGTH_OF_DAY_MS: Int = 24 * 60 * 60 * 1000;
+        private const val LENGTH_OF_DAY_MS: Long = 24 * 60 * 60 * 1000;
         private const val DAY_PERIOD: Double = TWO_PI / LENGTH_OF_DAY_MS;
         private const val HALF_DAY_PERIOD = 2.0 * DAY_PERIOD;
 
-        fun calculate(timeSinceStartMs: Int): DayNight {
+        fun calculate(timeSinceStartMs: Long): DayNight {
             // we use 0.45 and 0.55 so that we convert the vertical range of sin from -1,1 to .1,1
             // this keeps a small level of transparency at all times of day
-            val alpha = sin(0.45, DAY_PERIOD, HALF_PI, 0.55, timeSinceStartMs)
-            val colorMix = sin(0.45, HALF_DAY_PERIOD, HALF_PI, 0.55, timeSinceStartMs)
-            val am = sin(0.45, DAY_PERIOD, HALF_PI, 0.55, timeSinceStartMs + 1) >= alpha;
+            val t = timeSinceStartMs % 86400000
+            val alpha = sin(0.45, DAY_PERIOD, HALF_PI, 0.55, t)
+            val colorMix = sin(0.45, HALF_DAY_PERIOD, HALF_PI, 0.55, t)
+            val am = sin(0.45, DAY_PERIOD, HALF_PI, 0.55, t + 1) >= alpha;
             return DayNight(alpha.toFloat(), colorMix.toFloat(), am)
-        }
-
-        private fun sin(amplitude: Double, period: Double, horizontal: Double, vertical: Double, x: Int): Double {
-            return amplitude * sin(period * x - horizontal) + vertical
         }
     }
 }

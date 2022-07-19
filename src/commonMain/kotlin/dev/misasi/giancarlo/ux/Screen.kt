@@ -43,7 +43,7 @@ abstract class Screen {
     }
 
     abstract fun onInit(context: DisplayContext)
-    abstract fun onUpdate(elapsedMs: Int)
+    abstract fun onUpdate(elapsedMs: Long)
     abstract fun onDraw(context: DisplayContext)
     abstract fun onEvent(context: DisplayContext, event: Event)
     abstract fun onDestroy(context: DisplayContext)
