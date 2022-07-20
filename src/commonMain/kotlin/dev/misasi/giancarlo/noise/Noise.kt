@@ -31,9 +31,22 @@ import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.powList
 import kotlin.random.Random
 
+/**
+ * Interface for generating functions to produce random values (noise)
+ * useful for generation of things like terrain.
+ */
 interface Noise {
+    /**
+     * Randomizes the generator.
+     * @param seed determines the set of random numbers to use when generating noise
+     */
     fun shuffle(seed: Long): Noise
-    fun noise2d(x: Float, y: Float): Float
+
+    /**
+     * Generates noise values in the range [-1f to 1f]
+     * @param point the normalized position to generate noise from
+     */
+    fun noise2d(point: Vector2f): Float
 
     companion object {
         fun octaves(

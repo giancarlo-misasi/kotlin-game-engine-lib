@@ -25,7 +25,8 @@
 
 package dev.misasi.giancarlo.noise
 
-import dev.misasi.giancarlo.math.convertRange
+import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.math.constrainValue
 import dev.misasi.giancarlo.math.fastFloor
 import kotlin.math.pow
 import kotlin.random.Random
@@ -33,12 +34,13 @@ import kotlin.random.Random
 class SimplexNoise : Noise {
     private val permutations = (0 until 256).toMutableList()
 
-    override fun shuffle(seed: Long): Noise {
-        permutations.shuffle(Random(seed))
-        return this
-    }
+    override fun shuffle(seed: Long): Noise =
+        apply { permutations.shuffle(Random(seed)) }
 
-    override fun noise2d(x: Float, y: Float): Float {
+    override fun noise2d(point: Vector2f): Float =
+        noise2d(point.x, point.y)
+
+    private fun noise2d(x: Float, y: Float): Float {
         // Skew the input space to determine which simplex cell we're in
         val s = (x + y) * F2 // Hairy factor for 2D
         val i = fastFloor(x + s)
@@ -106,7 +108,7 @@ class SimplexNoise : Noise {
             t2.pow(4) * grad(gi2, x2, y2);
         }
 
-        return convertRange(-1f, 1f, 0f, 1f, RANGE_SCALE * (n0 + n1 + n2))
+        return constrainValue(-1f, 1f, RANGE_SCALE * (n0 + n1 + n2))
     }
 
     private fun hash(value: Int): Int {

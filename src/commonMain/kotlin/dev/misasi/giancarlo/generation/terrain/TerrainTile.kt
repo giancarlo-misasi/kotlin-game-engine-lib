@@ -23,14 +23,7 @@
  *
  */
 
-package dev.misasi.giancarlo.noise
+package dev.misasi.giancarlo.generation.terrain
 
-import dev.misasi.giancarlo.math.Vector2f
-
-data class NoiseOctave (private val noiseGenerator: Noise, val frequency: Float, val amplitude: Float) {
-    fun noise2d(points: List<NoisePoint>): Map<Vector2f, Float> =
-        points.associate { it.position to noise2d(it) }
-
-    private fun noise2d(point: NoisePoint): Float =
-        amplitude * noiseGenerator.noise2d(point.normalizedPosition.scale(frequency))
+class TerrainTile {
 }
