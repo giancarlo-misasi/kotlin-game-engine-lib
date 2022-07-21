@@ -25,12 +25,58 @@
 
 package dev.misasi.giancarlo.noise
 
+import dev.misasi.giancarlo.collections.mergeReduce
+import dev.misasi.giancarlo.collections.sumOf
+import dev.misasi.giancarlo.math.NormalizedPoint
 import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.math.powList
+import kotlin.random.Random
 
-data class NoiseOctave (private val noiseGenerator: Noise, val frequency: Float, val amplitude: Float) {
-    fun noise2d(points: List<NoisePoint>): Map<Vector2f, Float> =
-        points.associate { it.position to noise2d(it) }
+/**
+ * To configure and combine multiple iterations of noise.
+ */
+data class NoiseOctave(private val noiseGenerator: Noise, val frequency: Float, val amplitude: Float) {
 
-    private fun noise2d(point: NoisePoint): Float =
-        amplitude * noiseGenerator.noise2d(point.normalizedPosition.scale(frequency))
+    /**
+     * Generates a noise value that falls into the range [-amplitude to +amplitude].
+     */
+    fun noise2d(point: NormalizedPoint): Float =
+        amplitude * noiseGenerator.noise2d(point.normal.scale(frequency))
+
+    companion object {
+
+        /**
+         * Generates a list of octaves to use to combine iterations of noise.
+         */
+        fun octaves(
+            seed: Long,
+            count: Int,
+            noiseGenerator: () -> Noise,
+            lacunarity: Float = 1.99f,
+            gain: Float = 0.499f
+        ): List<NoiseOctave> {
+            val seeds = Random(seed).let { r -> (0 until count).map { r.nextLong() } }
+            val frequencies = lacunarity.powList(count)
+            val amplitudes = gain.powList(count)
+            return (0 until count).map { i ->
+                NoiseOctave(
+                    noiseGenerator().shuffle(seeds[i]),
+                    frequencies[i],
+                    amplitudes[i]
+                )
+            }
+        }
+
+        /**
+         * Generates a noise map by combining octaves where noise values fall into the range [-1f to 1f].
+         */
+        fun List<NoiseOctave>.noise2d(points: List<NormalizedPoint>): Map<Vector2f, Float> {
+            // generate noise map with values from [0f to 2f * amplitude], where the max value is the start amplitude
+            val noises = map { octave -> points.associate { it.point to octave.noise2d(it).plus(octave.amplitude) } }
+            val max = noises.sumOf { it.values.max() }
+            val noise = noises.mergeReduce(Float::plus).toMutableMap()
+            // convert noise range back to [0f to amplitude], where the max value is the start amplitude
+            return noise.onEach { noise[it.key] = it.value / max }
+        }
+    }
 }

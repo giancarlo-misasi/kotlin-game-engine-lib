@@ -23,8 +23,18 @@
  *
  */
 
-package dev.misasi.giancarlo.noise
+package dev.misasi.giancarlo.math
 
-import dev.misasi.giancarlo.math.Vector2f
-
-data class NoisePoint(val position: Vector2f, val normalizedPosition: Vector2f)
+data class NormalizedPoint(val point: Vector2f, val normal: Vector2f) {
+    companion object {
+        fun points(width: Int, height: Int, scale: (Float) -> Float = { it }): List<NormalizedPoint> {
+            return (0 until height).flatMap { y ->
+                val ny = scale(y / height.toFloat())
+                (0 until width).map { x ->
+                    val nx = scale(x / width.toFloat())
+                    NormalizedPoint(Vector2f(x.toFloat(), y.toFloat()), Vector2f(nx, ny))
+                }
+            }
+        }
+    }
+}

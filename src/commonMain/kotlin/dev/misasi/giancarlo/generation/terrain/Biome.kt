@@ -23,48 +23,29 @@
  *
  */
 
-package dev.misasi.giancarlo.math
+package dev.misasi.giancarlo.generation.terrain
+// https://education.nationalgeographic.org/resource/five-major-types-biomes
+enum class Biome {
+    // Aquatic, bodies of water surrounded by land
+    WATER,
+    BEACH,
 
-import kotlin.math.pow
+    // Grasslands, open regions that are dominated by grass and have a warm, dry climate
+    TROPICAL_GRASSLANDS, // SAVANNAS, have few scattered trees
+    // Temperate grasslands
+    PRAIRIES, // have tall grass, do not have any trees or shrubs, and receive less precipitation
+    STEPPES,  // have shorter grass, do not have any trees or shrubs, and receive less precipitation
 
-const val HALF_PI: Double = Math.PI / 2.0;
-const val TWO_PI: Double = 2.0 * Math.PI;
+    // Forest, dominated by trees
+    TROPICAL_FOREST,  // warm, humid, and found close to the equator
+    TEMPERATE_FOREST, // higher latitudes, experience all four seasons
+    BOREAL_FOREST,    // TAIGA, highest latitudes, coldest/driest climate, precipitation occurs as snow
 
-fun fastFloor(x: Float): Int {
-    val xi = x.toInt()
-    return if (x < xi) xi - 1 else xi
+    // Deserts, dry areas where rainfall is less than 50 centimeters per year
+    COLD_DESERT,
+    HOT_DESERT,
+
+    // Tundra, extremely inhospitable conditions, lowest temperatures, biodiversity and low precipitation
+    TUNDRA
 }
 
-//fun convertRange(oldMin: Float, oldMax: Float, newMin: Float, newMax: Float, value: Float): Float {
-//    val v: Float = if (value < oldMin) {
-//        oldMin
-//    } else if (value > oldMax) {
-//        oldMax
-//    } else {
-//        value
-//    }
-//    return (((v - oldMin) * (newMax - newMin)) / (oldMax - oldMin)) + newMin
-//}
-
-fun constrainValue(min: Float, max: Float, value: Float): Float {
-    return if (value < min) {
-        min
-    } else if (value > max) {
-        max
-    } else {
-        value
-    }
-}
-
-fun sin(amplitude: Double, period: Double, horizontal: Double, vertical: Double, x: Long): Double {
-    return amplitude * kotlin.math.sin(period * x - horizontal) + vertical
-}
-
-fun Float.powList(iterations: Int): List<Float> {
-    var v = this
-    return listOf(1f) + (1 until iterations).map {
-        val result = v
-        v *= v
-        result
-    }
-}

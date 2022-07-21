@@ -25,8 +25,30 @@
 
 package dev.misasi.giancarlo.generation.terrain
 
-class TerrainChunk (
-    val biome: Biome
-//    val elevation: ClosedFloatingPointRange<Float>,
-//    val moisture: ClosedFloatingPointRange<Float>
-)
+import dev.misasi.giancarlo.math.Grid
+import dev.misasi.giancarlo.noise.NoiseOctave
+import dev.misasi.giancarlo.noise.NoiseOctave.Companion.noise2d
+import dev.misasi.giancarlo.math.NormalizedPoint
+import dev.misasi.giancarlo.noise.SimplexNoise
+import java.util.*
+
+class NoiseTerrainGenerator : TerrainGenerator {
+
+    override fun generate(seed: Long, width: Int, height: Int): Grid<TerrainChunk> {
+        val random = Random(seed)
+        val grid = Grid(width, height) { TerrainChunk(Biome.WATER) }
+        val points = NormalizedPoint.points(width, height)
+        val elevationNoise = NoiseOctave.octaves(random.nextLong(), 3, ::SimplexNoise).noise2d(points)
+        val moistureNoise = NoiseOctave.octaves(random.nextLong(), 3, ::SimplexNoise).noise2d(points)
+        for (point in points) {
+            val elevation = elevationNoise[point.point]!!
+            val moisture = moistureNoise[point.point]!!
+            grid.replace(point.point.x.toInt(), point.point.y.toInt(), TerrainChunk(biome(elevation, moisture)))
+        }
+        return grid
+    }
+
+    private fun biome(elevation: Float, moisture: Float): Biome {
+        return Biome.BEACH
+    }
+}

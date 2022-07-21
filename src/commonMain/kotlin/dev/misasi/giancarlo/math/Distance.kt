@@ -25,4 +25,20 @@
 
 package dev.misasi.giancarlo.math
 
-data class MinMax<T> (val min: T, val max: T)
+import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sqrt
+
+class Distance {
+    companion object {
+        fun squareBump(width: Int, height: Int): Map<Vector2f, Float> {
+            val points = NormalizedPoint.points(width, height) { v -> 2f * v - 1f }
+            return points.associate { it.point to 1f - (1 - it.normal.x.pow(2) * (1 - it.normal.y.pow(2))) }
+        }
+
+        fun euclideanSquared(width: Int, height: Int): Map<Vector2f, Float> {
+            val points = NormalizedPoint.points(width, height) { v -> 2f * v - 1f }
+            return points.associate { it.point to min(1f, (it.normal.x.pow(2) + it.normal.y.pow(2)) / sqrt(2f)) }
+        }
+    }
+}

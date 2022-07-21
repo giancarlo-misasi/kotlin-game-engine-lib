@@ -40,8 +40,9 @@ import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
 import dev.misasi.giancarlo.events.input.window.ResizeEvent
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector3f
-import dev.misasi.giancarlo.noise.Noise
-import dev.misasi.giancarlo.noise.Noise.Companion.noise2d
+import dev.misasi.giancarlo.noise.NoiseOctave
+import dev.misasi.giancarlo.noise.NoiseOctave.Companion.noise2d
+import dev.misasi.giancarlo.math.NormalizedPoint
 import dev.misasi.giancarlo.noise.SimplexNoise
 import dev.misasi.giancarlo.openal.SoundSource
 import dev.misasi.giancarlo.opengl.Buffer
@@ -124,15 +125,16 @@ class TestScreen(
 
 
         val seed = getTimeMillis()
-        val points = Noise.points(width, height, 16)
-        val octaves = Noise.octaves(seed, 3, 1.99f, 0.79f, ::SimplexNoise)
-        val noise = octaves.noise2d(points)
+        val points = NormalizedPoint.points(width/16, height/16) { v -> v - 0.5f }
+        val noise = NoiseOctave.octaves(seed, 5, ::SimplexNoise).noise2d(points)
+        val min = noise.values.min()
+        val max = noise.values.max()
 
         spriteGfx = Sprite2d(context.gl, Buffer.Usage.DYNAMIC, 10000)
         val overworld = Overworld(assets)
         noise.forEach {
             overworld.fromElevation(it.value).forEach { material ->
-                spriteGfx.putSprite(it.key, Vector2f(16f, 16f), material)
+                spriteGfx.putSprite(it.key.scale(16f), Vector2f(16f, 16f), material)
             }
         }
         spriteGfx.updateVertexBuffer()
