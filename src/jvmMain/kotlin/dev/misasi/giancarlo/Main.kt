@@ -26,6 +26,7 @@
 package dev.misasi.giancarlo
 
 import dev.misasi.giancarlo.assets.Assets
+import dev.misasi.giancarlo.collections.sumOf
 import dev.misasi.giancarlo.drawing.Animator
 import dev.misasi.giancarlo.drawing.Material
 import dev.misasi.giancarlo.drawing.programs.Sprite2d
@@ -38,11 +39,9 @@ import dev.misasi.giancarlo.events.input.mouse.CursorMode
 import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
 import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
 import dev.misasi.giancarlo.events.input.window.ResizeEvent
-import dev.misasi.giancarlo.math.Vector2f
-import dev.misasi.giancarlo.math.Vector3f
+import dev.misasi.giancarlo.math.*
 import dev.misasi.giancarlo.noise.NoiseOctave
 import dev.misasi.giancarlo.noise.NoiseOctave.Companion.noise2d
-import dev.misasi.giancarlo.math.NormalizedPoint
 import dev.misasi.giancarlo.noise.SimplexNoise
 import dev.misasi.giancarlo.openal.SoundSource
 import dev.misasi.giancarlo.opengl.Buffer
@@ -54,9 +53,12 @@ import dev.misasi.giancarlo.ux.ScreenStack
 import dev.misasi.giancarlo.ux.ScreenState
 import dev.misasi.giancarlo.ux.ScreenTransition
 import dev.misasi.giancarlo.ux.effects.DayNight
+import kotlin.math.pow
 
-val width = 1600
-val height = 1200
+val windowWidth = 1600
+val windowHeight = 1200
+val worldWidth = 4800
+val worldHeight = 4800
 
 class Overworld(assets: Assets) {
 
@@ -88,12 +90,13 @@ class Overworld(assets: Assets) {
     fun fromElevation(elevation: Float): List<Material> {
         // elevation falls into 0 to 1
         return when (elevation.times(100).toInt()) {
-            in 0 until 20 -> listOf(water)
-            in 20 until 35 -> listOf(floorSand)
-            in 35 until 55 -> listOf(floorGrass)
-            in 55 until 65 -> listOf(floorGrass, tree)
+            //listOf(floorGrass, tree)
+            in 0 until 30 -> listOf(water)
+            in 30 until 40 -> listOf(floorSand)
+            in 40 until 65 -> listOf(floorGrass)
             in 65 until 80 -> listOf(floorOrange)
-            in 80 .. 100 -> listOf(floorPurple)
+            in 80 until 90 -> listOf(floorPurple)
+            in 90 .. 100 -> listOf(floorBlue)
             else -> listOf(floorBlue)
         }
     }
@@ -106,7 +109,7 @@ class TestScreen(
     waitMs: Long = 0
 ) : Screen() {
     private lateinit var spriteGfx: Sprite2d
-    private var camera = Camera()
+    private var camera = Camera().copy(zoom = 0.25f)
     private var time: Long = 86400000 / 2
     private var alpha = -1f
     private val screenTransition = ScreenTransition(this, mapOf(
@@ -125,16 +128,68 @@ class TestScreen(
 
 
         val seed = getTimeMillis()
-        val points = NormalizedPoint.points(width/16, height/16) { v -> v - 0.5f }
-        val noise = NoiseOctave.octaves(seed, 5, ::SimplexNoise).noise2d(points)
-        val min = noise.values.min()
-        val max = noise.values.max()
+        val w = worldWidth / 16
+        val h = worldHeight / 16
+        val noise = NoiseOctave
+            .octaves(seed, 4, ::SimplexNoise, 2f, 0.65f)
+            .noise2d(w, h)
 
-        spriteGfx = Sprite2d(context.gl, Buffer.Usage.DYNAMIC, 10000)
+        // Adjusting the normalized point adjusts how functions change the data
+        // if we shift origin to the center, we can apply a circular gradient
+        // if we shift to top middle we make a smile etc
+
+        // first lets redistribute by increasing peaks and flattening valleys
+        noise.forEach {
+            var e = it.value
+            e = e.times(1.2f).pow(1.16F)
+            e = constrainValue(0f, 1f, e)
+            noise.replace(it.index, e)
+        }
+//
+//        // next, let's convert the data to an island using a square bump
+        noise.forEach {
+            val e = it.value
+            if (e >= 0.3f) { // let's keep lakes everywhere
+                val nxy = Vector2f(it.x, it.y).divide(Vector2f(w, h)).scale(2f).minus(Vector2f(1f, 1f))
+                val d = Distance.squareBump(nxy)
+                noise.replace(it.index, (e + (1f - d)) / 2f)
+            }
+        }
+
+        // Blockify the noise
+        // Visit each vertex at most once
+        // For each vertex, get the neighbors
+        // OPTIONAL check if any neighbors processed, if so, skip, otherwise proceed
+        // Take the average of the elevation across all the vertexes and apply it (to all involved)
+        val visited = MutableList(noise.size) { false }
+        for (cell in noise) {
+            val i = cell.index
+            if (visited[i]) {
+                continue
+            }
+
+            // only process neighbors right and down from me, to avoid being too blocky
+//            val neighbors = grid.neighbors(i)
+            val neighbors = noise.neighbors(i, Direction.RIGHT, Direction.DOWN_RIGHT, Direction.DOWN)
+            if (neighbors.any { visited[it.index] }) {
+                continue
+            }
+
+//            val avg = neighbors.sumOf { it.value } / neighbors.size
+            val max = neighbors.maxOf { it.value }
+            visited[i] = true
+            noise.replace(i, max)
+            neighbors.forEach {
+                visited[it.index] = true
+                noise.replace(it.index, max)
+            }
+        }
+
+        spriteGfx = Sprite2d(context.gl, Buffer.Usage.DYNAMIC, 100000)
         val overworld = Overworld(assets)
         noise.forEach {
             overworld.fromElevation(it.value).forEach { material ->
-                spriteGfx.putSprite(it.key.scale(16f), Vector2f(16f, 16f), material)
+                spriteGfx.putSprite(Vector2f(it.x.toFloat(), it.y.toFloat()).scale(16f), Vector2f(16f, 16f), material)
             }
         }
         spriteGfx.updateVertexBuffer()
@@ -149,12 +204,12 @@ class TestScreen(
         val transitionElapsedPercentage = screenTransition.elapsedPercentage()
         if (transitionElapsedPercentage != null) {
             when (state) {
-                ScreenState.IN -> camera = camera.copy(position = Animator.translate(Vector2f(-width.toFloat()), Vector2f(), transitionElapsedPercentage))
+                ScreenState.IN -> camera = camera.copy(position = Animator.translate(Vector2f(-windowWidth.toFloat()), Vector2f(), transitionElapsedPercentage))
 //                ScreenState.IN -> alpha = Animator.fadeIn(transitionElapsedPercentage)
                 else -> {}
             }
             when (state) {
-                ScreenState.OUT -> camera = camera.copy(position = Animator.translate(Vector2f(), Vector2f(width.toFloat()), transitionElapsedPercentage))
+                ScreenState.OUT -> camera = camera.copy(position = Animator.translate(Vector2f(), Vector2f(windowWidth.toFloat()), transitionElapsedPercentage))
 //                ScreenState.OUT -> alpha = Animator.fadeOut(transitionElapsedPercentage)
                 else -> {}
             }
@@ -175,7 +230,7 @@ class TestScreen(
 //        spriteGfx.setTimeSinceStartMs(time)
         spriteGfx.setAlphaOverride(alpha)
 //        spriteGfx.setShake(Shake.calculate(time))
-        spriteGfx.setDayNight(DayNight.calculate(time))
+//        spriteGfx.setDayNight(DayNight.calculate(time))
         spriteGfx.draw()
     }
 
@@ -209,6 +264,7 @@ class TestScreen(
             } else if (event.offset.y < 0) {
                 camera = camera.copy(zoom = camera.zoom.div(-event.offset.y * 1.1f))
             }
+            println(camera)
         }
     }
 
@@ -220,8 +276,8 @@ class TestScreen(
 fun main() {
     val context = LwjglGlfwDisplayContext(
         "title",
-        Vector2f(width.toFloat(), height.toFloat()),
-        Vector2f(width.toFloat(), height.toFloat()),
+        Vector2f(windowWidth.toFloat(), windowHeight.toFloat()),
+        Vector2f(windowWidth.toFloat(), windowHeight.toFloat()),
         fullScreen = false,
         vsync = false,
         refreshRate = 60,

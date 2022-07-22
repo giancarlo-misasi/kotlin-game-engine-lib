@@ -25,7 +25,7 @@
 
 package dev.misasi.giancarlo.math
 
-class Grid<T>(val width: Int, val height: Int, init: (index: Int) -> T) {
+class Grid<T>(val width: Int, val height: Int, init: (index: Int) -> T) : Iterable<Cell<T>> {
     val size: Int = width * height
     private val data = MutableList(size, init)
 
@@ -35,11 +35,13 @@ class Grid<T>(val width: Int, val height: Int, init: (index: Int) -> T) {
     fun replace(index: Int, value: T) = data.set(index, value)
     fun replace(x: Int, y: Int, value: T) = data.set(index(x, y), value)
 
-    fun neighbor(index: Int, direction: Direction): T? = neighborIndex(index, direction)?.let { at(it) }
-    fun neighbor(x: Int, y: Int, direction: Direction): T? = neighbor(index(x, y), direction)
+    fun neighbor(index: Int, direction: Direction): Cell<T>? = neighborIndex(index, direction)?.let { Cell(this, it, at(it)) }
+    fun neighbor(x: Int, y: Int, direction: Direction): Cell<T>? = neighbor(index(x, y), direction)
 
-    fun neighbors(index: Int, vararg directions: Direction): List<T> = directions.mapNotNull { neighbor(index, it) }
-    fun neighbors(x: Int, y: Int, vararg directions: Direction): List<T> = neighbors(index(x, y), *directions)
+    fun neighbors(index: Int, vararg directions: Direction): List<Cell<T>> = directions.mapNotNull { neighbor(index, it) }
+    fun neighbors(x: Int, y: Int, vararg directions: Direction): List<Cell<T>> = neighbors(index(x, y), *directions)
+    fun neighbors(index: Int): List<Cell<T>> = neighbors(index, *Direction.values())
+    fun neighbors(x: Int, y: Int): List<Cell<T>> = neighbors(index(x, y), *Direction.values())
 
     private fun index(x: Int, y: Int) = y * width + x
 
@@ -53,11 +55,24 @@ class Grid<T>(val width: Int, val height: Int, init: (index: Int) -> T) {
             Direction.LEFT -> if (index % width != 0) index - 1 else null
             Direction.DOWN -> (index + width).run { if (this < size) this else null }
             Direction.RIGHT -> (index + 1).run { if (this % width != 0) this else null }
-            Direction.UP_LEFT -> neighborIndex(neighborIndex(index, Direction.UP), Direction.RIGHT)
+            Direction.UP_LEFT -> neighborIndex(neighborIndex(index, Direction.UP), Direction.LEFT)
             Direction.UP_RIGHT -> neighborIndex(neighborIndex(index, Direction.UP), Direction.RIGHT)
-            Direction.DOWN_LEFT -> neighborIndex(neighborIndex(index, Direction.UP), Direction.RIGHT)
-            Direction.DOWN_RIGHT -> neighborIndex(neighborIndex(index, Direction.UP), Direction.RIGHT)
+            Direction.DOWN_LEFT -> neighborIndex(neighborIndex(index, Direction.DOWN), Direction.LEFT)
+            Direction.DOWN_RIGHT -> neighborIndex(neighborIndex(index, Direction.DOWN), Direction.RIGHT)
             else -> null
         }
     }
+
+    override fun iterator(): Iterator<Cell<T>> = CellIterator(this)
+}
+
+data class Cell<T>(private val grid: Grid<T>, val index: Int, val value: T) {
+    val x = index % grid.width
+    val y = index / grid.height
+}
+
+class CellIterator<T>(private val grid: Grid<T>) : Iterator<Cell<T>> {
+    private var index = 0
+    override fun hasNext(): Boolean = index < grid.size
+    override fun next(): Cell<T> = Cell(grid, index, grid.at(index)).also { index ++ }
 }

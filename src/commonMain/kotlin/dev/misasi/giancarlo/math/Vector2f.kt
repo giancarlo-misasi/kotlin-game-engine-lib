@@ -30,6 +30,8 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 data class Vector2f (val x: Float = 0f, val y: Float = 0f) {
+    constructor(x: Int, y: Int) : this(x.toFloat(), y.toFloat())
+
     val lengthSquared by lazy {
         x * x + y * y
     }

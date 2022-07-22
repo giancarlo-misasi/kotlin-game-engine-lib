@@ -28,5 +28,5 @@ package dev.misasi.giancarlo.generation.terrain
 import dev.misasi.giancarlo.math.Grid
 
 interface TerrainGenerator {
-    fun generate(seed: Long, width: Int, height: Int): Grid<TerrainChunk>
+//    fun generate(seed: Long, width: Int, height: Int): Grid<TerrainChunk>
 }

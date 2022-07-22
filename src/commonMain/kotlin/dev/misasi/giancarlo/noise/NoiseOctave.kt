@@ -25,9 +25,7 @@
 
 package dev.misasi.giancarlo.noise
 
-import dev.misasi.giancarlo.collections.mergeReduce
-import dev.misasi.giancarlo.collections.sumOf
-import dev.misasi.giancarlo.math.NormalizedPoint
+import dev.misasi.giancarlo.math.Grid
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.powList
 import kotlin.random.Random
@@ -40,8 +38,8 @@ data class NoiseOctave(private val noiseGenerator: Noise, val frequency: Float, 
     /**
      * Generates a noise value that falls into the range [-amplitude to +amplitude].
      */
-    fun noise2d(point: NormalizedPoint): Float =
-        amplitude * noiseGenerator.noise2d(point.normal.scale(frequency))
+    fun noise2d(nxy: Vector2f): Float =
+        amplitude * noiseGenerator.noise2d(nxy.scale(frequency))
 
     companion object {
 
@@ -68,15 +66,29 @@ data class NoiseOctave(private val noiseGenerator: Noise, val frequency: Float, 
         }
 
         /**
-         * Generates a noise map by combining octaves where noise values fall into the range [-1f to 1f].
+         * Generates a noise map by combining octaves where noise values fall into the range [0f to 1f].
          */
-        fun List<NoiseOctave>.noise2d(points: List<NormalizedPoint>): Map<Vector2f, Float> {
+        fun List<NoiseOctave>.noise2d(
+            width: Int,
+            height: Int,
+            normalize: (Int, Int) -> Vector2f = { x, y ->
+                Vector2f(x, y).divide(Vector2f(width, height)).minus(Vector2f(0.5f, 0.5f))
+            }
+        ): Grid<Float> {
             // generate noise map with values from [0f to 2f * amplitude], where the max value is the start amplitude
-            val noises = map { octave -> points.associate { it.point to octave.noise2d(it).plus(octave.amplitude) } }
-            val max = noises.sumOf { it.values.max() }
-            val noise = noises.mergeReduce(Float::plus).toMutableMap()
-            // convert noise range back to [0f to amplitude], where the max value is the start amplitude
-            return noise.onEach { noise[it.key] = it.value / max }
+            val grid = Grid(width, height) { 0f }
+            forEach { octave ->
+                grid.forEach { cell ->
+                    val nxy = normalize(cell.x, cell.y)
+                    val sum = grid.at(cell.index) + octave.noise2d(nxy).plus(octave.amplitude)
+                    grid.replace(cell.index, sum)
+                }
+            }
+
+            // calculate the max to normalize the range of values
+            val max = grid.maxOf { it.value }
+            grid.forEach { grid.replace(it.index, it.value / max) }
+            return grid
         }
     }
 }

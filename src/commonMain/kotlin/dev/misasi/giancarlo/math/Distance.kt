@@ -31,14 +31,12 @@ import kotlin.math.sqrt
 
 class Distance {
     companion object {
-        fun squareBump(width: Int, height: Int): Map<Vector2f, Float> {
-            val points = NormalizedPoint.points(width, height) { v -> 2f * v - 1f }
-            return points.associate { it.point to 1f - (1 - it.normal.x.pow(2) * (1 - it.normal.y.pow(2))) }
-        }
+        fun squareBump(nxy: Vector2f): Float =
+            squareBump(nxy.x, nxy.y)
+        fun squareBump(nx: Float, ny: Float): Float =
+            1f - (1 - nx.pow(2)) * (1 - ny.pow(2))
 
-        fun euclideanSquared(width: Int, height: Int): Map<Vector2f, Float> {
-            val points = NormalizedPoint.points(width, height) { v -> 2f * v - 1f }
-            return points.associate { it.point to min(1f, (it.normal.x.pow(2) + it.normal.y.pow(2)) / sqrt(2f)) }
-        }
+        fun euclideanSquared(nx: Float, ny: Float): Float =
+            min(1f, (nx.pow(2) + ny.pow(2)) / sqrt(2f))
     }
 }
