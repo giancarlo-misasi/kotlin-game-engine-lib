@@ -26,7 +26,6 @@
 package dev.misasi.giancarlo
 
 import dev.misasi.giancarlo.assets.Assets
-import dev.misasi.giancarlo.collections.sumOf
 import dev.misasi.giancarlo.drawing.Animator
 import dev.misasi.giancarlo.drawing.Material
 import dev.misasi.giancarlo.drawing.programs.Sprite2d
@@ -52,7 +51,6 @@ import dev.misasi.giancarlo.ux.Screen
 import dev.misasi.giancarlo.ux.ScreenStack
 import dev.misasi.giancarlo.ux.ScreenState
 import dev.misasi.giancarlo.ux.ScreenTransition
-import dev.misasi.giancarlo.ux.effects.DayNight
 import kotlin.math.pow
 
 val windowWidth = 1600
@@ -103,7 +101,6 @@ class Overworld(assets: Assets) {
 }
 
 class TestScreen(
-    private val context: DisplayContext,
     private val screenStack: ScreenStack,
     private val assets: Assets,
     waitMs: Long = 0
@@ -125,7 +122,6 @@ class TestScreen(
         // i.e. position, alpha
         // We may want to share instances of these resources, or simply create new for every screen
         // Possibly have a pool so that we can do loading in case init is slow
-
 
         val seed = getTimeMillis()
         val w = worldWidth / 16
@@ -150,7 +146,7 @@ class TestScreen(
         noise.forEach {
             val e = it.value
             if (e >= 0.3f) { // let's keep lakes everywhere
-                val nxy = Vector2f(it.x, it.y).divide(Vector2f(w, h)).scale(2f).minus(Vector2f(1f, 1f))
+                val nxy = Vector2f(it.x, it.y).divide(Vector2f(w, h)).multiply(2f).minus(Vector2f(1f, 1f))
                 val d = Distance.squareBump(nxy)
                 noise.replace(it.index, (e + (1f - d)) / 2f)
             }
@@ -189,7 +185,7 @@ class TestScreen(
         val overworld = Overworld(assets)
         noise.forEach {
             overworld.fromElevation(it.value).forEach { material ->
-                spriteGfx.putSprite(Vector2f(it.x.toFloat(), it.y.toFloat()).scale(16f), Vector2f(16f, 16f), material)
+                spriteGfx.putSprite(Vector2f(it.x.toFloat(), it.y.toFloat()).multiply(16f), Vector2f(16f, 16f), material)
             }
         }
         spriteGfx.updateVertexBuffer()
@@ -198,7 +194,7 @@ class TestScreen(
         context.al.setListenerPosition(Vector3f())
     }
 
-    override fun onUpdate(elapsedMs: Long) {
+    override fun onUpdate(context: DisplayContext, elapsedMs: Long) {
         screenTransition.update(elapsedMs)
 
         val transitionElapsedPercentage = screenTransition.elapsedPercentage()
@@ -236,11 +232,11 @@ class TestScreen(
 
     override fun onEvent(context: DisplayContext, event: Event) {
         if (event is ResizeEvent) {
-            context.view.actualScreenSize = event.size
+            context.view.update(event.size)
         }
 
         if (event is MouseButtonEvent) {
-            screenStack.transitionToScreen(TestScreen(context, screenStack, assets, 0))
+            screenStack.transitionToScreen(TestScreen(screenStack, assets, 0))
             walkSource.play()
         }
 
@@ -293,6 +289,6 @@ fun main() {
 
     // todo improve this variable
     val screenStack = ScreenStack(context)
-    screenStack.transitionToScreen(TestScreen(context, screenStack, assets))
+    screenStack.transitionToScreen(TestScreen(screenStack, assets))
     screenStack.run()
 }

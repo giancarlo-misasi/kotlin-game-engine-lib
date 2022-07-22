@@ -30,7 +30,7 @@ import dev.misasi.giancarlo.drawing.StaticMaterial
 import dev.misasi.giancarlo.drawing.programs.Sprite2d
 import dev.misasi.giancarlo.events.input.window.ResizeEvent
 import dev.misasi.giancarlo.math.Flip
-import dev.misasi.giancarlo.math.Point4f
+import dev.misasi.giancarlo.math.Aabb
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.opengl.*
 import dev.misasi.giancarlo.system.Clock
@@ -73,7 +73,7 @@ class ScreenStack (private val context: DisplayContext) {
             }
 
             // Update the screen
-            screen.onUpdate(elapsedMs)
+            screen.onUpdate(context, elapsedMs)
 
             // Remove the screen once it is hidden
             if (screen.state == ScreenState.HIDDEN) {
@@ -163,6 +163,6 @@ class ScreenStack (private val context: DisplayContext) {
     }
 
     companion object {
-        val postProcessUv = Point4f.create(Vector2f(), Vector2f(1f, 1f))
+        val postProcessUv = Aabb.create(Vector2f(), Vector2f(1f, 1f))
     }
 }

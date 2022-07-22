@@ -23,24 +23,15 @@
  *
  */
 
-package dev.misasi.giancarlo.noise
+package dev.misasi.giancarlo.ux
 
-import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.events.Event
+import dev.misasi.giancarlo.opengl.DisplayContext
 
-/**
- * Interface for generating functions to produce random values (noise)
- * useful for generation of things like terrain.
- */
-interface Noise {
-    /**
-     * Randomizes the generator.
-     * @param seed determines the set of random numbers to use when generating noise
-     */
-    fun shuffle(seed: Long): Noise
-
-    /**
-     * Generates noise values in the range [-1f to 1f]
-     * @param point the normalized position to generate noise from
-     */
-    fun noise2d(point: Vector2f): Float
+interface Component {
+    fun onInit(context: DisplayContext)
+    fun onUpdate(context: DisplayContext, elapsedMs: Long)
+    fun onEvent(context: DisplayContext, event: Event)
+    fun onDraw(context: DisplayContext)
+    fun onDestroy(context: DisplayContext)
 }

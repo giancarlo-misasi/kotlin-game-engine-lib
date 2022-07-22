@@ -99,7 +99,7 @@ class LwjglGlfwDisplayContext(
 
         // Setup the viewport for events
         val actualScreenSize = if (fullScreen) targetResolution else getActualWindowSize()
-        view = Viewport(gl, targetResolution, actualScreenSize)
+        view = Viewport(targetResolution, actualScreenSize)
 
         // Initialize sound
         al = LwjglOpenAl()

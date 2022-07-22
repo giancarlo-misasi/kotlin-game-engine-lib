@@ -35,7 +35,8 @@ class Distance {
             squareBump(nxy.x, nxy.y)
         fun squareBump(nx: Float, ny: Float): Float =
             1f - (1 - nx.pow(2)) * (1 - ny.pow(2))
-
+        fun euclideanSquared(nxy: Vector2f): Float =
+            euclideanSquared(nxy)
         fun euclideanSquared(nx: Float, ny: Float): Float =
             min(1f, (nx.pow(2) + ny.pow(2)) / sqrt(2f))
     }

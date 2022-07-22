@@ -48,7 +48,7 @@ class Animator {
         }
 
         fun translate(start: Vector2f, end: Vector2f, percentage: Float) : Vector2f {
-            return start.plus(end.minus(start).scale(percentage))
+            return start.plus(end.minus(start).multiply(percentage))
         }
     }
 }

@@ -30,7 +30,7 @@ import dev.misasi.giancarlo.drawing.DrawOrder
 import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.drawing.ShapeType
 import dev.misasi.giancarlo.math.Matrix4f
-import dev.misasi.giancarlo.math.Point4f
+import dev.misasi.giancarlo.math.Aabb
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
 import dev.misasi.giancarlo.opengl.*
@@ -80,7 +80,7 @@ class Shape2d(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: In
 
     fun putRectangle(position: Vector2f, size: Vector2f, color: Rgba8) {
         DrawOrder.updateDrawOrder(drawOrders, program, attributeArray, ShapeType.SQUARE)
-        putSquare(Point4f.create(position, size), color)
+        putSquare(Aabb.create(position, size), color)
     }
 
     fun putCircle(position: Vector2f, radius: Float, color: Rgba8) {
@@ -89,7 +89,7 @@ class Shape2d(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: In
         }
     }
 
-    private fun putSquare(xy: Point4f, color: Rgba8) {
+    private fun putSquare(xy: Aabb, color: Rgba8) {
         directBuffer.putVector2f(xy.tl)
         directBuffer.putRgba8(color)
         directBuffer.putVector2f(xy.bl)

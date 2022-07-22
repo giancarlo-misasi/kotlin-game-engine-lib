@@ -39,7 +39,7 @@ data class NoiseOctave(private val noiseGenerator: Noise, val frequency: Float, 
      * Generates a noise value that falls into the range [-amplitude to +amplitude].
      */
     fun noise2d(nxy: Vector2f): Float =
-        amplitude * noiseGenerator.noise2d(nxy.scale(frequency))
+        amplitude * noiseGenerator.noise2d(nxy.multiply(frequency))
 
     companion object {
 

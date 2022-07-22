@@ -27,7 +27,7 @@ package dev.misasi.giancarlo.memory
 
 import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.math.Vector2f
-import dev.misasi.giancarlo.math.Vector2us
+import dev.misasi.giancarlo.math.Vector2i
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -75,7 +75,7 @@ class DirectNativeByteBuffer(
     fun putUShort(value: UShort): DirectNativeByteBuffer = putShort(value.toShort())
     fun putUByte(value: UByte): DirectNativeByteBuffer = putByte(value.toByte())
     fun putVector2f(xy: Vector2f): DirectNativeByteBuffer = putFloat(xy.x).putFloat(xy.y)
-    fun putVector2us(xy: Vector2us): DirectNativeByteBuffer = putUShort(xy.x).putUShort(xy.y)
+    fun putVector2i(xy: Vector2i): DirectNativeByteBuffer = putInt(xy.x).putInt(xy.y)
     fun putRgba8(color: Rgba8): DirectNativeByteBuffer = putInt(color.packedRgba)
 
     fun putFloats(value: Iterable<Float>): DirectNativeByteBuffer = putIterable(value, this::putFloat)

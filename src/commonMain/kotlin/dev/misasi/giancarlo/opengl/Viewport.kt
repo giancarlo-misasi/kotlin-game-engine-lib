@@ -25,40 +25,39 @@
 
 package dev.misasi.giancarlo.opengl
 
+import dev.misasi.giancarlo.math.Rectangle
 import dev.misasi.giancarlo.math.Vector2f
 
-class Viewport(private val gl: OpenGl, val targetResolution: Vector2f, actualScreenSize: Vector2f) {
+class Viewport(val targetResolution: Vector2f, actualScreenSize: Vector2f) {
     var actualScreenSize: Vector2f = actualScreenSize
-        set(value) {
-            field = value
-            update(gl)
-        }
-
+        private set
     var adjustedScreenSize: Vector2f = actualScreenSize
         private set
-
+    var view: Rectangle = Rectangle(adjustedScreenSize)
+        private set
     var offset: Vector2f = Vector2f()
         private set
-
     var scale: Vector2f = Vector2f(1f, 1f)
         private set
 
     init {
-        update(gl)
+        update(actualScreenSize)
     }
 
-    fun withinBounds(point: Vector2f): Boolean {
-        return point.withinBounds(targetResolution)
+    fun contains(point: Vector2f): Boolean {
+        return view.contains(point) // todo verify if this change is okay
     }
 
     fun adjustToBounds(point: Vector2f): Vector2f {
         return point.minus(offset).divide(scale)
     }
 
-    private fun update(gl: OpenGl) {
-        adjustedScreenSize = calculateAdjustedScreenSize(targetResolution.aspectRatio, actualScreenSize)
-        offset = actualScreenSize.minus(adjustedScreenSize).scale(0.5f)
-        scale = adjustedScreenSize.divide(targetResolution)
+    fun update(actualScreenSize: Vector2f) {
+        this.actualScreenSize = actualScreenSize
+        this.adjustedScreenSize = calculateAdjustedScreenSize(targetResolution.aspectRatio, actualScreenSize)
+        this.offset = actualScreenSize.minus(adjustedScreenSize).multiply(0.5f)
+        this.view = Rectangle(offset, adjustedScreenSize.plus(offset))
+        this.scale = adjustedScreenSize.divide(targetResolution)
     }
 
     companion object {

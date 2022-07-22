@@ -25,11 +25,11 @@
 
 package dev.misasi.giancarlo.drawing
 
-import dev.misasi.giancarlo.math.Point4f
+import dev.misasi.giancarlo.math.Aabb
 import dev.misasi.giancarlo.opengl.Texture
 
 interface Material {
     fun name(): String
     fun texture(): Texture
-    fun coordinates(): Point4f
+    fun coordinates(): Aabb
 }

@@ -28,7 +28,7 @@ package dev.misasi.giancarlo.ux
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.opengl.DisplayContext
 
-abstract class Screen {
+abstract class Screen : Component {
     var state: ScreenState = ScreenState.WAITING
         private set
 
@@ -42,9 +42,9 @@ abstract class Screen {
         }
     }
 
-    abstract fun onInit(context: DisplayContext)
-    abstract fun onUpdate(elapsedMs: Long)
-    abstract fun onDraw(context: DisplayContext)
-    abstract fun onEvent(context: DisplayContext, event: Event)
-    abstract fun onDestroy(context: DisplayContext)
+    abstract override fun onInit(context: DisplayContext)
+    abstract override fun onUpdate(context: DisplayContext, elapsedMs: Long)
+    abstract override fun onDraw(context: DisplayContext)
+    abstract override fun onEvent(context: DisplayContext, event: Event)
+    abstract override fun onDestroy(context: DisplayContext)
 }

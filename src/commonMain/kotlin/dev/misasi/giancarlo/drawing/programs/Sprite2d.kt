@@ -114,8 +114,8 @@ class Sprite2d(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: I
     ) {
         DrawOrder.updateDrawOrder(drawOrders, program, attributeArray, material)
         putSpriteIndexed(
-            Point4f.create(position, size, rotation),
-            material.coordinates().flip(flip).toPoint4us(),
+            Aabb.create(position, size, rotation),
+            material.coordinates().flip(flip),
             alpha?.toFloat()?.div(UByte.MAX_VALUE.toFloat()) ?: -1f
         )
     }
@@ -128,23 +128,31 @@ class Sprite2d(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: I
         drawOrders.clear()
     }
 
-    private fun putSpriteIndexed(xy: Point4f, uv: Point4us, alpha: Float) {
+    private fun putSpriteIndexed(xy: Aabb, uv: Aabb, alpha: Float) {
         directBuffer.putVector2f(xy.tl)
-        directBuffer.putVector2us(uv.tl)
+        putTextureCoordinate(uv.tl)
         directBuffer.putFloat(alpha)
 
         directBuffer.putVector2f(xy.bl)
-        directBuffer.putVector2us(uv.bl)
+        putTextureCoordinate(uv.bl)
         directBuffer.putFloat(alpha)
 
         directBuffer.putVector2f(xy.br)
-        directBuffer.putVector2us(uv.br)
+        putTextureCoordinate(uv.br)
         directBuffer.putFloat(alpha)
 
         directBuffer.putVector2f(xy.tr)
-        directBuffer.putVector2us(uv.tr)
+        putTextureCoordinate(uv.tr)
         directBuffer.putFloat(alpha)
     }
+
+    private fun putTextureCoordinate(uv: Vector2f) {
+        directBuffer.putUShort(normalize(uv.x))
+        directBuffer.putUShort(normalize(uv.y))
+    }
+
+    private fun normalize(value: Float): UShort =
+        value.times(UShort.MAX_VALUE.toInt()).toInt().toUShort()
 
     private fun generateTriangleIndexes(count: Int): List<Int> {
         return (0 until count).map { i ->

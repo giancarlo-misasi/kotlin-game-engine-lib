@@ -25,7 +25,7 @@
 
 package dev.misasi.giancarlo.drawing
 
-import dev.misasi.giancarlo.math.Point4f
+import dev.misasi.giancarlo.math.Aabb
 import dev.misasi.giancarlo.opengl.Texture
 import dev.misasi.giancarlo.system.TimeAccumulator
 
@@ -37,7 +37,7 @@ class AnimatedMaterial (
 
     override fun name(): String = currentFrame().name()
     override fun texture(): Texture = currentFrame().texture()
-    override fun coordinates(): Point4f = currentFrame().coordinates()
+    override fun coordinates(): Aabb = currentFrame().coordinates()
     private fun currentFrame() : Material = materialSet.frames[index]
 
     fun update(elapsedMillis: Long) {

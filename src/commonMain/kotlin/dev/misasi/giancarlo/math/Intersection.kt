@@ -43,7 +43,7 @@ class Intersection {
             val delta = c.position.minus(other.position)
             val radiusSum = c.radius + other.radius
             return if (delta.lengthSquared < radiusSum.times(radiusSum)) {
-                delta.normal.scale(radiusSum - delta.length)
+                delta.normal.multiply(radiusSum - delta.length)
             } else {
                 null
             }
@@ -122,9 +122,9 @@ class Intersection {
             return if (delta.x == 0f && delta.y == 0f) {
                 // uh-oh were inside, let's treat the rectangle as a circle
                 val d = c.position.minus(other.center)
-                d.normal.scale(c.radius + other.radius - d.length)
+                d.normal.multiply(c.radius + other.radius - d.length)
             } else if (delta.lengthSquared < c.radiusSquared) {
-                delta.normal.scale(c.radius - delta.length)
+                delta.normal.multiply(c.radius - delta.length)
             } else {
                 null
             }

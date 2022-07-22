@@ -51,7 +51,7 @@ class EventQueue (
              .asSequence()
              .mapNotNull { it.detect(touchEvent) }
              .map { adjustToViewport(viewport, it) }
-             .filter { viewport.withinBounds(it.position) }
+             .filter { viewport.contains(it.position) }
          )
     }
 
