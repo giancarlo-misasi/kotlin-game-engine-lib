@@ -27,14 +27,14 @@ package dev.misasi.giancarlo.opengl
 
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.events.input.mouse.CursorMode
-import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.openal.OpenAl
 
 interface DisplayContext {
 
     var title: String
-    var targetResolution: Vector2f
-    var windowSize: Vector2f
+    var targetResolution: Vector2i
+    var windowSize: Vector2i
     var fullScreen: Boolean
     var vsync: Boolean
     var refreshRate: Int?
@@ -42,8 +42,8 @@ interface DisplayContext {
     val al: OpenAl
     val view: Viewport
 
-    fun getPrimaryMonitorResolution(): Vector2f
-    fun getActualWindowSize(): Vector2f
+    fun getPrimaryMonitorResolution(): Vector2i
+    fun getActualWindowSize(): Vector2i
     fun reconfigure()
     fun swapBuffers()
 

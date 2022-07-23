@@ -23,15 +23,21 @@
  *
  */
 
-package dev.misasi.giancarlo.ux
+package dev.misasi.giancarlo.ux.attributes
 
-import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.opengl.DisplayContext
-
-interface Component {
-    fun onInit(context: DisplayContext)
-    fun onUpdate(context: DisplayContext, elapsedMs: Long)
-    fun onEvent(context: DisplayContext, event: Event)
-    fun onDraw(context: DisplayContext)
-    fun onDestroy(context: DisplayContext)
+enum class HorizontalAlignment {
+    LEFT,
+    MIDDLE,
+    RIGHT
 }
+
+enum class VerticalAlignment {
+    TOP,
+    MIDDLE,
+    BOTTOM
+}
+
+data class LayoutAlignment (
+    val x: HorizontalAlignment = HorizontalAlignment.MIDDLE,
+    val y: VerticalAlignment = VerticalAlignment.MIDDLE
+)

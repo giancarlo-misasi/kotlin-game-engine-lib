@@ -65,6 +65,7 @@ class Sprite2d(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: I
     private val totalSizeInBytes = 4 * attributeArray.totalSizeInBytes * maxEntities
     private val vertexBuffer = VertexBuffer(gl, bufferUsage, totalSizeInBytes)
     private val directBuffer = DirectNativeByteBuffer(totalSizeInBytes)
+    private val offsets: MutableList<Vector2f> = mutableListOf()
     private var drawOrders: MutableList<DrawOrder> = mutableListOf()
 
     init {
@@ -100,6 +101,8 @@ class Sprite2d(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: I
        }
     }
 
+    fun pushOffset(offset: Vector2f) = offsets.add(offset)
+    fun popOffset(count: Int = 1) = (0 until count).forEach { _ -> offsets.removeLast() }
     fun updateVertexBuffer() = vertexBuffer.bind().update(directBuffer)
     fun draw() = DrawOrder.drawIndexed(gl, DataType.UNSIGNED_INT, drawOrders)
     fun clear() = directBuffer.reset().also { drawOrders.clear() }
@@ -113,8 +116,9 @@ class Sprite2d(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: I
         alpha: UByte? = null
     ) {
         DrawOrder.updateDrawOrder(drawOrders, program, attributeArray, material)
+        val p = if (offsets.isEmpty()) position else offsets.last().plus(position)
         putSpriteIndexed(
-            Aabb.create(position, size, rotation),
+            Aabb.create(p, size, rotation),
             material.coordinates().flip(flip),
             alpha?.toFloat()?.div(UByte.MAX_VALUE.toFloat()) ?: -1f
         )

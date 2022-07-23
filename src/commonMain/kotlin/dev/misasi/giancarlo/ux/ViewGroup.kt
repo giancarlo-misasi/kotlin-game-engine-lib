@@ -27,30 +27,33 @@ package dev.misasi.giancarlo.ux
 
 import dev.misasi.giancarlo.drawing.programs.Sprite2d
 import dev.misasi.giancarlo.events.Event
+import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.opengl.DisplayContext
 
-class Screen(
-    private val gfx: Sprite2d,
-    private val view: View
-) {
-    var state: ScreenState = ScreenState.WAITING
+abstract class ViewGroup : View() {
+    protected var children = mutableListOf<View>()
         private set
 
-    fun goToNextState() = state.next()?.let { state = it }
+    fun add(child: View) = children.add(child)
 
-    fun close() {
-        if (state == ScreenState.ACTIVE) {
-            state = ScreenState.OUT
+    abstract override fun onMeasure(): Vector2i
+
+    override fun onUpdate(context: DisplayContext, elapsedMs: Long) {
+        if (!visible) return
+        children.forEach {
+            it.onUpdate(context, elapsedMs)
         }
     }
 
-    fun onUpdate(context: DisplayContext, elapsedMs: Long) =
-        view.onUpdate(context, elapsedMs)
-
-    fun onDraw(context: DisplayContext) {
-        gfx.clear() // todo: remove once mechanism to update buffers vs draw is in place
-        view.onDraw(context, gfx)
+    override fun onEvent(context: DisplayContext, event: Event): Boolean {
+        if (!visible) return false
+        children.forEach {
+            if (it.visible && it.onEvent(context, event)) {
+                return true
+            }
+        }
+        return false
     }
-    fun onEvent(context: DisplayContext, event: Event) =
-        view.onEvent(context, event)
+
+    abstract override fun onDraw(context: DisplayContext, gfx: Sprite2d)
 }

@@ -48,6 +48,7 @@ data class Vector2f (val x: Float = 0f, val y: Float = 0f) {
     fun multiply(scale: Number) : Vector2f = Vector2f(scale.toFloat() * x, scale.toFloat() * y)
     fun min(other: Vector2f) : Vector2f = Vector2f(min(x, other.x), min(y, other.y))
     fun max(other: Vector2f) : Vector2f = Vector2f(max(x, other.x), max(y, other.y))
+    fun toVector2i(): Vector2i = Vector2i(x, y)
 }
 
 data class Vector2i (val x: Int = 0, val y: Int = 0) {
@@ -69,6 +70,7 @@ data class Vector2i (val x: Int = 0, val y: Int = 0) {
     fun multiply(scale: Number) : Vector2i = Vector2i(scale.toFloat() * x, scale.toFloat() * y)
     fun min(other: Vector2i) : Vector2i = Vector2i(min(x, other.x), min(y, other.y))
     fun max(other: Vector2i) : Vector2i = Vector2i(max(x, other.x), max(y, other.y))
+    fun toVector2f(): Vector2f = Vector2f(x, y)
 }
 
 data class Vector3f (val x: Float = 0f, val y: Float = 0f, val z: Float = 0f) {
@@ -91,6 +93,7 @@ data class Vector3f (val x: Float = 0f, val y: Float = 0f, val z: Float = 0f) {
     fun multiply(scale: Number) : Vector3f = Vector3f(scale.toFloat() * x, scale.toFloat() * y, scale.toFloat() * z)
     fun min(other: Vector3f) : Vector3f = Vector3f(min(x, other.x), min(y, other.y), min(z, other.z))
     fun max(other: Vector3f) : Vector3f = Vector3f(max(x, other.x), max(y, other.y), max(z, other.z))
+    fun toVector3i(): Vector3i = Vector3i(x, y, z)
 }
 
 data class Vector3i (val x: Int = 0, val y: Int = 0, val z: Int = 0) {
@@ -113,4 +116,10 @@ data class Vector3i (val x: Int = 0, val y: Int = 0, val z: Int = 0) {
     fun multiply(scale: Number) : Vector3i = Vector3i(scale.toFloat() * x, scale.toFloat() * y, scale.toFloat() * z)
     fun min(other: Vector3i) : Vector3i = Vector3i(min(x, other.x), min(y, other.y), min(z, other.z))
     fun max(other: Vector3i) : Vector3i = Vector3i(max(x, other.x), max(y, other.y), max(z, other.z))
+    fun toVector3f(): Vector3f = Vector3f(x, y, z)
 }
+
+fun Iterable<Vector2f>.sum(): Vector2f = reduce(Vector2f::plus)
+fun Iterable<Vector2i>.sum(): Vector2i = reduce(Vector2i::plus)
+fun Iterable<Vector3f>.sum(): Vector3f = reduce(Vector3f::plus)
+fun Iterable<Vector3i>.sum(): Vector3i = reduce(Vector3i::plus)

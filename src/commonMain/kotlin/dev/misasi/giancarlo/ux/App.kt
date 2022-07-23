@@ -35,7 +35,7 @@ import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.opengl.*
 import dev.misasi.giancarlo.system.Clock
 
-class ScreenStack (private val context: DisplayContext) {
+class App (val context: DisplayContext) {
     private val clock = Clock()
     private val frameBuffer: FrameBuffer
     private val postProcessingGfx: Sprite2d
@@ -50,7 +50,6 @@ class ScreenStack (private val context: DisplayContext) {
     }
 
     fun transitionToScreen(screen: Screen) {
-        screen.onInit(context)
         screens.add(screen)
     }
 
@@ -78,7 +77,6 @@ class ScreenStack (private val context: DisplayContext) {
             // Remove the screen once it is hidden
             if (screen.state == ScreenState.HIDDEN) {
                 screens.remove(screen)
-                screen.onDestroy(context)
             } else {
                 transitionOut = true
             }
@@ -151,11 +149,11 @@ class ScreenStack (private val context: DisplayContext) {
 
     private fun updateScreenSize() {
         postProcessingGfx.bindProgram()
-        postProcessingGfx.setMvp(Camera.mvp(context.view.actualScreenSize))
+        postProcessingGfx.setMvp(Camera.mvp(context.view.actualScreenSize.toVector2f()))
         postProcessingGfx.clear()
         postProcessingGfx.putSprite(
             context.view.offset,
-            context.view.adjustedScreenSize,
+            context.view.adjustedScreenSize.toVector2f(),
             StaticMaterial("", frameBuffer.attachedTexture!!, postProcessUv),
             flip = Flip.VERTICAL
         )

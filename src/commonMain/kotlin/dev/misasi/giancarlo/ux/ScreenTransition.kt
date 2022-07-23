@@ -27,14 +27,11 @@ package dev.misasi.giancarlo.ux
 
 import dev.misasi.giancarlo.system.TimeAccumulator
 
-class ScreenTransition(
-    private val screen: Screen,
-    private val transitionDurationsMs: Map<ScreenState, Long> = mapOf()
-) {
+class ScreenTransition(private val transitionDurationsMs: Map<ScreenState, Long> = mapOf()) {
     private val accumulator = TimeAccumulator()
 
-    fun elapsedPercentage(): Float? {
-        val durationMs = transitionDurationsMs[screen.state]
+    fun elapsedPercentage(state: ScreenState): Float? {
+        val durationMs = transitionDurationsMs[state]
         return if (durationMs != null) {
             accumulator.elapsedPercentage(durationMs)
         } else {
@@ -42,7 +39,7 @@ class ScreenTransition(
         }
     }
 
-    fun update(elapsedMs: Long) {
+    fun update(screen: Screen, elapsedMs: Long) {
         if (screen.state.hasNext()) {
             accumulator.update(elapsedMs)
             val durationMs = transitionDurationsMs[screen.state] ?: 0

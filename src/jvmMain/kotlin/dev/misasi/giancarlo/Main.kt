@@ -47,10 +47,8 @@ import dev.misasi.giancarlo.opengl.Buffer
 import dev.misasi.giancarlo.opengl.Camera
 import dev.misasi.giancarlo.opengl.DisplayContext
 import dev.misasi.giancarlo.opengl.LwjglGlfwDisplayContext
-import dev.misasi.giancarlo.ux.Screen
-import dev.misasi.giancarlo.ux.ScreenStack
-import dev.misasi.giancarlo.ux.ScreenState
-import dev.misasi.giancarlo.ux.ScreenTransition
+import dev.misasi.giancarlo.ux.*
+import dev.misasi.giancarlo.ux.attributes.LayoutMargin
 import kotlin.math.pow
 
 val windowWidth = 1600
@@ -100,24 +98,24 @@ class Overworld(assets: Assets) {
     }
 }
 
-class TestScreen(
-    private val screenStack: ScreenStack,
+class Test(
+    private val app: App,
     private val assets: Assets,
     waitMs: Long = 0
-) : Screen() {
-    private lateinit var spriteGfx: Sprite2d
-    private var camera = Camera().copy(zoom = 0.25f)
+) : View() {
+    private var camera = Camera()//.copy(zoom = 0.25f)
     private var time: Long = 86400000 / 2
     private var alpha = -1f
-    private val screenTransition = ScreenTransition(this, mapOf(
+    private val screenTransition = ScreenTransition(mapOf(
         ScreenState.WAITING to waitMs,
         ScreenState.IN to 1500,
         ScreenState.OUT to 1500
     ))
+    private var walkSource: SoundSource
+    val overworld = Overworld(assets)
+    private lateinit var noise: Grid<Float>
 
-    private lateinit var walkSource: SoundSource
-
-    override fun onInit(context: DisplayContext) {
+    init {
         // So screens have additional state that let us draw everything with variation
         // i.e. position, alpha
         // We may want to share instances of these resources, or simply create new for every screen
@@ -126,7 +124,7 @@ class TestScreen(
         val seed = getTimeMillis()
         val w = worldWidth / 16
         val h = worldHeight / 16
-        val noise = NoiseOctave
+        noise = NoiseOctave
             .octaves(seed, 4, ::SimplexNoise, 2f, 0.65f)
             .noise2d(w, h)
 
@@ -181,34 +179,30 @@ class TestScreen(
             }
         }
 
-        spriteGfx = Sprite2d(context.gl, Buffer.Usage.DYNAMIC, 100000)
-        val overworld = Overworld(assets)
-        noise.forEach {
-            overworld.fromElevation(it.value).forEach { material ->
-                spriteGfx.putSprite(Vector2f(it.x.toFloat(), it.y.toFloat()).multiply(16f), Vector2f(16f, 16f), material)
-            }
-        }
-        spriteGfx.updateVertexBuffer()
+        walkSource = SoundSource(app.context.al).attach(assets.sound("heart container 1"))
+        app.context.al.setListenerPosition(Vector3f())
+    }
 
-        walkSource = SoundSource(context.al).attach(assets.sound("heart container 1"))
-        context.al.setListenerPosition(Vector3f())
+    override fun onMeasure(): Vector2i {
+        return app.context.view.adjustedScreenSize
     }
 
     override fun onUpdate(context: DisplayContext, elapsedMs: Long) {
-        screenTransition.update(elapsedMs)
+//        screenTransition.update(elapsedMs)
 
-        val transitionElapsedPercentage = screenTransition.elapsedPercentage()
+        val transitionElapsedPercentage = null//screenTransition.elapsedPercentage()
         if (transitionElapsedPercentage != null) {
-            when (state) {
-                ScreenState.IN -> camera = camera.copy(position = Animator.translate(Vector2f(-windowWidth.toFloat()), Vector2f(), transitionElapsedPercentage))
-//                ScreenState.IN -> alpha = Animator.fadeIn(transitionElapsedPercentage)
-                else -> {}
-            }
-            when (state) {
-                ScreenState.OUT -> camera = camera.copy(position = Animator.translate(Vector2f(), Vector2f(windowWidth.toFloat()), transitionElapsedPercentage))
-//                ScreenState.OUT -> alpha = Animator.fadeOut(transitionElapsedPercentage)
-                else -> {}
-            }
+            // TODO: Figure out screen to view relationship so I can animate screen state in a view
+//            when (screen.state) {
+//                ScreenState.IN -> camera = camera.copy(position = Animator.translate(Vector2f(-windowWidth.toFloat()), Vector2f(), transitionElapsedPercentage))
+////                ScreenState.IN -> alpha = Animator.fadeIn(transitionElapsedPercentage)
+//                else -> {}
+//            }
+//            when (screen.state) {
+//                ScreenState.OUT -> camera = camera.copy(position = Animator.translate(Vector2f(), Vector2f(windowWidth.toFloat()), transitionElapsedPercentage))
+////                ScreenState.OUT -> alpha = Animator.fadeOut(transitionElapsedPercentage)
+//                else -> {}
+//            }
         } else {
             camera = camera.copy(position = Vector2f())
             alpha = -1f
@@ -220,60 +214,73 @@ class TestScreen(
         }
     }
 
-    override fun onDraw(context: DisplayContext) {
-        spriteGfx.bindProgram()
-        spriteGfx.setMvp(camera.mvp(context.view.targetResolution))
+    override fun onDraw(context: DisplayContext, gfx: Sprite2d) {
+        gfx.bindProgram()
+        gfx.setMvp(camera.mvp(context.view.targetResolution.toVector2f()))
 //        spriteGfx.setTimeSinceStartMs(time)
-        spriteGfx.setAlphaOverride(alpha)
+        gfx.setAlphaOverride(alpha)
 //        spriteGfx.setShake(Shake.calculate(time))
 //        spriteGfx.setDayNight(DayNight.calculate(time))
-        spriteGfx.draw()
+
+//        gfx.clear() // should like have 2 methods, one to fill buffers, one to draw them
+        noise.forEach {
+            overworld.fromElevation(it.value).forEach { material ->
+                gfx.putSprite(Vector2f(it.x.toFloat(), it.y.toFloat()).multiply(16f), Vector2f(16f, 16f), material)
+            }
+        }
+        gfx.updateVertexBuffer()
+
+        gfx.draw()
     }
 
-    override fun onEvent(context: DisplayContext, event: Event) {
+    override fun onEvent(context: DisplayContext, event: Event): Boolean {
         if (event is ResizeEvent) {
-            context.view.update(event.size)
+            context.view.update(event.size.toVector2i())
+            return true
         }
 
-        if (event is MouseButtonEvent) {
-            screenStack.transitionToScreen(TestScreen(screenStack, assets, 0))
-            walkSource.play()
-        }
+//        if (event is MouseButtonEvent) {
+//            val screen = Screen()
+//            app.transitionToScreen(Test(app, assets, 0))
+//            walkSource.play()
+//        }
 
         if (event is KeyEvent) {
             if (event.key == Key.KEY_ESCAPE && event.action == KeyAction.RELEASE) {
                 context.close()
+                return true
             }
         }
 
         if (event is KeyEvent) {
             if (event.key == Key.KEY_F && event.action == KeyAction.RELEASE) {
                 context.setCursorMode(CursorMode.FPS)
+                return true
             } else if (event.key == Key.KEY_N && event.action == KeyAction.RELEASE) {
                 context.setCursorMode(CursorMode.NORMAL)
+                return true
             }
         }
 
         if (event is ScrollEvent) {
             if (event.offset.y > 0) {
                 camera = camera.copy(zoom = camera.zoom.times(event.offset.y * 1.1f))
+                return true
             } else if (event.offset.y < 0) {
                 camera = camera.copy(zoom = camera.zoom.div(-event.offset.y * 1.1f))
+                return true
             }
-            println(camera)
         }
-    }
 
-    override fun onDestroy(context: DisplayContext) {
-        spriteGfx.delete()
+        return false
     }
 }
 
 fun main() {
     val context = LwjglGlfwDisplayContext(
         "title",
-        Vector2f(windowWidth.toFloat(), windowHeight.toFloat()),
-        Vector2f(windowWidth.toFloat(), windowHeight.toFloat()),
+        Vector2i(windowWidth, windowHeight),
+        Vector2i(windowWidth, windowHeight),
         fullScreen = false,
         vsync = false,
         refreshRate = 60,
@@ -286,9 +293,19 @@ fun main() {
     context.enableResizeEvents(true)
 
     val assets = Assets(context)
+    val overworld = Overworld(assets)
 
     // todo improve this variable
-    val screenStack = ScreenStack(context)
-    screenStack.transitionToScreen(TestScreen(screenStack, assets))
-    screenStack.run()
+    val app = App(context)
+    val test = Test(app, assets)
+    val group1 = SimpleBoxLayoutViewGroup(overworld.floorTeal)
+    val group2 = SimpleBoxLayoutViewGroup(overworld.floorBlue, margin = LayoutMargin(50, 50))
+    group2.add(test)
+    group1.add(group2)
+
+    val screen = Screen(Sprite2d(app.context.gl, Buffer.Usage.DYNAMIC, 100000), group1)
+    app.transitionToScreen(screen)
+    screen.goToNextState()
+
+    app.run()
 }

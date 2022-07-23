@@ -34,7 +34,7 @@ import dev.misasi.giancarlo.events.input.mouse.MouseEvent
 import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
 import dev.misasi.giancarlo.events.input.text.TextEvent
 import dev.misasi.giancarlo.events.input.window.ResizeEvent
-import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.openal.OpenAl
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -45,8 +45,8 @@ import org.lwjgl.system.MemoryStack.stackPush
 
 class LwjglGlfwDisplayContext(
     override var title: String,
-    override var targetResolution: Vector2f,
-    override var windowSize: Vector2f,
+    override var targetResolution: Vector2i,
+    override var windowSize: Vector2i,
     override var fullScreen: Boolean,
     override var vsync: Boolean,
     override var refreshRate: Int?,
@@ -106,19 +106,19 @@ class LwjglGlfwDisplayContext(
         al.init()
     }
 
-    override fun getPrimaryMonitorResolution(): Vector2f {
+    override fun getPrimaryMonitorResolution(): Vector2i {
         val mode = glfwGetVideoMode(glfwGetPrimaryMonitor())!!
-        return Vector2f(mode.width().toFloat(), mode.height().toFloat())
+        return Vector2i(mode.width(), mode.height())
     }
 
-    override fun getActualWindowSize(): Vector2f {
+    override fun getActualWindowSize(): Vector2i {
         val stack: MemoryStack
         try {
             stack = stackPush()
             val pWidth = stack.mallocInt(1)
             val pHeight = stack.mallocInt(1)
             glfwGetWindowSize(window, pWidth, pHeight)
-            return Vector2f(pWidth.get(0).toFloat(), pHeight.get(0).toFloat())
+            return Vector2i(pWidth.get(0), pHeight.get(0))
         } finally {
             stackPop()
         }

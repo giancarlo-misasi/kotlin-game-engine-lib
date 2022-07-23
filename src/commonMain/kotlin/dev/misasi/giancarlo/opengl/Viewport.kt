@@ -27,13 +27,14 @@ package dev.misasi.giancarlo.opengl
 
 import dev.misasi.giancarlo.math.Rectangle
 import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.math.Vector2i
 
-class Viewport(val targetResolution: Vector2f, actualScreenSize: Vector2f) {
-    var actualScreenSize: Vector2f = actualScreenSize
+class Viewport(val targetResolution: Vector2i, actualScreenSize: Vector2i) {
+    var actualScreenSize: Vector2i = actualScreenSize
         private set
-    var adjustedScreenSize: Vector2f = actualScreenSize
+    var adjustedScreenSize: Vector2i = actualScreenSize
         private set
-    var view: Rectangle = Rectangle(adjustedScreenSize)
+    var view: Rectangle = Rectangle(adjustedScreenSize.toVector2f())
         private set
     var offset: Vector2f = Vector2f()
         private set
@@ -52,21 +53,21 @@ class Viewport(val targetResolution: Vector2f, actualScreenSize: Vector2f) {
         return point.minus(offset).divide(scale)
     }
 
-    fun update(actualScreenSize: Vector2f) {
+    fun update(actualScreenSize: Vector2i) {
         this.actualScreenSize = actualScreenSize
         this.adjustedScreenSize = calculateAdjustedScreenSize(targetResolution.aspectRatio, actualScreenSize)
-        this.offset = actualScreenSize.minus(adjustedScreenSize).multiply(0.5f)
-        this.view = Rectangle(offset, adjustedScreenSize.plus(offset))
-        this.scale = adjustedScreenSize.divide(targetResolution)
+        this.offset = actualScreenSize.minus(adjustedScreenSize).toVector2f().multiply(0.5f)
+        this.view = Rectangle(offset, adjustedScreenSize.toVector2f().plus(offset))
+        this.scale = adjustedScreenSize.toVector2f().divide(targetResolution.toVector2f())
     }
 
     companion object {
-        private fun calculateAdjustedScreenSize(aspectRatio: Float, actualScreenSize: Vector2f): Vector2f {
+        private fun calculateAdjustedScreenSize(aspectRatio: Float, actualScreenSize: Vector2i): Vector2i {
             val requiredScreenHeight = actualScreenSize.x / aspectRatio;
             return if (requiredScreenHeight > actualScreenSize.y) {
-                Vector2f(actualScreenSize.y * aspectRatio, actualScreenSize.y);
+                Vector2i(actualScreenSize.y * aspectRatio, actualScreenSize.y);
             } else {
-                Vector2f(actualScreenSize.x, requiredScreenHeight);
+                Vector2i(actualScreenSize.x, requiredScreenHeight);
             }
         }
     }
