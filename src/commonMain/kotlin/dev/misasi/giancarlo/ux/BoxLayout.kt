@@ -23,12 +23,23 @@
  *
  */
 
-package dev.misasi.giancarlo.ux.attributes
+package dev.misasi.giancarlo.ux
 
 import dev.misasi.giancarlo.math.Vector2i
+import dev.misasi.giancarlo.opengl.DisplayContext
+import dev.misasi.giancarlo.ux.attributes.LayoutAlignment
+import dev.misasi.giancarlo.ux.attributes.LayoutDirection
 
-data class LayoutMargin (val top: Int = 0, val left: Int = 0) {
-    val tl by lazy { Vector2i(top, left) }
+class BoxLayout(
+    var layoutDirection: LayoutDirection = LayoutDirection.HORIZONTAL,
+    var layoutAlignment: LayoutAlignment = LayoutAlignment()
+) : ViewGroup() {
 
-    fun plus(size: Vector2i): Vector2i = tl.plus(size)
+    override fun onMeasure(context: DisplayContext): Vector2i {
+        val measurements = children.map { it.onMeasure(context) }
+        return when (layoutDirection) {
+            LayoutDirection.HORIZONTAL -> Vector2i(measurements.sumOf { it.x }, measurements.maxOf { it.y })
+            LayoutDirection.VERTICAL -> Vector2i(measurements.maxOf { it.x }, measurements.sumOf { it.y })
+        }
+    }
 }

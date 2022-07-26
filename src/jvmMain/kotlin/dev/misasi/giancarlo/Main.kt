@@ -26,7 +26,6 @@
 package dev.misasi.giancarlo
 
 import dev.misasi.giancarlo.assets.Assets
-import dev.misasi.giancarlo.drawing.Animator
 import dev.misasi.giancarlo.drawing.Material
 import dev.misasi.giancarlo.drawing.programs.Sprite2d
 import dev.misasi.giancarlo.events.Event
@@ -35,9 +34,7 @@ import dev.misasi.giancarlo.events.input.keyboard.Key
 import dev.misasi.giancarlo.events.input.keyboard.KeyAction
 import dev.misasi.giancarlo.events.input.keyboard.KeyEvent
 import dev.misasi.giancarlo.events.input.mouse.CursorMode
-import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
 import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
-import dev.misasi.giancarlo.events.input.window.ResizeEvent
 import dev.misasi.giancarlo.math.*
 import dev.misasi.giancarlo.noise.NoiseOctave
 import dev.misasi.giancarlo.noise.NoiseOctave.Companion.noise2d
@@ -48,11 +45,11 @@ import dev.misasi.giancarlo.opengl.Camera
 import dev.misasi.giancarlo.opengl.DisplayContext
 import dev.misasi.giancarlo.opengl.LwjglGlfwDisplayContext
 import dev.misasi.giancarlo.ux.*
-import dev.misasi.giancarlo.ux.attributes.LayoutMargin
+import dev.misasi.giancarlo.ux.attributes.LayoutInset
 import kotlin.math.pow
 
-val windowWidth = 1600
-val windowHeight = 1200
+val windowWidth = 800
+val windowHeight = 608
 val worldWidth = 4800
 val worldHeight = 4800
 
@@ -183,10 +180,6 @@ class Test(
         app.context.al.setListenerPosition(Vector3f())
     }
 
-    override fun onMeasure(): Vector2i {
-        return app.context.view.adjustedScreenSize
-    }
-
     override fun onUpdate(context: DisplayContext, elapsedMs: Long) {
 //        screenTransition.update(elapsedMs)
 
@@ -214,7 +207,7 @@ class Test(
         }
     }
 
-    override fun onDraw(context: DisplayContext, gfx: Sprite2d) {
+    private fun onDraw(context: DisplayContext, gfx: Sprite2d) {
         gfx.bindProgram()
         gfx.setMvp(camera.mvp(context.view.targetResolution.toVector2f()))
 //        spriteGfx.setTimeSinceStartMs(time)
@@ -234,10 +227,7 @@ class Test(
     }
 
     override fun onEvent(context: DisplayContext, event: Event): Boolean {
-        if (event is ResizeEvent) {
-            context.view.update(event.size.toVector2i())
-            return true
-        }
+
 
 //        if (event is MouseButtonEvent) {
 //            val screen = Screen()
@@ -298,14 +288,14 @@ fun main() {
     // todo improve this variable
     val app = App(context)
     val test = Test(app, assets)
-    val group1 = SimpleBoxLayoutViewGroup(overworld.floorTeal)
-    val group2 = SimpleBoxLayoutViewGroup(overworld.floorBlue, margin = LayoutMargin(50, 50))
-    group2.add(test)
-    group1.add(group2)
+//    val group1 = BoxLayout(overworld.floorOrange, LayoutInset(16, 16), LayoutInset(32, 32))
+//    val group2 = SimpleBoxLayoutViewGroup(overworld.floorBlue, margin = LayoutMargin(50, 50))
+//    group2.add(test)
+//    group1.add(test)
 
-    val screen = Screen(Sprite2d(app.context.gl, Buffer.Usage.DYNAMIC, 100000), group1)
-    app.transitionToScreen(screen)
-    screen.goToNextState()
+//    val screen = Screen(assets, Sprite2d(app.context.gl, Buffer.Usage.DYNAMIC, 100000), group1)
+//    app.transitionToScreen(screen)
+//    screen.goToNextState()
 
-    app.run()
+//    app.run()
 }

@@ -46,7 +46,7 @@ class Viewport(val targetResolution: Vector2i, actualScreenSize: Vector2i) {
     }
 
     fun contains(point: Vector2f): Boolean {
-        return view.contains(point) // todo verify if this change is okay
+        return view.contains(point) // todo verify if this change is okay (do we need to factor in offset, or am I handling that in events already?)
     }
 
     fun adjustToBounds(point: Vector2f): Vector2f {

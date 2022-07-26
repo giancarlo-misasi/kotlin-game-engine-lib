@@ -34,17 +34,20 @@ import dev.misasi.giancarlo.math.Aabb
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.opengl.*
 import dev.misasi.giancarlo.system.Clock
+import dev.misasi.giancarlo.ux.rendering.RenderProvider
 
 class App (val context: DisplayContext) {
     private val clock = Clock()
     private val frameBuffer: FrameBuffer
     private val postProcessingGfx: Sprite2d
     private val screens = mutableListOf<Screen>()
+    private val renderProvider = RenderProvider()
 
     init {
-        context.gl.setClearColor(Rgba8.BLACK)
+//        context.gl.setClearColor(Rgba8.BLACK)
+        context.gl.setClearColor(Rgba8.RED)
         frameBuffer = FrameBuffer(context.gl)
-        frameBuffer.attach(Texture(context.gl, context.view.targetResolution.x.toInt(), context.view.targetResolution.y.toInt()))
+        frameBuffer.attach(Texture(context.gl, context.view.targetResolution.x, context.view.targetResolution.y))
         postProcessingGfx = Sprite2d(context.gl, Buffer.Usage.STATIC, 1)
         updateScreenSize()
     }
@@ -92,7 +95,7 @@ class App (val context: DisplayContext) {
 
         // Set the viewport to the target resolution
         // everything draws assuming target resolution and then this will scale to fit nicely
-        context.gl.setViewport(0, 0, context.view.targetResolution.x.toInt(), context.view.targetResolution.y.toInt())
+        context.gl.setViewport(0, 0, context.view.targetResolution.x, context.view.targetResolution.y)
 
         // Draw the screens
         for (screen in screens) {
@@ -101,7 +104,8 @@ class App (val context: DisplayContext) {
             }
 
             // Draw visible screens
-            screen.onDraw(context)
+            renderProvider.prepareRender(context, screen)
+            renderProvider.render(context, screen) // todo: separate prepare vs render calls in this state machine so they dont happen all the time
         }
 
         // Detach the frame buffer and clear the screen to avoid artifacts
@@ -110,7 +114,7 @@ class App (val context: DisplayContext) {
 
         // Apply post-processing
         postProcessingGfx.bindProgram()
-        context.gl.setViewport(0, 0, context.view.actualScreenSize.x.toInt(), context.view.actualScreenSize.y.toInt())
+        context.gl.setViewport(0, 0, context.view.actualScreenSize.x, context.view.actualScreenSize.y)
         postProcessingGfx.draw()
 
         // Swap the buffers so we see the image
@@ -122,6 +126,7 @@ class App (val context: DisplayContext) {
         while (true) {
             val event = context.getNextEvent() ?: break
             if (event is ResizeEvent) {
+                context.view.update(event.size.toVector2i())
                 updateScreenSize()
             }
 

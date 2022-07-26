@@ -101,7 +101,7 @@ class Sprite2d(private val gl: OpenGl, bufferUsage: Buffer.Usage, maxEntities: I
        }
     }
 
-    fun pushOffset(offset: Vector2f) = offsets.add(offset)
+    fun pushOffset(offset: Vector2f) = offsets.add(offset.plus(offsets.lastOrNull() ?: Vector2f()))
     fun popOffset(count: Int = 1) = (0 until count).forEach { _ -> offsets.removeLast() }
     fun updateVertexBuffer() = vertexBuffer.bind().update(directBuffer)
     fun draw() = DrawOrder.drawIndexed(gl, DataType.UNSIGNED_INT, drawOrders)

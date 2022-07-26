@@ -29,10 +29,13 @@ import dev.misasi.giancarlo.drawing.programs.Sprite2d
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.opengl.DisplayContext
+import dev.misasi.giancarlo.ux.attributes.LayoutInset
 
-abstract class View(var visible: Boolean = true) {
-    open fun onMeasure(): Vector2i = Vector2i()
+abstract class View(
+    var inset: LayoutInset = LayoutInset(),
+    var visible: Boolean = true
+) {
+    open fun onMeasure(context: DisplayContext): Vector2i = context.targetResolution.minus(inset.size)
     open fun onUpdate(context: DisplayContext, elapsedMs: Long) = Unit
     open fun onEvent(context: DisplayContext, event: Event): Boolean = false
-    abstract fun onDraw(context: DisplayContext, gfx: Sprite2d)
 }

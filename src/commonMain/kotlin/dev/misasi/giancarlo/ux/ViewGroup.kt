@@ -25,25 +25,14 @@
 
 package dev.misasi.giancarlo.ux
 
-import dev.misasi.giancarlo.drawing.programs.Sprite2d
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.opengl.DisplayContext
 
 abstract class ViewGroup : View() {
-    protected var children = mutableListOf<View>()
+    var children = mutableListOf<View>()
         private set
 
     fun add(child: View) = children.add(child)
-
-    abstract override fun onMeasure(): Vector2i
-
-    override fun onUpdate(context: DisplayContext, elapsedMs: Long) {
-        if (!visible) return
-        children.forEach {
-            it.onUpdate(context, elapsedMs)
-        }
-    }
 
     override fun onEvent(context: DisplayContext, event: Event): Boolean {
         if (!visible) return false
@@ -54,6 +43,4 @@ abstract class ViewGroup : View() {
         }
         return false
     }
-
-    abstract override fun onDraw(context: DisplayContext, gfx: Sprite2d)
 }
