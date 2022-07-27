@@ -29,7 +29,7 @@ import dev.misasi.giancarlo.math.Rectangle
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector2i
 
-class Viewport(val targetResolution: Vector2i, actualScreenSize: Vector2i) {
+class Viewport(val designedResolution: Vector2i, actualScreenSize: Vector2i) {
     var actualScreenSize: Vector2i = actualScreenSize
         private set
     var adjustedScreenSize: Vector2i = actualScreenSize
@@ -55,10 +55,10 @@ class Viewport(val targetResolution: Vector2i, actualScreenSize: Vector2i) {
 
     fun update(actualScreenSize: Vector2i) {
         this.actualScreenSize = actualScreenSize
-        this.adjustedScreenSize = calculateAdjustedScreenSize(targetResolution.aspectRatio, actualScreenSize)
+        this.adjustedScreenSize = calculateAdjustedScreenSize(designedResolution.aspectRatio, actualScreenSize)
         this.offset = actualScreenSize.minus(adjustedScreenSize).toVector2f().multiply(0.5f)
         this.view = Rectangle(offset, adjustedScreenSize.toVector2f().plus(offset))
-        this.scale = adjustedScreenSize.toVector2f().divide(targetResolution.toVector2f())
+        this.scale = adjustedScreenSize.toVector2f().divide(designedResolution.toVector2f())
     }
 
     companion object {

@@ -25,8 +25,8 @@
 
 package dev.misasi.giancarlo.assets.loaders
 
-import dev.misasi.giancarlo.getResourceAsBitmap
-import dev.misasi.giancarlo.getResourceAsLines
+import dev.misasi.giancarlo.system.getResourceAsBitmap
+import dev.misasi.giancarlo.system.getResourceAsLines
 import dev.misasi.giancarlo.opengl.OpenGl
 import dev.misasi.giancarlo.opengl.Texture
 

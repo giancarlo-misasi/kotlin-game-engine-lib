@@ -26,7 +26,7 @@
 package dev.misasi.giancarlo.ux.views
 
 import dev.misasi.giancarlo.math.Vector2i
-import dev.misasi.giancarlo.opengl.DisplayContext
+import dev.misasi.giancarlo.ResourceContext
 import dev.misasi.giancarlo.ux.attributes.LayoutAlignment
 import dev.misasi.giancarlo.ux.attributes.LayoutDirection
 
@@ -35,7 +35,7 @@ class BoxLayout(
     var layoutAlignment: LayoutAlignment = LayoutAlignment()
 ) : ViewGroup() {
 
-    override fun onMeasure(context: DisplayContext): Vector2i {
+    override fun onMeasure(context: ResourceContext): Vector2i {
         val measurements = children.map { it.onMeasure(context) }
         return when (layoutDirection) {
             LayoutDirection.HORIZONTAL -> Vector2i(measurements.sumOf { it.x }, measurements.maxOf { it.y })

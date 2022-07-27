@@ -23,16 +23,15 @@
  *
  */
 
-package dev.misasi.giancarlo
+package dev.misasi.giancarlo.system
 
 import dev.misasi.giancarlo.drawing.Bitmap
 import dev.misasi.giancarlo.drawing.Rgba8
 import java.io.BufferedReader
-import java.nio.ByteBuffer
 import javax.imageio.ImageIO
 import kotlin.system.exitProcess
 
-fun getTimeMillis(): Long {
+fun getCurrentTimeMs(): Long {
     return System.currentTimeMillis()
 }
 

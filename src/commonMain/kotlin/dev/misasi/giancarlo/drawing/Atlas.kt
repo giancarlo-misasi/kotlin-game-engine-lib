@@ -25,7 +25,7 @@
 
 package dev.misasi.giancarlo.drawing
 
-import dev.misasi.giancarlo.crash
+import dev.misasi.giancarlo.system.crash
 
 class Atlas (
     private val materials: Map<String, Material>,

@@ -1,7 +1,7 @@
 package dev.misasi.giancarlo.events.input.window
 
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.getTimeMillis
+import dev.misasi.giancarlo.system.getCurrentTimeMs
 import dev.misasi.giancarlo.math.Vector2f
 
 data class ResizeEvent(
@@ -11,7 +11,7 @@ data class ResizeEvent(
 
     companion object {
         fun valueOf(x: Int, y: Int): ResizeEvent {
-            return ResizeEvent(Vector2f(x.toFloat(), y.toFloat()), getTimeMillis())
+            return ResizeEvent(Vector2f(x.toFloat(), y.toFloat()), getCurrentTimeMs())
         }
     }
 }

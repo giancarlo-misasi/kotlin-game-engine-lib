@@ -26,7 +26,7 @@
 package dev.misasi.giancarlo.events.input.mouse
 
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.getTimeMillis
+import dev.misasi.giancarlo.system.getCurrentTimeMs
 import dev.misasi.giancarlo.math.Vector2f
 
 data class MouseEvent(
@@ -36,7 +36,7 @@ data class MouseEvent(
 
     companion object {
         fun valueOf(x: Double, y: Double): MouseEvent {
-            return MouseEvent(Vector2f(x.toFloat(), y.toFloat()), getTimeMillis())
+            return MouseEvent(Vector2f(x.toFloat(), y.toFloat()), getCurrentTimeMs())
         }
     }
 }

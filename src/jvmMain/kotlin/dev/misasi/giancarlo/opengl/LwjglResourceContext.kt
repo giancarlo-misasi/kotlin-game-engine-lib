@@ -25,6 +25,7 @@
 
 package dev.misasi.giancarlo.opengl
 
+import dev.misasi.giancarlo.ResourceContext
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.events.EventQueue
 import dev.misasi.giancarlo.events.input.keyboard.KeyEvent
@@ -43,67 +44,54 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryStack.stackPop
 import org.lwjgl.system.MemoryStack.stackPush
 
-class LwjglGlfwDisplayContext(
-    override var title: String,
-    override var targetResolution: Vector2i,
-    override var windowSize: Vector2i,
-    override var fullScreen: Boolean,
-    override var vsync: Boolean,
-    override var refreshRate: Int?,
-    private val events: EventQueue
-) : DisplayContext {
+class LwjglResourceContext(
+    title: String,
+    designedResolution: Vector2i,
+    windowSize: Vector2i,
+    fullScreen: Boolean = false,
+    refreshRate: Int = 60
+) : ResourceContext {
     private val window: Long
     override val gl: OpenGl
     override val al: OpenAl
-    override val view: Viewport
+    override val viewport: Viewport
+    override val events: EventQueue
 
     init {
-        // Setup an error callback. The default implementation
-        // will print the error message in System.err.
-        GLFWErrorCallback.createPrint(System.err).set()
+        window = initializeGlfwWindow(title, fullScreen)
+        gl = LwjglOpenGl.gl
+        al = LwjglOpenAl.al
+        viewport = Viewport(designedResolution, if (fullScreen) designedResolution else getActualWindowSize())
+        events = EventQueue(setOf()) // todo: add detectors as needed
 
-        // Initialize GLFW. Most GLFW functions will not work before doing this.
-        check(glfwInit()) { "Unable to initialize GLFW" }
+        if (fullScreen) setFullScreen(refreshRate) else setWindowed(windowSize)
+    }
 
-        // Configure GLFW
-        glfwDefaultWindowHints() // optional, the current window hints are already the default
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE) // the window will stay hidden after creation
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE) // the window will be resizable
+    override fun setTitle(title: String) {
+        glfwSetWindowTitle(window, title)
+    }
 
-        // Get the primary monitor
+    override fun setFullScreen(refreshRate: Int) {
+        val monitor = glfwGetPrimaryMonitor()
+        val resolution = getPrimaryMonitorResolution()
+
+        glfwSetWindowSize(window, resolution.x, resolution.y)
+        glfwSetWindowMonitor(window, monitor, 0, 0, resolution.x, resolution.y, refreshRate ?: GLFW_DONT_CARE)
+        viewport.update(resolution)
+    }
+    override fun setWindowed(windowSize: Vector2i) {
         val primaryMonitor = glfwGetPrimaryMonitor()
-        val monitor = if (fullScreen) primaryMonitor else 0
+        val mode = glfwGetVideoMode(primaryMonitor)!!
+        val x = ((mode.width().toFloat() - windowSize.x) / 2f).toInt()
+        val y = ((mode.height().toFloat() - windowSize.y) / 2f).toInt()
 
-        // Create the window
-        window = glfwCreateWindow(windowSize.x.toInt(), windowSize.y.toInt(), title, monitor, 0)
-        check(window != 0L) { "Unable to create window" }
+        glfwSetWindowSize(window, windowSize.x, windowSize.y)
+        glfwSetWindowMonitor(window, 0, x, y, windowSize.x, windowSize.y, GLFW_DONT_CARE)
+        viewport.update(windowSize)
+    }
 
-        // Make the OpenGL context current
-        glfwMakeContextCurrent(window)
-
-        // Update the window based on all configuration parameters
-        reconfigure()
-
-        // Make the window visible
-        glfwShowWindow(window)
-
-        // This line is critical for LWJGL's interoperation with GLFW's
-        // OpenGL context, or any context that is managed externally.
-        // LWJGL detects the context that is current in the current thread,
-        // creates the GLCapabilities instance and makes the OpenGL
-        // bindings available for use.
-        GL.createCapabilities()
-
-        // Now let's create the OpenGL instance
-        gl = LwjglOpenGl()
-
-        // Setup the viewport for events
-        val actualScreenSize = if (fullScreen) targetResolution else getActualWindowSize()
-        view = Viewport(targetResolution, actualScreenSize)
-
-        // Initialize sound
-        al = LwjglOpenAl()
-        al.init()
+    override fun setVsync(vsync: Boolean) {
+        glfwSwapInterval(if (vsync) 1 else 0)
     }
 
     override fun getPrimaryMonitorResolution(): Vector2i {
@@ -122,29 +110,6 @@ class LwjglGlfwDisplayContext(
         } finally {
             stackPop()
         }
-    }
-
-    override fun reconfigure() {
-        val primaryMonitor = glfwGetPrimaryMonitor()
-        val mode = glfwGetVideoMode(primaryMonitor)!!
-
-        val monitor: Long
-        val x: Float
-        val y: Float
-        if (fullScreen) {
-            monitor = primaryMonitor
-            x = 0f
-            y = 0f
-        } else {
-            monitor = 0
-            x = (mode.width().toFloat() - windowSize.x) / 2f
-            y = (mode.height().toFloat() - windowSize.y) / 2f
-        }
-
-        glfwSetWindowTitle(window, title)
-        glfwSetWindowSize(window, windowSize.x.toInt(), windowSize.y.toInt())
-        glfwSetWindowMonitor(window, monitor, x.toInt(), y.toInt(), windowSize.x.toInt(), windowSize.y.toInt(), refreshRate ?: GLFW_DONT_CARE)
-        glfwSwapInterval(if (vsync) 1 else 0)
     }
 
     override fun enableKeyboardEvents(enable: Boolean) {
@@ -212,7 +177,7 @@ class LwjglGlfwDisplayContext(
     }
 
     private fun mouseEventHandler(window: Long, x: Double, y: Double) {
-        events.pushMouseEvent(view, MouseEvent.valueOf(x, y))
+        events.pushMouseEvent(viewport, MouseEvent.valueOf(x, y))
     }
 
     private fun mouseButtonEventHandler(window: Long, buttonCode: Int, actionCode: Int, modifierCode: Int) {
@@ -225,5 +190,44 @@ class LwjglGlfwDisplayContext(
 
     private fun resizeEventHandler(window: Long, x: Int, y: Int) {
         events.pushEvent(ResizeEvent.valueOf(x, y))
+    }
+
+    companion object {
+        private fun initializeGlfwWindow(title: String, fullScreen: Boolean): Long {
+            // Setup an error callback. The default implementation
+            // will print the error message in System.err.
+            GLFWErrorCallback.createPrint(System.err).set()
+
+            // Initialize GLFW. Most GLFW functions will not work before doing this.
+            check(glfwInit()) { "Unable to initialize GLFW" }
+
+            // Configure GLFW
+            glfwDefaultWindowHints() // optional, the current window hints are already the default
+            glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE) // the window will stay hidden after creation
+            glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE) // the window will not be manually resizable
+
+            // Get the monitor to use
+            val monitor = if (fullScreen) glfwGetPrimaryMonitor() else 0
+
+            // Create the window
+            val window = glfwCreateWindow(1024, 768, title, monitor, 0)
+            check(window != 0L) { "Unable to create window" }
+
+            // Make the OpenGL context current
+            glfwMakeContextCurrent(window)
+
+            // Make the window visible
+            glfwShowWindow(window)
+
+            // This line is critical for LWJGL's interoperation with GLFW's
+            // OpenGL context, or any context that is managed externally.
+            // LWJGL detects the context that is current in the current thread,
+            // creates the GLCapabilities instance and makes the OpenGL
+            // bindings available for use.
+            GL.createCapabilities()
+
+            // Return the window
+            return window
+        }
     }
 }

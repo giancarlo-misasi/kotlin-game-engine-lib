@@ -25,10 +25,10 @@
 
 package dev.misasi.giancarlo.opengl
 
-import dev.misasi.giancarlo.crash
 import dev.misasi.giancarlo.math.Vector3f
 import dev.misasi.giancarlo.openal.OpenAl
 import dev.misasi.giancarlo.openal.PcmSound
+import dev.misasi.giancarlo.system.crash
 import org.lwjgl.openal.AL10.*
 import org.lwjgl.openal.ALC10.*
 import org.lwjgl.stb.STBVorbis
@@ -40,18 +40,7 @@ import java.nio.ByteBuffer
 import java.nio.IntBuffer
 import java.nio.ShortBuffer
 
-class LwjglOpenAl : OpenAl {
-
-    override fun init() {
-        val byteBuffer: ByteBuffer? = null
-        val intBuffer: IntBuffer? = null
-
-        val device = alcOpenDevice(byteBuffer)
-        val capabilities = org.lwjgl.openal.ALC.createCapabilities(device)
-        val context = alcCreateContext(device, intBuffer)
-        alcMakeContextCurrent(context)
-        org.lwjgl.openal.AL.createCapabilities(capabilities)
-    }
+class LwjglOpenAl private constructor(): OpenAl {
 
     override fun convertOgg(byteArray: ByteArray): PcmSound {
         STBVorbisInfo.malloc().use { info ->
@@ -144,12 +133,33 @@ class LwjglOpenAl : OpenAl {
     }
 
     companion object {
-        val formatMap = mapOf(
+        val al: OpenAl get() = getInstance()
+
+        @Volatile
+        private var INSTANCE: OpenAl? = null
+
+        private fun init(): OpenAl {
+            val byteBuffer: ByteBuffer? = null
+            val intBuffer: IntBuffer? = null
+            val device = alcOpenDevice(byteBuffer)
+            val capabilities = org.lwjgl.openal.ALC.createCapabilities(device)
+            val context = alcCreateContext(device, intBuffer)
+            alcMakeContextCurrent(context)
+            org.lwjgl.openal.AL.createCapabilities(capabilities)
+            return LwjglOpenAl()
+        }
+
+        private fun getInstance(): OpenAl =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: init().also { INSTANCE = it }
+            }
+
+        private val formatMap = mapOf(
             PcmSound.Format.MONO16 to AL_FORMAT_MONO16,
             PcmSound.Format.STEREO16 to AL_FORMAT_STEREO16
         )
 
-        val errorMap = mapOf(
+        private val errorMap = mapOf(
             30 to "VORBIS missing capture pattern",
             31 to "VORBIS invalid stream structure version",
             32 to "VORBIS continued packet flag invalid",
@@ -161,7 +171,7 @@ class LwjglOpenAl : OpenAl {
             38 to "VORBIS ogg skeleton not supported"
         )
 
-        fun toArray(shortBuffer: ShortBuffer): ShortArray {
+        private fun toArray(shortBuffer: ShortBuffer): ShortArray {
             val array = ShortArray(shortBuffer.limit())
             shortBuffer.get(array)
             return array

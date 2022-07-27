@@ -25,9 +25,9 @@
 
 package dev.misasi.giancarlo.assets.loaders
 
-import dev.misasi.giancarlo.crash
-import dev.misasi.giancarlo.getResourceAsLines
-import dev.misasi.giancarlo.getResourceAsString
+import dev.misasi.giancarlo.system.crash
+import dev.misasi.giancarlo.system.getResourceAsLines
+import dev.misasi.giancarlo.system.getResourceAsString
 import dev.misasi.giancarlo.opengl.Shader
 
 class ShaderLoader : AssetLoader<Shader.Spec> {

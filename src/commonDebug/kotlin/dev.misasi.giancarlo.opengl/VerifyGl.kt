@@ -25,8 +25,7 @@
 
 package dev.misasi.giancarlo.opengl
 
-import dev.misasi.giancarlo.crash
-import java.nio.ByteBuffer
+import dev.misasi.giancarlo.system.crash
 
 inline fun <T> glVerify(gl: OpenGl, glOperation: () -> T): T {
     val result = glOperation()

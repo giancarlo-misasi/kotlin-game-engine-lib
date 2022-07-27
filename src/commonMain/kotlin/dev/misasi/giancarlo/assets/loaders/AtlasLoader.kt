@@ -28,7 +28,7 @@ package dev.misasi.giancarlo.assets.loaders
 import dev.misasi.giancarlo.drawing.Atlas
 import dev.misasi.giancarlo.drawing.MaterialSet
 import dev.misasi.giancarlo.drawing.StaticMaterial
-import dev.misasi.giancarlo.getResourceAsLines
+import dev.misasi.giancarlo.system.getResourceAsLines
 import dev.misasi.giancarlo.math.Aabb
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.opengl.Texture

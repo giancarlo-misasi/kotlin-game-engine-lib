@@ -25,7 +25,7 @@
 
 package dev.misasi.giancarlo.events.input.touch
 
-import dev.misasi.giancarlo.crash
+import dev.misasi.giancarlo.system.crash
 
 data class TouchEvent (
     val type: Type,

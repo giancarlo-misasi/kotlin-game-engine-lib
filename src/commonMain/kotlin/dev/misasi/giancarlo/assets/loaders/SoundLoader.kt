@@ -25,8 +25,8 @@
 
 package dev.misasi.giancarlo.assets.loaders
 
-import dev.misasi.giancarlo.getResourceAsBytes
-import dev.misasi.giancarlo.getResourceAsLines
+import dev.misasi.giancarlo.system.getResourceAsBytes
+import dev.misasi.giancarlo.system.getResourceAsLines
 import dev.misasi.giancarlo.openal.OpenAl
 import dev.misasi.giancarlo.openal.SoundBuffer
 

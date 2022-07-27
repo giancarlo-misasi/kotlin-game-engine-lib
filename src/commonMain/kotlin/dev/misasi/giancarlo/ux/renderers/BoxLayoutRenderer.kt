@@ -4,7 +4,7 @@ import dev.misasi.giancarlo.drawing.Material
 import dev.misasi.giancarlo.drawing.programs.Sprite2d
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector2i
-import dev.misasi.giancarlo.opengl.DisplayContext
+import dev.misasi.giancarlo.ResourceContext
 import dev.misasi.giancarlo.ux.RenderProvider.Companion.renderers
 import dev.misasi.giancarlo.ux.views.BoxLayout
 import dev.misasi.giancarlo.ux.Renderer
@@ -18,7 +18,7 @@ class BoxLayoutRenderer(
     private val background: Material,
 ) : Renderer<BoxLayout> {
 
-    override fun prepareRender(context: DisplayContext, gfx: Sprite2d, view: BoxLayout) {
+    override fun prepareRender(context: ResourceContext, gfx: Sprite2d, view: BoxLayout) {
         if (!view.visible) return
 
         val contentSize = view.onMeasure(context)
@@ -47,7 +47,7 @@ class BoxLayoutRenderer(
     }
 
     private fun prepareRenderChild(
-        context: DisplayContext,
+        context: ResourceContext,
         gfx: Sprite2d,
         layoutDirection: LayoutDirection,
         layoutAlignment: LayoutAlignment,
@@ -61,7 +61,7 @@ class BoxLayoutRenderer(
     }
 
     private fun prepareRenderChildHorizontal(
-        context: DisplayContext,
+        context: ResourceContext,
         gfx: Sprite2d,
         layoutAlignment: LayoutAlignment,
         maxSize: Vector2i,
@@ -76,17 +76,17 @@ class BoxLayoutRenderer(
 
         if (offset != null) {
             gfx.pushOffset(offset)
-            context.renderers().prepareRender(context, gfx, child)
+            context.renderers.prepareRender(context, gfx, child)
             gfx.popOffset()
         } else {
-            context.renderers().prepareRender(context, gfx, child)
+            context.renderers.prepareRender(context, gfx, child)
         }
 
         gfx.pushOffset(Vector2f(childSize.x, 0))
     }
 
     private fun prepareRenderChildVertical(
-        context: DisplayContext,
+        context: ResourceContext,
         gfx: Sprite2d,
         layoutAlignment: LayoutAlignment,
         maxSize: Vector2i,
@@ -101,10 +101,10 @@ class BoxLayoutRenderer(
 
         if (offset != null) {
             gfx.pushOffset(offset)
-            context.renderers().prepareRender(context, gfx, child)
+            context.renderers.prepareRender(context, gfx, child)
             gfx.popOffset()
         } else {
-            context.renderers().prepareRender(context, gfx, child)
+            context.renderers.prepareRender(context, gfx, child)
         }
 
         gfx.pushOffset(Vector2f(0, childSize.y))

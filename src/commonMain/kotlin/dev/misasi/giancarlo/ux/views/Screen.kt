@@ -26,7 +26,7 @@
 package dev.misasi.giancarlo.ux.views
 
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.opengl.DisplayContext
+import dev.misasi.giancarlo.ResourceContext
 import dev.misasi.giancarlo.system.TimeAccumulator
 import dev.misasi.giancarlo.ux.Renderer
 import dev.misasi.giancarlo.ux.Connector
@@ -56,7 +56,7 @@ class Screen<ViewModel>(
         }
     }
 
-    override fun onUpdate(context: DisplayContext, elapsedMs: Long) {
+    override fun onUpdate(context: ResourceContext, elapsedMs: Long) {
         if (state.hasNext()) {
             accumulator.update(elapsedMs)
 
@@ -70,7 +70,7 @@ class Screen<ViewModel>(
         connector.onUpdate(context, elapsedMs)
     }
 
-    override fun onEvent(context: DisplayContext, event: Event): Boolean =
+    override fun onEvent(context: ResourceContext, event: Event): Boolean =
         connector.onEvent(context, event)
 
     fun close() {

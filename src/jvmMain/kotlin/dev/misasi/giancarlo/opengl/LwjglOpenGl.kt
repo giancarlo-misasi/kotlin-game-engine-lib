@@ -25,65 +25,17 @@
 
 package dev.misasi.giancarlo.opengl
 
-import org.lwjgl.opengl.GL40.*
-import dev.misasi.giancarlo.crash
 import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.drawing.ShapeType
 import dev.misasi.giancarlo.math.Matrix4f
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
+import dev.misasi.giancarlo.system.crash
+import org.lwjgl.opengl.GL40.*
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 
-class LwjglOpenGl : OpenGl {
-
-    companion object {
-        private val dataTypeMapping = mapOf(
-            DataType.FLOAT to GL_FLOAT,
-            DataType.INT to GL_INT,
-            DataType.UNSIGNED_INT to GL_UNSIGNED_INT,
-            DataType.SHORT to GL_SHORT,
-            DataType.UNSIGNED_SHORT to GL_UNSIGNED_SHORT,
-            DataType.BYTE to GL_BYTE,
-            DataType.UNSIGNED_BYTE to GL_UNSIGNED_BYTE
-        )
-
-        private val shaderTypeMapping = mapOf(
-            Shader.Type.VERTEX to GL_VERTEX_SHADER,
-            Shader.Type.FRAGMENT to GL_FRAGMENT_SHADER
-        )
-
-        private val bufferTypeMapping = mapOf(
-            Buffer.Type.VERTEX to GL_ARRAY_BUFFER,
-            Buffer.Type.INDEX to GL_ELEMENT_ARRAY_BUFFER
-        )
-
-        private val bufferBindingMapping = mapOf(
-            Buffer.Type.VERTEX to GL_ARRAY_BUFFER_BINDING,
-            Buffer.Type.INDEX to GL_ELEMENT_ARRAY_BUFFER_BINDING
-        )
-
-        private val bufferUsageMapping = mapOf(
-            Buffer.Usage.STATIC to GL_STATIC_DRAW,
-            Buffer.Usage.DYNAMIC to GL_DYNAMIC_DRAW,
-            Buffer.Usage.STREAM to GL_STREAM_DRAW
-        )
-
-        private val textureFilter = mapOf(
-            Texture.Filter.NEAREST to GL_NEAREST,
-            Texture.Filter.LINEAR to GL_LINEAR
-        )
-
-        private val textureWrap = mapOf(
-            Texture.Wrap.REPEAT to GL_REPEAT,
-            Texture.Wrap.CLAMP_TO_BORDER to GL_CLAMP_TO_BORDER
-        )
-
-        private val textureFormat = mapOf(
-            Rgba8.Format.BGRA to GL_BGRA,
-            Rgba8.Format.RGBA to GL_RGBA
-        )
-    }
+class LwjglOpenGl private constructor(): OpenGl {
 
     override fun createProgram(): Int {
         return glVerifyCreate(this, ::glCreateProgram) { "PROGRAM" }
@@ -436,5 +388,63 @@ class LwjglOpenGl : OpenGl {
         } else {
             throw IllegalStateException("ByteBuffer did not have $length bytes to retrieve string from")
         }
+    }
+
+    companion object {
+        val gl: OpenGl get() = getInstance()
+
+        @Volatile
+        private var INSTANCE: OpenGl? = null
+
+        private fun getInstance(): OpenGl =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: LwjglOpenGl().also { INSTANCE = it }
+            }
+
+        private val dataTypeMapping = mapOf(
+            DataType.FLOAT to GL_FLOAT,
+            DataType.INT to GL_INT,
+            DataType.UNSIGNED_INT to GL_UNSIGNED_INT,
+            DataType.SHORT to GL_SHORT,
+            DataType.UNSIGNED_SHORT to GL_UNSIGNED_SHORT,
+            DataType.BYTE to GL_BYTE,
+            DataType.UNSIGNED_BYTE to GL_UNSIGNED_BYTE
+        )
+
+        private val shaderTypeMapping = mapOf(
+            Shader.Type.VERTEX to GL_VERTEX_SHADER,
+            Shader.Type.FRAGMENT to GL_FRAGMENT_SHADER
+        )
+
+        private val bufferTypeMapping = mapOf(
+            Buffer.Type.VERTEX to GL_ARRAY_BUFFER,
+            Buffer.Type.INDEX to GL_ELEMENT_ARRAY_BUFFER
+        )
+
+        private val bufferBindingMapping = mapOf(
+            Buffer.Type.VERTEX to GL_ARRAY_BUFFER_BINDING,
+            Buffer.Type.INDEX to GL_ELEMENT_ARRAY_BUFFER_BINDING
+        )
+
+        private val bufferUsageMapping = mapOf(
+            Buffer.Usage.STATIC to GL_STATIC_DRAW,
+            Buffer.Usage.DYNAMIC to GL_DYNAMIC_DRAW,
+            Buffer.Usage.STREAM to GL_STREAM_DRAW
+        )
+
+        private val textureFilter = mapOf(
+            Texture.Filter.NEAREST to GL_NEAREST,
+            Texture.Filter.LINEAR to GL_LINEAR
+        )
+
+        private val textureWrap = mapOf(
+            Texture.Wrap.REPEAT to GL_REPEAT,
+            Texture.Wrap.CLAMP_TO_BORDER to GL_CLAMP_TO_BORDER
+        )
+
+        private val textureFormat = mapOf(
+            Rgba8.Format.BGRA to GL_BGRA,
+            Rgba8.Format.RGBA to GL_RGBA
+        )
     }
 }

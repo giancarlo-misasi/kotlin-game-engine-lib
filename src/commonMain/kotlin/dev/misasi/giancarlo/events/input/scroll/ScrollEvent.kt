@@ -26,7 +26,7 @@
 package dev.misasi.giancarlo.events.input.scroll
 
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.getTimeMillis
+import dev.misasi.giancarlo.system.getCurrentTimeMs
 import dev.misasi.giancarlo.math.Vector2f
 
 data class ScrollEvent (
@@ -36,7 +36,7 @@ data class ScrollEvent (
 
     companion object {
         fun valueOf(x: Double, y: Double): ScrollEvent {
-            return ScrollEvent(Vector2f(x.toFloat(), y.toFloat()), getTimeMillis())
+            return ScrollEvent(Vector2f(x.toFloat(), y.toFloat()), getCurrentTimeMs())
         }
     }
 }

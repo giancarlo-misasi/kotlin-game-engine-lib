@@ -26,7 +26,7 @@
 package dev.misasi.giancarlo.ux.views
 
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.opengl.DisplayContext
+import dev.misasi.giancarlo.ResourceContext
 
 abstract class ViewGroup : View() {
     var children = mutableListOf<View>()
@@ -34,7 +34,7 @@ abstract class ViewGroup : View() {
 
     fun add(child: View) = children.add(child)
 
-    override fun onEvent(context: DisplayContext, event: Event): Boolean {
+    override fun onEvent(context: ResourceContext, event: Event): Boolean {
         if (!visible) return false
         children.forEach {
             if (it.visible && it.onEvent(context, event)) {

@@ -23,28 +23,30 @@
  *
  */
 
-package dev.misasi.giancarlo.opengl
+package dev.misasi.giancarlo
 
 import dev.misasi.giancarlo.events.Event
+import dev.misasi.giancarlo.events.EventQueue
 import dev.misasi.giancarlo.events.input.mouse.CursorMode
 import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.openal.OpenAl
+import dev.misasi.giancarlo.opengl.OpenGl
+import dev.misasi.giancarlo.opengl.Viewport
 
-interface DisplayContext {
+interface ResourceContext {
 
-    var title: String
-    var targetResolution: Vector2i
-    var windowSize: Vector2i
-    var fullScreen: Boolean
-    var vsync: Boolean
-    var refreshRate: Int?
     val gl: OpenGl
     val al: OpenAl
-    val view: Viewport
+    val viewport: Viewport
+    val events: EventQueue
+
+    fun setTitle(title: String)
+    fun setFullScreen(refreshRate: Int = 60)
+    fun setWindowed(windowSize: Vector2i)
+    fun setVsync(vsync: Boolean)
 
     fun getPrimaryMonitorResolution(): Vector2i
     fun getActualWindowSize(): Vector2i
-    fun reconfigure()
     fun swapBuffers()
 
     fun enableKeyboardEvents(enable: Boolean)

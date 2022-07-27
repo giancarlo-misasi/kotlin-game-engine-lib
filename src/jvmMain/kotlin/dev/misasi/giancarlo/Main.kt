@@ -42,10 +42,9 @@ import dev.misasi.giancarlo.noise.NoiseOctave.Companion.noise2d
 import dev.misasi.giancarlo.noise.SimplexNoise
 import dev.misasi.giancarlo.openal.SoundSource
 import dev.misasi.giancarlo.opengl.Camera
-import dev.misasi.giancarlo.opengl.DisplayContext
-import dev.misasi.giancarlo.opengl.LwjglGlfwDisplayContext
+import dev.misasi.giancarlo.opengl.LwjglResourceContext
+import dev.misasi.giancarlo.system.getCurrentTimeMs
 import dev.misasi.giancarlo.ux.*
-import dev.misasi.giancarlo.ux.views.ScreenState
 import dev.misasi.giancarlo.ux.views.View
 import kotlin.math.pow
 
@@ -119,7 +118,7 @@ class Test(
         // We may want to share instances of these resources, or simply create new for every screen
         // Possibly have a pool so that we can do loading in case init is slow
 
-        val seed = getTimeMillis()
+        val seed = getCurrentTimeMs()
         val w = worldWidth / 16
         val h = worldHeight / 16
         noise = NoiseOctave
@@ -181,7 +180,7 @@ class Test(
         app.context.al.setListenerPosition(Vector3f())
     }
 
-    override fun onUpdate(context: DisplayContext, elapsedMs: Long) {
+    override fun onUpdate(context: ResourceContext, elapsedMs: Long) {
 //        screenTransition.update(elapsedMs)
 
         val transitionElapsedPercentage = null//screenTransition.elapsedPercentage()
@@ -208,9 +207,9 @@ class Test(
         }
     }
 
-    private fun onDraw(context: DisplayContext, gfx: Sprite2d) {
+    private fun onDraw(context: ResourceContext, gfx: Sprite2d) {
         gfx.bindProgram()
-        gfx.setMvp(camera.mvp(context.view.targetResolution.toVector2f()))
+        gfx.setMvp(camera.mvp(context.viewport.designedResolution.toVector2f()))
 //        spriteGfx.setTimeSinceStartMs(time)
         gfx.setAlphaOverride(alpha)
 //        spriteGfx.setShake(Shake.calculate(time))
@@ -227,7 +226,7 @@ class Test(
         gfx.draw()
     }
 
-    override fun onEvent(context: DisplayContext, event: Event): Boolean {
+    override fun onEvent(context: ResourceContext, event: Event): Boolean {
 
 
 //        if (event is MouseButtonEvent) {
@@ -268,14 +267,12 @@ class Test(
 }
 
 fun main() {
-    val context = LwjglGlfwDisplayContext(
+    val context = LwjglResourceContext(
         "title",
         Vector2i(windowWidth, windowHeight),
         Vector2i(windowWidth, windowHeight),
         fullScreen = false,
-        vsync = false,
         refreshRate = 60,
-        events = EventQueue(setOf())
     )
     context.enableKeyboardEvents(true)
     context.enableMouseEvents(true)
@@ -283,7 +280,7 @@ fun main() {
     context.enableScrollEvents(true)
     context.enableResizeEvents(true)
 
-    val assets = context.assets()
+    val assets = context.assets
     val overworld = Overworld(assets)
 
     // todo improve this variable

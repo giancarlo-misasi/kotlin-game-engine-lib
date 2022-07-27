@@ -29,8 +29,6 @@ import dev.misasi.giancarlo.math.Vector3f
 
 interface OpenAl {
 
-    fun init()
-
     fun convertOgg(byteArray: ByteArray): PcmSound
 
     fun createSoundBuffer(sound: PcmSound): Int

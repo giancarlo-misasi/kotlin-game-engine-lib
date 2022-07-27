@@ -28,10 +28,10 @@ package dev.misasi.giancarlo.assets
 import dev.misasi.giancarlo.assets.loaders.AtlasLoader
 import dev.misasi.giancarlo.assets.loaders.SoundLoader
 import dev.misasi.giancarlo.assets.loaders.TextureLoader
-import dev.misasi.giancarlo.crash
-import dev.misasi.giancarlo.opengl.DisplayContext
+import dev.misasi.giancarlo.system.crash
+import dev.misasi.giancarlo.ResourceContext
 
-class Assets private constructor(context: DisplayContext) {
+class Assets private constructor(context: ResourceContext) {
     private val atlases = AtlasLoader(TextureLoader(context.gl)).load()
     private val sounds = SoundLoader(context.al).load()
 
@@ -43,11 +43,12 @@ class Assets private constructor(context: DisplayContext) {
         @Volatile
         private var INSTANCE: Assets? = null
 
-        private fun getInstance(context: DisplayContext): Assets =
+        private fun getInstance(context: ResourceContext): Assets =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Assets(context).also { INSTANCE = it }
             }
 
-        fun DisplayContext.assets(): Assets = getInstance(this)
+        val ResourceContext.assets: Assets
+            get() = getInstance(this)
     }
 }
