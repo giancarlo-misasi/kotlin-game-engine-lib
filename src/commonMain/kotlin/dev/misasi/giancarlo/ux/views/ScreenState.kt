@@ -23,23 +23,26 @@
  *
  */
 
-package dev.misasi.giancarlo.ux
+package dev.misasi.giancarlo.ux.views
 
-import dev.misasi.giancarlo.math.Vector2i
-import dev.misasi.giancarlo.opengl.DisplayContext
-import dev.misasi.giancarlo.ux.attributes.LayoutAlignment
-import dev.misasi.giancarlo.ux.attributes.LayoutDirection
+enum class ScreenState {
+    WAITING,
+    IN,
+    OUT,
+    ACTIVE,
+    HIDDEN;
 
-class BoxLayout(
-    var layoutDirection: LayoutDirection = LayoutDirection.HORIZONTAL,
-    var layoutAlignment: LayoutAlignment = LayoutAlignment()
-) : ViewGroup() {
+    fun next(): ScreenState? = next(this)
+    fun hasNext(): Boolean = hasNext(this)
 
-    override fun onMeasure(context: DisplayContext): Vector2i {
-        val measurements = children.map { it.onMeasure(context) }
-        return when (layoutDirection) {
-            LayoutDirection.HORIZONTAL -> Vector2i(measurements.sumOf { it.x }, measurements.maxOf { it.y })
-            LayoutDirection.VERTICAL -> Vector2i(measurements.maxOf { it.x }, measurements.sumOf { it.y })
-        }
+    companion object {
+        private val transitions: Map<ScreenState, ScreenState> = mapOf(
+            WAITING to IN,
+            IN to ACTIVE,
+            OUT to HIDDEN
+        )
+
+        fun next(currentState: ScreenState): ScreenState? = transitions[currentState]
+        fun hasNext(currentState: ScreenState): Boolean = transitions.containsKey(currentState)
     }
 }

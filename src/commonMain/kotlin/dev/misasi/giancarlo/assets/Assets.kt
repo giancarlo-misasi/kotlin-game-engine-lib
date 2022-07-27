@@ -31,11 +31,23 @@ import dev.misasi.giancarlo.assets.loaders.TextureLoader
 import dev.misasi.giancarlo.crash
 import dev.misasi.giancarlo.opengl.DisplayContext
 
-class Assets (context: DisplayContext) {
+class Assets private constructor(context: DisplayContext) {
     private val atlases = AtlasLoader(TextureLoader(context.gl)).load()
     private val sounds = SoundLoader(context.al).load()
 
     fun atlas(name: String) = atlases[name] ?: crash("Atlas not found")
 
     fun sound(name: String) = sounds[name] ?: crash("Sound not found")
+
+    companion object {
+        @Volatile
+        private var INSTANCE: Assets? = null
+
+        private fun getInstance(context: DisplayContext): Assets =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Assets(context).also { INSTANCE = it }
+            }
+
+        fun DisplayContext.assets(): Assets = getInstance(this)
+    }
 }

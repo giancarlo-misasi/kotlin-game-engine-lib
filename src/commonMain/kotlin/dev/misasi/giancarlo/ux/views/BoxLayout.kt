@@ -23,24 +23,23 @@
  *
  */
 
-package dev.misasi.giancarlo.ux
+package dev.misasi.giancarlo.ux.views
 
-import dev.misasi.giancarlo.events.Event
+import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.opengl.DisplayContext
+import dev.misasi.giancarlo.ux.attributes.LayoutAlignment
+import dev.misasi.giancarlo.ux.attributes.LayoutDirection
 
-abstract class ViewGroup : View() {
-    var children = mutableListOf<View>()
-        private set
+class BoxLayout(
+    var layoutDirection: LayoutDirection = LayoutDirection.HORIZONTAL,
+    var layoutAlignment: LayoutAlignment = LayoutAlignment()
+) : ViewGroup() {
 
-    fun add(child: View) = children.add(child)
-
-    override fun onEvent(context: DisplayContext, event: Event): Boolean {
-        if (!visible) return false
-        children.forEach {
-            if (it.visible && it.onEvent(context, event)) {
-                return true
-            }
+    override fun onMeasure(context: DisplayContext): Vector2i {
+        val measurements = children.map { it.onMeasure(context) }
+        return when (layoutDirection) {
+            LayoutDirection.HORIZONTAL -> Vector2i(measurements.sumOf { it.x }, measurements.maxOf { it.y })
+            LayoutDirection.VERTICAL -> Vector2i(measurements.maxOf { it.x }, measurements.sumOf { it.y })
         }
-        return false
     }
 }

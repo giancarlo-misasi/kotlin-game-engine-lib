@@ -26,6 +26,7 @@
 package dev.misasi.giancarlo
 
 import dev.misasi.giancarlo.assets.Assets
+import dev.misasi.giancarlo.assets.Assets.Companion.assets
 import dev.misasi.giancarlo.drawing.Material
 import dev.misasi.giancarlo.drawing.programs.Sprite2d
 import dev.misasi.giancarlo.events.Event
@@ -40,12 +41,12 @@ import dev.misasi.giancarlo.noise.NoiseOctave
 import dev.misasi.giancarlo.noise.NoiseOctave.Companion.noise2d
 import dev.misasi.giancarlo.noise.SimplexNoise
 import dev.misasi.giancarlo.openal.SoundSource
-import dev.misasi.giancarlo.opengl.Buffer
 import dev.misasi.giancarlo.opengl.Camera
 import dev.misasi.giancarlo.opengl.DisplayContext
 import dev.misasi.giancarlo.opengl.LwjglGlfwDisplayContext
 import dev.misasi.giancarlo.ux.*
-import dev.misasi.giancarlo.ux.attributes.LayoutInset
+import dev.misasi.giancarlo.ux.views.ScreenState
+import dev.misasi.giancarlo.ux.views.View
 import kotlin.math.pow
 
 val windowWidth = 800
@@ -103,11 +104,11 @@ class Test(
     private var camera = Camera()//.copy(zoom = 0.25f)
     private var time: Long = 86400000 / 2
     private var alpha = -1f
-    private val screenTransition = ScreenTransition(mapOf(
-        ScreenState.WAITING to waitMs,
-        ScreenState.IN to 1500,
-        ScreenState.OUT to 1500
-    ))
+//    private val screenTransition = ScreenTransition(mapOf(
+//        ScreenState.WAITING to waitMs,
+//        ScreenState.IN to 1500,
+//        ScreenState.OUT to 1500
+//    ))
     private var walkSource: SoundSource
     val overworld = Overworld(assets)
     private lateinit var noise: Grid<Float>
@@ -282,7 +283,7 @@ fun main() {
     context.enableScrollEvents(true)
     context.enableResizeEvents(true)
 
-    val assets = Assets(context)
+    val assets = context.assets()
     val overworld = Overworld(assets)
 
     // todo improve this variable

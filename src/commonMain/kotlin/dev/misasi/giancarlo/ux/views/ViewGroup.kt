@@ -23,26 +23,24 @@
  *
  */
 
-package dev.misasi.giancarlo.ux
+package dev.misasi.giancarlo.ux.views
 
-enum class ScreenState {
-    WAITING,
-    IN,
-    OUT,
-    ACTIVE,
-    HIDDEN;
+import dev.misasi.giancarlo.events.Event
+import dev.misasi.giancarlo.opengl.DisplayContext
 
-    fun next(): ScreenState? = Companion.next(this)
-    fun hasNext(): Boolean = Companion.hasNext(this)
+abstract class ViewGroup : View() {
+    var children = mutableListOf<View>()
+        private set
 
-    companion object {
-        private val transitions: Map<ScreenState, ScreenState> = mapOf(
-            WAITING to IN,
-            IN to ACTIVE,
-            OUT to HIDDEN
-        )
+    fun add(child: View) = children.add(child)
 
-        fun next(currentState: ScreenState): ScreenState? = transitions[currentState]
-        fun hasNext(currentState: ScreenState): Boolean = transitions.containsKey(currentState)
+    override fun onEvent(context: DisplayContext, event: Event): Boolean {
+        if (!visible) return false
+        children.forEach {
+            if (it.visible && it.onEvent(context, event)) {
+                return true
+            }
+        }
+        return false
     }
 }

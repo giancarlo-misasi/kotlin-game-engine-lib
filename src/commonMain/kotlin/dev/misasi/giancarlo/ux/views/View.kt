@@ -23,34 +23,19 @@
  *
  */
 
-package dev.misasi.giancarlo.ux
+package dev.misasi.giancarlo.ux.views
 
-import dev.misasi.giancarlo.system.TimeAccumulator
+import dev.misasi.giancarlo.drawing.programs.Sprite2d
+import dev.misasi.giancarlo.events.Event
+import dev.misasi.giancarlo.math.Vector2i
+import dev.misasi.giancarlo.opengl.DisplayContext
+import dev.misasi.giancarlo.ux.attributes.LayoutInset
 
-class ScreenTransition(private val transitionDurationsMs: Map<ScreenState, Long> = mapOf()) {
-    private val accumulator = TimeAccumulator()
-
-    fun elapsedPercentage(state: ScreenState): Float? {
-        val durationMs = transitionDurationsMs[state]
-        return if (durationMs != null) {
-            accumulator.elapsedPercentage(durationMs)
-        } else {
-            null
-        }
-    }
-
-    fun update(screen: Screen, elapsedMs: Long) {
-        if (screen.state.hasNext()) {
-            accumulator.update(elapsedMs)
-            val durationMs = transitionDurationsMs[screen.state] ?: 0
-            if (accumulator.hasElapsed(durationMs)) {
-                screen.goToNextState()
-                reset()
-            }
-        }
-    }
-
-    fun reset() {
-        accumulator.reset()
-    }
+abstract class View(
+    var inset: LayoutInset = LayoutInset(),
+    var visible: Boolean = true
+) {
+    open fun onMeasure(context: DisplayContext): Vector2i = context.targetResolution.minus(inset.size)
+    open fun onUpdate(context: DisplayContext, elapsedMs: Long) = Unit
+    open fun onEvent(context: DisplayContext, event: Event): Boolean = false
 }

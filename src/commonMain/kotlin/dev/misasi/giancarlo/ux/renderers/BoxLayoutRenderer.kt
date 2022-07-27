@@ -1,24 +1,24 @@
-package dev.misasi.giancarlo.ux.rendering
+package dev.misasi.giancarlo.ux.renderers
 
 import dev.misasi.giancarlo.drawing.Material
 import dev.misasi.giancarlo.drawing.programs.Sprite2d
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.opengl.DisplayContext
-import dev.misasi.giancarlo.ux.BoxLayout
-import dev.misasi.giancarlo.ux.View
+import dev.misasi.giancarlo.ux.RenderProvider.Companion.renderers
+import dev.misasi.giancarlo.ux.views.BoxLayout
+import dev.misasi.giancarlo.ux.Renderer
+import dev.misasi.giancarlo.ux.views.View
 import dev.misasi.giancarlo.ux.attributes.HorizontalAlignment
 import dev.misasi.giancarlo.ux.attributes.LayoutAlignment
 import dev.misasi.giancarlo.ux.attributes.LayoutDirection
 import dev.misasi.giancarlo.ux.attributes.VerticalAlignment
 
 class BoxLayoutRenderer(
-    private val renderProvider: RenderProvider,
     private val background: Material,
-    private val gfx: Sprite2d
 ) : Renderer<BoxLayout> {
 
-    override fun prepareRender(context: DisplayContext, view: BoxLayout) {
+    override fun prepareRender(context: DisplayContext, gfx: Sprite2d, view: BoxLayout) {
         if (!view.visible) return
 
         val contentSize = view.onMeasure(context)
@@ -37,7 +37,7 @@ class BoxLayoutRenderer(
         var drawCount = 0
         for (child in view.children) {
             if (child.visible) {
-                prepareRenderChild(context, view.layoutDirection, view.layoutAlignment, contentSize, child)
+                prepareRenderChild(context, gfx, view.layoutDirection, view.layoutAlignment, contentSize, child)
                 drawCount++
             }
         }
@@ -46,23 +46,23 @@ class BoxLayoutRenderer(
         gfx.popOffset(drawCount + 2)
     }
 
-    override fun render(context: DisplayContext, view: BoxLayout) = Unit
-
     private fun prepareRenderChild(
         context: DisplayContext,
+        gfx: Sprite2d,
         layoutDirection: LayoutDirection,
         layoutAlignment: LayoutAlignment,
         maxSize: Vector2i,
         child: View
     ) {
         when (layoutDirection) {
-            LayoutDirection.HORIZONTAL -> prepareRenderChildHorizontal(context, layoutAlignment, maxSize, child)
-            LayoutDirection.VERTICAL -> prepareRenderChildVertical(context, layoutAlignment, maxSize, child)
+            LayoutDirection.HORIZONTAL -> prepareRenderChildHorizontal(context, gfx, layoutAlignment, maxSize, child)
+            LayoutDirection.VERTICAL -> prepareRenderChildVertical(context, gfx, layoutAlignment, maxSize, child)
         }
     }
 
     private fun prepareRenderChildHorizontal(
         context: DisplayContext,
+        gfx: Sprite2d,
         layoutAlignment: LayoutAlignment,
         maxSize: Vector2i,
         child: View
@@ -76,10 +76,10 @@ class BoxLayoutRenderer(
 
         if (offset != null) {
             gfx.pushOffset(offset)
-            renderProvider.prepareRender(context, child)
+            context.renderers().prepareRender(context, gfx, child)
             gfx.popOffset()
         } else {
-            renderProvider.prepareRender(context, child)
+            context.renderers().prepareRender(context, gfx, child)
         }
 
         gfx.pushOffset(Vector2f(childSize.x, 0))
@@ -87,6 +87,7 @@ class BoxLayoutRenderer(
 
     private fun prepareRenderChildVertical(
         context: DisplayContext,
+        gfx: Sprite2d,
         layoutAlignment: LayoutAlignment,
         maxSize: Vector2i,
         child: View
@@ -100,10 +101,10 @@ class BoxLayoutRenderer(
 
         if (offset != null) {
             gfx.pushOffset(offset)
-            renderProvider.prepareRender(context, child)
+            context.renderers().prepareRender(context, gfx, child)
             gfx.popOffset()
         } else {
-            renderProvider.prepareRender(context, child)
+            context.renderers().prepareRender(context, gfx, child)
         }
 
         gfx.pushOffset(Vector2f(0, childSize.y))

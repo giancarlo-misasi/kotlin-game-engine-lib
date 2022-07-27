@@ -29,30 +29,33 @@ import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.drawing.StaticMaterial
 import dev.misasi.giancarlo.drawing.programs.Sprite2d
 import dev.misasi.giancarlo.events.input.window.ResizeEvent
-import dev.misasi.giancarlo.math.Flip
 import dev.misasi.giancarlo.math.Aabb
+import dev.misasi.giancarlo.math.Flip
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.opengl.*
 import dev.misasi.giancarlo.system.Clock
-import dev.misasi.giancarlo.ux.rendering.RenderProvider
+import dev.misasi.giancarlo.ux.RenderProvider.Companion.renderers
+import dev.misasi.giancarlo.ux.views.Screen
+import dev.misasi.giancarlo.ux.views.ScreenState
 
 class App (val context: DisplayContext) {
     private val clock = Clock()
     private val frameBuffer: FrameBuffer
+    private val defaultGfx: Sprite2d
     private val postProcessingGfx: Sprite2d
-    private val screens = mutableListOf<Screen>()
-    private val renderProvider = RenderProvider()
+    private val screens = mutableListOf<Screen<*>>()
 
     init {
 //        context.gl.setClearColor(Rgba8.BLACK)
         context.gl.setClearColor(Rgba8.RED)
         frameBuffer = FrameBuffer(context.gl)
         frameBuffer.attach(Texture(context.gl, context.view.targetResolution.x, context.view.targetResolution.y))
+        defaultGfx = Sprite2d(context.gl, Buffer.Usage.DYNAMIC, 100000) // todo: parameterize
         postProcessingGfx = Sprite2d(context.gl, Buffer.Usage.STATIC, 1)
         updateScreenSize()
     }
 
-    fun transitionToScreen(screen: Screen) {
+    fun transitionToScreen(screen: Screen<Any>) {
         screens.add(screen)
     }
 
@@ -104,8 +107,9 @@ class App (val context: DisplayContext) {
             }
 
             // Draw visible screens
-            renderProvider.prepareRender(context, screen)
-            renderProvider.render(context, screen) // todo: separate prepare vs render calls in this state machine so they dont happen all the time
+            context.renderers().prepareRender(context, defaultGfx, screen)
+            context.renderers().render(context, defaultGfx, screen)
+            // todo: separate prepare vs render calls in this state machine so they dont happen all the time
         }
 
         // Detach the frame buffer and clear the screen to avoid artifacts
