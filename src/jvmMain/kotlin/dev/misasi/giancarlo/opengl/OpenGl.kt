@@ -152,8 +152,20 @@ actual class OpenGl private constructor() {
         return GLFW.glfwWindowShouldClose(window)
     }
 
-    actual fun onKeyboardEvents(window: Long, handler: ((window: Long, keyCode: Int, scanCode: Int, actionCode: Int, modifierCode: Int) -> Unit)?
-    ) {
+    actual fun getMousePosition(window: Long): Vector2f {
+        val stack: MemoryStack
+        try {
+            stack = MemoryStack.stackPush()
+            val pWidth = stack.mallocDouble(1)
+            val pHeight = stack.mallocDouble(1)
+            GLFW.glfwGetCursorPos(window, pWidth, pHeight)
+            return Vector2f(pWidth.get(0), pHeight.get(0))
+        } finally {
+            MemoryStack.stackPop()
+        }
+    }
+
+    actual fun onKeyboardEvents(window: Long, handler: ((window: Long, keyCode: Int, scanCode: Int, actionCode: Int, modifierCode: Int) -> Unit)?) {
         GLFW.glfwSetKeyCallback(window, handler)
     }
 

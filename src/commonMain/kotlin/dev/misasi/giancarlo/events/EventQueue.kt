@@ -25,6 +25,7 @@
 
 package dev.misasi.giancarlo.events
 
+import dev.misasi.giancarlo.events.input.PositionEvent
 import dev.misasi.giancarlo.events.input.gestures.GestureEvent
 import dev.misasi.giancarlo.events.input.gestures.detector.GestureDetector
 import dev.misasi.giancarlo.events.input.mouse.MouseEvent
@@ -38,10 +39,15 @@ class EventQueue (
 
     fun pushEvent(event: Event) {
         events.addLast(event)
+        println(events.last())
     }
 
-    fun pushMouseEvent(viewport: Viewport, event: MouseEvent) {
-        events.addLast(adjustToViewport(viewport, event))
+    fun pushPositionEvent(viewport: Viewport, event: PositionEvent) {
+        val position = viewport.adjustToBounds(event.position)
+        if (viewport.contains(position)) {
+            events.addLast(event.withPosition(position))
+            println(events.last())
+        }
     }
 
     fun pushGestureEvent(viewport: Viewport, touchEvent: TouchEvent) {
@@ -61,6 +67,5 @@ class EventQueue (
         }
     }
 
-    private fun adjustToViewport(viewport: Viewport, event: MouseEvent) = event.copy(position = viewport.adjustToBounds(event.position))
     private fun adjustToViewport(viewport: Viewport, event: GestureEvent) = event.copy(position = viewport.adjustToBounds(event.position))
 }

@@ -59,6 +59,7 @@ expect class OpenGl {
     fun shouldCloseWindow(window: Long): Boolean
 
     // Events
+    fun getMousePosition(window: Long): Vector2f
     fun onKeyboardEvents(window: Long, handler: ((window: Long, keyCode: Int, scanCode: Int, actionCode: Int, modifierCode: Int) -> Unit)?)
     fun onTextEvents(window: Long, handler: ((window: Long, codePoint: Int) -> Unit)?)
     fun onMouseEvents(window: Long, handler: ((window: Long, x: Double, y: Double) -> Unit)?)

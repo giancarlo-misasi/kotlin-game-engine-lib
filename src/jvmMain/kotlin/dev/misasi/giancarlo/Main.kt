@@ -46,6 +46,8 @@ import dev.misasi.giancarlo.ux.App
 import dev.misasi.giancarlo.ux.AppContext
 import dev.misasi.giancarlo.ux.Renderer
 import dev.misasi.giancarlo.ux.View
+import dev.misasi.giancarlo.ux.transitions.Slide
+import dev.misasi.giancarlo.ux.transitions.Transition
 import dev.misasi.giancarlo.ux.views.HorizontalLayout
 import dev.misasi.giancarlo.ux.views.VerticalLayout
 import kotlin.math.pow
@@ -236,15 +238,25 @@ class TestView : View() {
     }
 }
 
-class MyView : View() {}
+class MyView : View() {
+    override fun onEvent(context: AppContext, event: Event): Boolean {
+        if (event is MouseButtonEvent) {
+            if (event.button == MouseButton.LEFT) {
+                context.go(MyView(), inTransition = Slide.slideUp(
+                    context.viewport.designedResolution.y.toFloat(),
+                    Vector2f(0, context.viewport.designedResolution.y))
+                )
+            }
+        }
+        return false
+    }
+}
 
 class MyViewRenderer : Renderer {
     override fun render(target: Any, context: AppContext, state: DrawState) {
         if (target !is MyView) return
 
         val contentSize = target.onMeasure(context)
-        val material = context.assets.material("PlayerWalkDown1")
-
         state.putSprite("White", AffineTransform(
             scale = Vector2f(400, 400),
             translation = Vector2f(400f, 400f),
@@ -269,6 +281,8 @@ fun main() {
         Vector2i(windowWidth, windowHeight),
     )
     app.enableResizeEvents(true)
+    app.enableMouseEvents(true)
+    app.enableMouseButtonEvents(true)
     app.register(MyView::class, MyViewRenderer())
 
     val rootView = HorizontalLayout()

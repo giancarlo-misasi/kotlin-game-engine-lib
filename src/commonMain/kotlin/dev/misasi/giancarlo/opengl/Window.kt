@@ -89,11 +89,12 @@ class Window(
     }
 
     private fun onMouseEvent(window: Long, x: Double, y: Double) {
-        events.pushMouseEvent(viewport, MouseEvent.valueOf(window, x, y))
+        events.pushPositionEvent(viewport, MouseEvent.valueOf(window, x, y))
     }
 
     private fun onMouseButtonEvent(window: Long, buttonCode: Int, actionCode: Int, modifierCode: Int) {
-        events.pushEvent(MouseButtonEvent.valueOf(window, buttonCode, actionCode, modifierCode))
+        val position = gl.getMousePosition(window)
+        events.pushPositionEvent(viewport, MouseButtonEvent.valueOf(window, position, buttonCode, actionCode, modifierCode))
     }
 
     private fun onScrollEvent(window: Long, x: Double, y: Double) {

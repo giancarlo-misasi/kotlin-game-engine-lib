@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Giancarlo Misasi
+ * Copyright (c) 2023 Giancarlo Misasi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,24 +23,12 @@
  *
  */
 
-package dev.misasi.giancarlo.events.input.mouse
+package dev.misasi.giancarlo.events.input
 
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.events.input.PositionEvent
-import dev.misasi.giancarlo.system.System.Companion.getCurrentTimeMs
 import dev.misasi.giancarlo.math.Vector2f
 
-data class MouseEvent(
-    val window: Long,
-    override val position: Vector2f,
-    val time: Long
-) : Event, PositionEvent {
-
-    override fun withPosition(position: Vector2f): Event = copy(position = position)
-
-    companion object {
-        fun valueOf(window: Long, x: Double, y: Double): MouseEvent {
-            return MouseEvent(window, Vector2f(x.toFloat(), y.toFloat()), getCurrentTimeMs())
-        }
-    }
+interface PositionEvent {
+    val position: Vector2f
+    fun withPosition(position: Vector2f): Event
 }
