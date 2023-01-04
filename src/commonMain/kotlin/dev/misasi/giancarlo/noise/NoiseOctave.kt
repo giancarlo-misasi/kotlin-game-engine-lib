@@ -25,18 +25,70 @@
 
 package dev.misasi.giancarlo.noise
 
+import dev.misasi.giancarlo.math.Grid
 import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.math.powList
+import kotlin.random.Random
 
-data class NoiseOctave (private val noiseGenerator: Noise, val frequency: Float, val amplitude: Float) {
-    fun noise2d(points: List<NoisePoint>): Map<Vector2f, Float> {
-        return points.associate { it.position to amplitude * noise2d(it.normalizedPosition.scale(frequency)) }
-    }
+/**
+ * To configure and combine multiple iterations of noise.
+ */
+data class NoiseOctave(private val noiseGenerator: Noise, val frequency: Float, val amplitude: Float) {
 
-    fun noise2d(point: Vector2f): Float {
-        return noise2d(point.x, point.y)
-    }
+    /**
+     * Generates a noise value that falls into the range [-amplitude to +amplitude].
+     */
+    fun noise2d(nxy: Vector2f): Float =
+        amplitude * noiseGenerator.noise2d(nxy.multiply(frequency))
 
-    fun noise2d(x: Float, y: Float): Float {
-        return noiseGenerator.noise2d(x, y)
+    companion object {
+
+        /**
+         * Generates a list of octaves to use to combine iterations of noise.
+         */
+        fun octaves(
+            seed: Long,
+            count: Int,
+            noiseGenerator: () -> Noise,
+            lacunarity: Float = 1.99f,
+            gain: Float = 0.499f
+        ): List<NoiseOctave> {
+            val seeds = Random(seed).let { r -> (0 until count).map { r.nextLong() } }
+            val frequencies = lacunarity.powList(count)
+            val amplitudes = gain.powList(count)
+            return (0 until count).map { i ->
+                NoiseOctave(
+                    noiseGenerator().shuffle(seeds[i]),
+                    frequencies[i],
+                    amplitudes[i]
+                )
+            }
+        }
+
+        /**
+         * Generates a noise map by combining octaves where noise values fall into the range [0f to 1f].
+         */
+        fun List<NoiseOctave>.noise2d(
+            width: Int,
+            height: Int,
+            normalize: (Int, Int) -> Vector2f = { x, y ->
+                Vector2f(x, y).divide(Vector2f(width, height)).minus(Vector2f(0.5f, 0.5f))
+            }
+        ): Grid<Float> {
+            // generate noise map with values from [0f to 2f * amplitude], where the max value is the start amplitude
+            val grid = Grid(width, height) { 0f }
+            forEach { octave ->
+                grid.forEach { cell ->
+                    val nxy = normalize(cell.x, cell.y)
+                    val sum = grid.at(cell.index) + octave.noise2d(nxy).plus(octave.amplitude)
+                    grid.replace(cell.index, sum)
+                }
+            }
+
+            // calculate the max to normalize the range of values
+            val max = grid.maxOf { it.value }
+            grid.forEach { grid.replace(it.index, it.value / max) }
+            return grid
+        }
     }
 }

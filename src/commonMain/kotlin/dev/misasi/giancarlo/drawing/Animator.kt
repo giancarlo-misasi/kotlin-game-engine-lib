@@ -31,24 +31,24 @@ import kotlin.math.min
 
 class Animator {
     companion object {
+        fun fade(percentage: Float, fadeIn: Boolean): Float {
+            return if (fadeIn) {
+                fadeIn(percentage)
+            } else {
+                fadeOut(percentage)
+            }
+        }
+
         fun fadeIn(percentage: Float) : Float {
             return max(0f, min(percentage, 1f))
         }
 
-        fun fadeInByte(percentage: Float) : UByte {
-            return (255f * fadeIn(percentage)).toUInt().toUByte()
-        }
-
         fun fadeOut(percentage: Float) : Float {
-            return (1f - max(0f, min(percentage, 1f)))
-        }
-
-        fun fadeOutByte(percentage: Float) : Int {
-            return (255f * fadeOut(percentage)).toInt()
+            return 1f - fadeIn(percentage)
         }
 
         fun translate(start: Vector2f, end: Vector2f, percentage: Float) : Vector2f {
-            return start.plus(end.minus(start).scale(percentage))
+            return start.plus(end.minus(start).multiply(percentage))
         }
     }
 }

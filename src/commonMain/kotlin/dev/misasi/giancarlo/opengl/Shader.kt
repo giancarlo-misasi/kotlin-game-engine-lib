@@ -25,14 +25,16 @@
 
 package dev.misasi.giancarlo.opengl
 
-import java.io.Closeable
+import dev.misasi.giancarlo.system.System.Companion.crash
 
-data class Shader(private val gl: OpenGl, private val programHandle: Int, val spec: Spec) : Closeable {
-    data class Spec(val type: Type, val source: String)
+data class Shader(private val gl: OpenGl, private val programHandle: Int, val spec: Spec) {
+    data class Spec(val name: String, val type: Type, val source: String) {
+        constructor(name: String, source: String) : this(name, fromName(name), source)
+    }
 
     enum class Type {
         VERTEX,
-        FRAGMENT
+        FRAGMENT;
     }
 
     private val shaderHandle = gl.createShader(spec.type)
@@ -42,8 +44,23 @@ data class Shader(private val gl: OpenGl, private val programHandle: Int, val sp
         gl.attachShader(programHandle, shaderHandle)
     }
 
-    override fun close() {
+    fun close() {
         gl.detachShader(programHandle, shaderHandle)
         gl.deleteShader(shaderHandle)
+    }
+
+    companion object {
+        private const val VERTEX_EXTENSION = "Vertex"
+        private const val FRAGMENT_EXTENSION = "Fragment"
+
+        fun fromName(name: String): Shader.Type {
+            return if (name.endsWith(VERTEX_EXTENSION)) {
+                Shader.Type.VERTEX
+            } else if (name.endsWith(FRAGMENT_EXTENSION)) {
+                Shader.Type.FRAGMENT
+            } else {
+                crash("Unknown shader type: $name")
+            }
+        }
     }
 }

@@ -25,19 +25,17 @@
 
 package dev.misasi.giancarlo.opengl
 
-import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
-
 abstract class Buffer private constructor(
     protected val gl: OpenGl,
     protected val handle: Int,
     val type: Type,
     val usage: Usage,
-    val sizeInBytes: Int
+    val capacityInBytes: Int
 ) {
-    constructor(gl: OpenGl, type: Type, usage: Usage, sizeInBytes: Int)
-            : this(gl, gl.createBuffer(type, usage, sizeInBytes), type, usage, sizeInBytes)
+    constructor(gl: OpenGl, type: Type, usage: Usage, capacityInBytes: Int)
+            : this(gl, gl.createBuffer(type, usage, capacityInBytes), type, usage, capacityInBytes)
 
-    constructor(gl: OpenGl, type: Type, usage: Usage, data: DirectNativeByteBuffer)
+    constructor(gl: OpenGl, type: Type, usage: Usage, data: NioBuffer)
             : this(gl, gl.createBuffer(type, usage, data), type, usage, data.sizeInBytes)
 
     enum class Type {
@@ -52,6 +50,6 @@ abstract class Buffer private constructor(
     }
 
     abstract fun bind(): Any
-    abstract fun update(data: DirectNativeByteBuffer, byteOffset: Int = 0): Any
+    abstract fun update(data: NioBuffer, byteOffset: Int = 0): Any
     abstract fun delete()
 }

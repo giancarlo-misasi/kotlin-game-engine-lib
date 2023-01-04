@@ -35,16 +35,16 @@ fun fastFloor(x: Float): Int {
     return if (x < xi) xi - 1 else xi
 }
 
-fun convertRange(oldMin: Float, oldMax: Float, newMin: Float, newMax: Float, value: Float): Float {
-    val v: Float = if (value < oldMin) {
-        oldMin
-    } else if (value > oldMax) {
-        oldMax
-    } else {
-        value
-    }
-    return (((v - oldMin) * (newMax - newMin)) / (oldMax - oldMin)) + newMin
-}
+//fun convertRange(oldMin: Float, oldMax: Float, newMin: Float, newMax: Float, value: Float): Float {
+//    val v: Float = if (value < oldMin) {
+//        oldMin
+//    } else if (value > oldMax) {
+//        oldMax
+//    } else {
+//        value
+//    }
+//    return (((v - oldMin) * (newMax - newMin)) / (oldMax - oldMin)) + newMin
+//}
 
 fun constrainValue(min: Float, max: Float, value: Float): Float {
     return if (value < min) {

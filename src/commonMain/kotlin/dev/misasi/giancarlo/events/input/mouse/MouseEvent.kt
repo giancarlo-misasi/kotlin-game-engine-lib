@@ -26,17 +26,18 @@
 package dev.misasi.giancarlo.events.input.mouse
 
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.getTimeMillis
+import dev.misasi.giancarlo.system.System.Companion.getCurrentTimeMs
 import dev.misasi.giancarlo.math.Vector2f
 
 data class MouseEvent(
+    val window: Long,
     val position: Vector2f,
     val time: Long
 ) : Event {
 
     companion object {
-        fun valueOf(x: Double, y: Double): MouseEvent {
-            return MouseEvent(Vector2f(x.toFloat(), y.toFloat()), getTimeMillis())
+        fun valueOf(window: Long, x: Double, y: Double): MouseEvent {
+            return MouseEvent(window, Vector2f(x.toFloat(), y.toFloat()), getCurrentTimeMs())
         }
     }
 }

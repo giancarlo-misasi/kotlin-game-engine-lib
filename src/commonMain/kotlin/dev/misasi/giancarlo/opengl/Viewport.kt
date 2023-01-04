@@ -25,50 +25,42 @@
 
 package dev.misasi.giancarlo.opengl
 
+import dev.misasi.giancarlo.math.Rectangle
 import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.math.Vector2i
 
-class Viewport(private val gl: OpenGl, val targetResolution: Vector2f, actualScreenSize: Vector2f) {
-    var actualScreenSize: Vector2f = actualScreenSize
-        set(value) {
-            field = value
-            update(gl)
-        }
-
-    var adjustedScreenSize: Vector2f = actualScreenSize
-        private set
-
-    var offset: Vector2f = Vector2f()
-        private set
-
-    var scale: Vector2f = Vector2f(1f, 1f)
-        private set
-
-    init {
-        update(gl)
-    }
-
-    fun withinBounds(point: Vector2f): Boolean {
-        return point.withinBounds(targetResolution)
+class Viewport private constructor(
+    val designedResolution: Vector2i,
+    val actualScreenSize: Vector2i,
+    val adjustedScreenSize: Vector2i,
+    val offset: Vector2f,
+    val view: Rectangle,
+    val scale: Vector2f
+) {
+    fun contains(point: Vector2f): Boolean {
+        return view.contains(point) // todo verify if this change is okay (do we need to factor in offset, or am I handling that in events already?)
     }
 
     fun adjustToBounds(point: Vector2f): Vector2f {
         return point.minus(offset).divide(scale)
     }
 
-    private fun update(gl: OpenGl) {
-        adjustedScreenSize = calculateAdjustedScreenSize(targetResolution.aspectRatio, actualScreenSize)
-        offset = actualScreenSize.minus(adjustedScreenSize).scale(0.5f)
-        scale = adjustedScreenSize.divide(targetResolution)
-    }
-
     companion object {
-        private fun calculateAdjustedScreenSize(aspectRatio: Float, actualScreenSize: Vector2f): Vector2f {
+        private fun calculateAdjustedScreenSize(aspectRatio: Float, actualScreenSize: Vector2i): Vector2i {
             val requiredScreenHeight = actualScreenSize.x / aspectRatio;
             return if (requiredScreenHeight > actualScreenSize.y) {
-                Vector2f(actualScreenSize.y * aspectRatio, actualScreenSize.y);
+                Vector2i(actualScreenSize.y * aspectRatio, actualScreenSize.y);
             } else {
-                Vector2f(actualScreenSize.x, requiredScreenHeight);
+                Vector2i(actualScreenSize.x, requiredScreenHeight);
             }
+        }
+
+        fun create(actualScreenSize: Vector2i, designedResolution: Vector2i): Viewport {
+            val adjustedScreenSize = calculateAdjustedScreenSize(designedResolution.aspectRatio, actualScreenSize)
+            val offset = actualScreenSize.minus(adjustedScreenSize).toVector2f().multiply(0.5f)
+            val scale = adjustedScreenSize.toVector2f().divide(designedResolution.toVector2f())
+            val view = Rectangle(offset, adjustedScreenSize.toVector2f().plus(offset))
+            return Viewport(designedResolution, actualScreenSize, adjustedScreenSize, offset, view, scale)
         }
     }
 }

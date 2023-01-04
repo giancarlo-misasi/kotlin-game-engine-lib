@@ -25,49 +25,22 @@
 
 package dev.misasi.giancarlo.noise
 
-import dev.misasi.giancarlo.collections.mergeReduce
-import dev.misasi.giancarlo.collections.sumOf
 import dev.misasi.giancarlo.math.Vector2f
-import dev.misasi.giancarlo.math.powList
-import kotlin.random.Random
 
+/**
+ * Interface for generating functions to produce random values (noise)
+ * useful for generation of things like terrain.
+ */
 interface Noise {
+    /**
+     * Randomizes the generator.
+     * @param seed determines the set of random numbers to use when generating noise
+     */
     fun shuffle(seed: Long): Noise
-    fun noise2d(x: Float, y: Float): Float
 
-    companion object {
-        fun octaves(
-            seed: Long,
-            count: Int,
-            lacunarity: Float = 1.99f,
-            gain: Float = 0.499f,
-            noiseGenerator: () -> Noise
-        ): List<NoiseOctave> {
-            val seeds = Random(seed).let { r -> (0 until count).map { r.nextLong() } }
-            val frequencies = lacunarity.powList(count)
-            val amplitudes = gain.powList(count)
-            return (0 until count).map { i -> NoiseOctave(noiseGenerator().shuffle(seeds[i]), frequencies[i], amplitudes[i]) }
-        }
-
-        fun points(width: Int, height: Int, step: Int = 1): List<NoisePoint> {
-            return (0 until height step step).flatMap { y ->
-                val ny = (y / height.toFloat() - 0.5f)
-                (0 until width step step).map { x ->
-                    val nx = (x / width.toFloat() - 0.5f)
-                    NoisePoint(Vector2f(x.toFloat(), y.toFloat()), Vector2f(nx, ny))
-                }
-            }
-        }
-
-        fun List<NoiseOctave>.noise2d(points: List<NoisePoint>): Map<Vector2f, Float> {
-            val noises = map { it.noise2d(points) }
-            val max = noises.sumOf { it.values.max() }
-            val noise = noises.mergeReduce(Float::plus).toMutableMap()
-            return noise.onEach { noise[it.key] = it.value / max }
-        }
-    }
+    /**
+     * Generates noise values in the range [-1f to 1f]
+     * @param point the normalized position to generate noise from
+     */
+    fun noise2d(point: Vector2f): Float
 }
-
-// TODO Make a cool function here
-//                e = e.times(1.2f).pow(2.4f)
-//                e = constrainValue(0f, 1f, e)

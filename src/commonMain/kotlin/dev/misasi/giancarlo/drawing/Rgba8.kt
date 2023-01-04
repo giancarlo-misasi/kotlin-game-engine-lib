@@ -25,7 +25,7 @@
 
 package dev.misasi.giancarlo.drawing
 
-import dev.misasi.giancarlo.crash
+import dev.misasi.giancarlo.system.System.Companion.crash
 
 data class Rgba8 (
     val r: Int = 0,

@@ -25,6 +25,7 @@
 
 package dev.misasi.giancarlo.opengl
 
+import dev.misasi.giancarlo.math.Matrix2f
 import dev.misasi.giancarlo.math.Matrix4f
 import dev.misasi.giancarlo.math.Vector2f
 
@@ -58,6 +59,7 @@ class Program(private val gl: OpenGl, shaderSpecs: List<Shader.Spec>, uniformNam
         return this
     }
 
+    fun setUniformMatrix2f(name: String, value: Matrix2f) = gl.setUniformMatrix2f(handle, uniforms[name]!!, value)
     fun setUniformMatrix4f(name: String, value: Matrix4f) = gl.setUniformMatrix4f(handle, uniforms[name]!!, value)
     fun setUniformVector2f(name: String, value: Vector2f) = gl.setUniformVector2f(handle, uniforms[name]!!, value)
     fun setUniformFloat(name: String, value: Float) = gl.setUniform1f(handle, uniforms[name]!!, value)

@@ -25,26 +25,39 @@
 
 package dev.misasi.giancarlo.drawing
 
-import dev.misasi.giancarlo.math.Point4f
-import dev.misasi.giancarlo.opengl.Texture
+import dev.misasi.giancarlo.math.Aabb
+import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.system.TimeAccumulator
 
-class AnimatedMaterial (
-    private val materialSet: MaterialSet
+class AnimatedMaterial(
+    val animationName: String,
+    val frames: List<StaticMaterial>,
+    val frameDurationMs: Int,
 ) : Material {
+    data class Spec(val animationName: String, val frames: List<StaticMaterial>, val frameDurationMs: Int)
+
+    constructor(spec: Spec) : this(spec.animationName, spec.frames, spec.frameDurationMs)
+
     private val accumulator = TimeAccumulator()
     private var index: Int = 0
 
-    override fun name(): String = currentFrame().name()
-    override fun texture(): Texture = currentFrame().texture()
-    override fun coordinates(): Point4f = currentFrame().coordinates()
-    private fun currentFrame() : Material = materialSet.frames[index]
+    override val materialName: String
+        get() = currentFrame().materialName
+
+    override val textureName: String
+        get() = currentFrame().textureName
+
+    override val coordinates: Aabb
+        get() = currentFrame().coordinates
+
+    override val size: Vector2i
+        get() = currentFrame().size
 
     fun update(elapsedMillis: Long) {
         accumulator.update(elapsedMillis)
-        if (accumulator.hasElapsed(materialSet.frameDurationMillis.toLong())) {
+        if (accumulator.hasElapsed(frameDurationMs.toLong())) {
             accumulator.reset()
-            index = (index + 1) % materialSet.frames.size
+            index = (index + 1) % frames.size
         }
     }
 
@@ -52,4 +65,7 @@ class AnimatedMaterial (
         accumulator.reset()
         index = 0
     }
+
+    private fun currentFrame(): Material =
+        frames[index]
 }

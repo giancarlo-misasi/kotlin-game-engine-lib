@@ -25,12 +25,13 @@
 
 package dev.misasi.giancarlo.events.input.mouse
 
-import dev.misasi.giancarlo.crash
+import dev.misasi.giancarlo.system.System.Companion.crash
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.events.input.keyboard.KeyModifier
-import dev.misasi.giancarlo.getTimeMillis
+import dev.misasi.giancarlo.system.System.Companion.getCurrentTimeMs
 
 data class MouseButtonEvent (
+    val window: Long,
     val button: MouseButton,
     val action: MouseButtonAction,
     val modifier: KeyModifier?,
@@ -38,11 +39,11 @@ data class MouseButtonEvent (
 ) : Event {
 
     companion object {
-        fun valueOf(buttonCode: Int, actionCode: Int, modifierCode: Int): MouseButtonEvent {
+        fun valueOf(window: Long, buttonCode: Int, actionCode: Int, modifierCode: Int): MouseButtonEvent {
             val button = MouseButton.valueOf(buttonCode) ?: crash("Unknown mbtn value: $buttonCode, $actionCode, $modifierCode")
             val action = MouseButtonAction.valueOf(actionCode) ?: crash("Unknown mbtn value: $buttonCode, $actionCode, $modifierCode")
             val modifier = KeyModifier.valueOf(modifierCode)
-            return MouseButtonEvent(button, action, modifier, getTimeMillis())
+            return MouseButtonEvent(window, button, action, modifier, getCurrentTimeMs())
         }
     }
 }

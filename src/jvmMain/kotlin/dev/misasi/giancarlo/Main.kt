@@ -25,216 +25,256 @@
 
 package dev.misasi.giancarlo
 
-import dev.misasi.giancarlo.assets.Assets
-import dev.misasi.giancarlo.drawing.Animator
+import dev.misasi.giancarlo.drawing.DrawState
 import dev.misasi.giancarlo.drawing.Material
-import dev.misasi.giancarlo.drawing.programs.Sprite2d
+import dev.misasi.giancarlo.drawing.StaticMaterial
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.events.EventQueue
 import dev.misasi.giancarlo.events.input.keyboard.Key
 import dev.misasi.giancarlo.events.input.keyboard.KeyAction
 import dev.misasi.giancarlo.events.input.keyboard.KeyEvent
-import dev.misasi.giancarlo.events.input.mouse.CursorMode
+import dev.misasi.giancarlo.events.input.mouse.MouseButton
+import dev.misasi.giancarlo.events.input.mouse.MouseButtonAction
 import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
+import dev.misasi.giancarlo.events.input.mouse.MouseEvent
 import dev.misasi.giancarlo.events.input.scroll.ScrollEvent
-import dev.misasi.giancarlo.events.input.window.ResizeEvent
-import dev.misasi.giancarlo.math.Vector2f
-import dev.misasi.giancarlo.math.Vector3f
-import dev.misasi.giancarlo.noise.Noise
-import dev.misasi.giancarlo.noise.Noise.Companion.noise2d
+import dev.misasi.giancarlo.math.*
+import dev.misasi.giancarlo.noise.NoiseOctave
+import dev.misasi.giancarlo.noise.NoiseOctave.Companion.noise2d
 import dev.misasi.giancarlo.noise.SimplexNoise
-import dev.misasi.giancarlo.openal.SoundSource
-import dev.misasi.giancarlo.opengl.Buffer
-import dev.misasi.giancarlo.opengl.Camera
-import dev.misasi.giancarlo.opengl.DisplayContext
-import dev.misasi.giancarlo.opengl.LwjglGlfwDisplayContext
-import dev.misasi.giancarlo.ux.Screen
-import dev.misasi.giancarlo.ux.ScreenStack
-import dev.misasi.giancarlo.ux.ScreenState
-import dev.misasi.giancarlo.ux.ScreenTransition
-import dev.misasi.giancarlo.ux.effects.DayNight
+import dev.misasi.giancarlo.system.System.Companion.getCurrentTimeMs
+import dev.misasi.giancarlo.ux.App
+import dev.misasi.giancarlo.ux.AppContext
+import dev.misasi.giancarlo.ux.Renderer
+import dev.misasi.giancarlo.ux.View
+import dev.misasi.giancarlo.ux.views.HorizontalLayout
+import dev.misasi.giancarlo.ux.views.VerticalLayout
+import kotlin.math.pow
 
-val width = 1600
-val height = 1200
+val windowWidth = 800
+val windowHeight = 800
 
-class Overworld(assets: Assets) {
+val worldWidth = 4800
+val worldHeight = 4800
 
-    private val atlas = assets.atlas("Overworld")
+class Overworld(overworld: Map<String, StaticMaterial>) {
 
-    val bigRock = atlas.material("BigRock")
-    val bigTree = atlas.material("BigTree")
-    val bigTreeStump = atlas.material("BigTreeStump")
-    val cliffInnerCorner = atlas.material("CliffInnerCorner")
-    val cliffOuterCorner = atlas.material("CliffOuterCorner")
-    val cliffWall = atlas.material("CliffWall")
-    val floorBlue = atlas.material("FloorBlue")
-    val floorCliff1 = atlas.material("FloorCliff1")
-    val floorCliff2 = atlas.material("FloorCliff2")
-    val floorCliff3 = atlas.material("FloorCliff3")
-    val floorGrass = atlas.material("FloorGrass")
-    val floorOrange = atlas.material("FloorOrange")
-    val floorPurple = atlas.material("FloorPurple")
-    val floorRed = atlas.material("FloorRed")
-    val floorSand = atlas.material("FloorSand")
-    val floorTeal = atlas.material("FloorTeal")
-    val floorYellow = atlas.material("FloorYellow")
-    val rock = atlas.material("Rock")
-    val stairs = atlas.material("Stairs")
-    val tree = atlas.material("Tree")
-    val treeStump = atlas.material("TreeStump")
-    val water = atlas.material("Water")
+    val bigRock = overworld["BigRock"]!!
+    val bigTree = overworld["BigTree"]!!
+    val bigTreeStump = overworld["BigTreeStump"]!!
+    val cliffInnerCorner = overworld["CliffInnerCorner"]!!
+    val cliffOuterCorner = overworld["CliffOuterCorner"]!!
+    val cliffWall = overworld["CliffWall"]!!
+    val floorBlue = overworld["FloorBlue"]!!
+    val floorCliff1 = overworld["FloorCliff1"]!!
+    val floorCliff2 = overworld["FloorCliff2"]!!
+    val floorCliff3 = overworld["FloorCliff3"]!!
+    val floorGrass = overworld["FloorGrass"]!!
+    val floorOrange = overworld["FloorOrange"]!!
+    val floorPurple = overworld["FloorPurple"]!!
+    val floorRed = overworld["FloorRed"]!!
+    val floorSand = overworld["FloorSand"]!!
+    val floorTeal = overworld["FloorTeal"]!!
+    val floorYellow = overworld["FloorYellow"]!!
+    val rock = overworld["Rock"]!!
+    val stairs = overworld["Stairs"]!!
+    val tree = overworld["Tree"]!!
+    val treeStump = overworld["TreeStump"]!!
+    val water = overworld["Water"]!!
 
     fun fromElevation(elevation: Float): List<Material> {
         // elevation falls into 0 to 1
         return when (elevation.times(100).toInt()) {
-            in 0 until 20 -> listOf(water)
-            in 20 until 35 -> listOf(floorSand)
-            in 35 until 55 -> listOf(floorGrass)
-            in 55 until 65 -> listOf(floorGrass, tree)
+            //listOf(floorGrass, tree)
+            in 0 until 30 -> listOf(water)
+            in 30 until 40 -> listOf(floorSand)
+            in 40 until 65 -> listOf(floorGrass)
             in 65 until 80 -> listOf(floorOrange)
-            in 80 .. 100 -> listOf(floorPurple)
+            in 80 until 90 -> listOf(floorPurple)
+            in 90..100 -> listOf(floorBlue)
             else -> listOf(floorBlue)
         }
     }
 }
 
-class TestScreen(
-    private val context: DisplayContext,
-    private val screenStack: ScreenStack,
-    private val assets: Assets,
-    waitMs: Long = 0
-) : Screen() {
-    private lateinit var spriteGfx: Sprite2d
-    private var camera = Camera()
-    private var time: Long = 86400000 / 2
-    private var alpha = -1f
-    private val screenTransition = ScreenTransition(this, mapOf(
-        ScreenState.WAITING to waitMs,
-        ScreenState.IN to 1500,
-        ScreenState.OUT to 1500
-    ))
+fun generateTerrain(): Grid<Float> {
+    val seed = getCurrentTimeMs()
+    val w = worldWidth / 16
+    val h = worldHeight / 16
+    val noise = NoiseOctave
+        .octaves(seed, 4, ::SimplexNoise, 2f, 0.65f)
+        .noise2d(w, h)
 
-    private lateinit var walkSource: SoundSource
+    // Adjusting the normalized point adjusts how functions change the data
+    // if we shift origin to the center, we can apply a circular gradient
+    // if we shift to top middle we make a smile etc
 
-    override fun onInit(context: DisplayContext) {
-        // So screens have additional state that let us draw everything with variation
-        // i.e. position, alpha
-        // We may want to share instances of these resources, or simply create new for every screen
-        // Possibly have a pool so that we can do loading in case init is slow
-
-
-        val seed = getTimeMillis()
-        val points = Noise.points(width, height, 16)
-        val octaves = Noise.octaves(seed, 3, 1.99f, 0.79f, ::SimplexNoise)
-        val noise = octaves.noise2d(points)
-
-        spriteGfx = Sprite2d(context.gl, Buffer.Usage.DYNAMIC, 10000)
-        val overworld = Overworld(assets)
-        noise.forEach {
-            overworld.fromElevation(it.value).forEach { material ->
-                spriteGfx.putSprite(it.key, Vector2f(16f, 16f), material)
-            }
-        }
-        spriteGfx.updateVertexBuffer()
-
-        walkSource = SoundSource(context.al).attach(assets.sound("heart container 1"))
-        context.al.setListenerPosition(Vector3f())
+    // first lets redistribute by increasing peaks and flattening valleys
+    noise.forEach {
+        var e = it.value
+        e = e.times(1.2f).pow(1.16F)
+        e = constrainValue(0f, 1f, e)
+        noise.replace(it.index, e)
     }
 
-    override fun onUpdate(elapsedMs: Long) {
-        screenTransition.update(elapsedMs)
-
-        val transitionElapsedPercentage = screenTransition.elapsedPercentage()
-        if (transitionElapsedPercentage != null) {
-            when (state) {
-                ScreenState.IN -> camera = camera.copy(position = Animator.translate(Vector2f(-width.toFloat()), Vector2f(), transitionElapsedPercentage))
-//                ScreenState.IN -> alpha = Animator.fadeIn(transitionElapsedPercentage)
-                else -> {}
-            }
-            when (state) {
-                ScreenState.OUT -> camera = camera.copy(position = Animator.translate(Vector2f(), Vector2f(width.toFloat()), transitionElapsedPercentage))
-//                ScreenState.OUT -> alpha = Animator.fadeOut(transitionElapsedPercentage)
-                else -> {}
-            }
-        } else {
-            camera = camera.copy(position = Vector2f())
-            alpha = -1f
-        }
-
-        time += elapsedMs.toFloat().times(60 * 60f).toInt() // 24-minute day
-        if (time > 86400000) {
-            time = 0
+    // next, let's convert the data to an island using a square bump
+    noise.forEach {
+        val e = it.value
+        if (e >= 0.3f) { // let's keep lakes everywhere
+            val nxy = Vector2f(it.x, it.y).divide(Vector2f(w, h)).multiply(2f).minus(Vector2f(1f, 1f))
+            val d = Distance.squareBump(nxy)
+            noise.replace(it.index, (e + (1f - d)) / 2f)
         }
     }
 
-    override fun onDraw(context: DisplayContext) {
-        spriteGfx.bindProgram()
-        spriteGfx.setMvp(camera.mvp(context.view.targetResolution))
-//        spriteGfx.setTimeSinceStartMs(time)
-        spriteGfx.setAlphaOverride(alpha)
-//        spriteGfx.setShake(Shake.calculate(time))
-        spriteGfx.setDayNight(DayNight.calculate(time))
-        spriteGfx.draw()
+    // Blockify the noise
+    // Visit each vertex at most once
+    // For each vertex, get the neighbors
+    // OPTIONAL check if any neighbors processed, if so, skip, otherwise proceed
+    // Take the average of the elevation across all the vertexes and apply it (to all involved)
+    val visited = MutableList(noise.size) { false }
+    for (cell in noise) {
+        val i = cell.index
+        if (visited[i]) {
+            continue
+        }
+
+        // only process neighbors right and down from me, to avoid being too blocky
+//            val neighbors = grid.neighbors(i)
+        val neighbors = noise.neighbors(i, Direction.RIGHT, Direction.DOWN_RIGHT, Direction.DOWN)
+        if (neighbors.any { visited[it.index] }) {
+            continue
+        }
+
+//            val avg = neighbors.sumOf { it.value } / neighbors.size
+        val max = neighbors.maxOf { it.value }
+        visited[i] = true
+        noise.replace(i, max)
+        neighbors.forEach {
+            visited[it.index] = true
+            noise.replace(it.index, max)
+        }
     }
+    return noise
+}
 
-    override fun onEvent(context: DisplayContext, event: Event) {
-        if (event is ResizeEvent) {
-            context.view.actualScreenSize = event.size
-        }
+data class TestData(
+    var time: Int = 86400000 / 2,
+    var alpha: Float = -1f,
+    var noise: Grid<Float> = generateTerrain(),
+    var position: Vector2f = Vector2f(),
+    var zoom: Float = 1f,
+    var rotation: Rotation? = null,
+    var reflection: Reflection? = null,
+)
 
-        if (event is MouseButtonEvent) {
-            screenStack.transitionToScreen(TestScreen(context, screenStack, assets, 0))
-            walkSource.play()
-        }
+class TestView : View() {
+    val data = TestData()
+    var mousePressing = false
+    var lastMousePos = Vector2f()
 
+    override fun onEvent(context: AppContext, event: Event): Boolean {
         if (event is KeyEvent) {
             if (event.key == Key.KEY_ESCAPE && event.action == KeyAction.RELEASE) {
-                context.close()
+//                context.window.close()
+                return true
             }
-        }
 
-        if (event is KeyEvent) {
+            if (event.key == Key.KEY_R && event.action == KeyAction.RELEASE) {
+                data.rotation = when (data.rotation) {
+                    Rotation.DEGREES_90 -> Rotation.DEGREES_180
+                    Rotation.DEGREES_180 -> Rotation.DEGREES_270
+                    Rotation.DEGREES_270 -> null
+                    else -> Rotation.DEGREES_90
+                }
+                return true
+            }
+
             if (event.key == Key.KEY_F && event.action == KeyAction.RELEASE) {
-                context.setCursorMode(CursorMode.FPS)
-            } else if (event.key == Key.KEY_N && event.action == KeyAction.RELEASE) {
-                context.setCursorMode(CursorMode.NORMAL)
+                data.reflection = when (data.reflection) {
+                    Reflection.VERTICAL -> Reflection.HORIZONTAL
+                    Reflection.HORIZONTAL -> Reflection.BOTH
+                    Reflection.BOTH -> null
+                    else -> Reflection.VERTICAL
+                }
+                return true
             }
         }
 
         if (event is ScrollEvent) {
             if (event.offset.y > 0) {
-                camera = camera.copy(zoom = camera.zoom.times(event.offset.y * 1.1f))
+                data.zoom *= event.offset.y * 1.1f
+                return true
             } else if (event.offset.y < 0) {
-                camera = camera.copy(zoom = camera.zoom.div(-event.offset.y * 1.1f))
+                data.zoom /= -event.offset.y * 1.1f
+                return true
             }
         }
+
+        if (event is MouseButtonEvent) {
+            if (event.button == MouseButton.LEFT) {
+                if (event.action == MouseButtonAction.PRESS) {
+                    mousePressing = true
+                } else if (event.action == MouseButtonAction.RELEASE) {
+                    mousePressing = false
+                }
+            }
+        }
+
+        if (event is MouseEvent) {
+            val delta = lastMousePos.minus(event.position)
+            if (mousePressing) {
+                data.position = data.position.plus(delta)
+            }
+
+            lastMousePos = event.position
+        }
+
+        return false
     }
 
-    override fun onDestroy(context: DisplayContext) {
-        spriteGfx.delete()
+    override fun onElapsed(context: AppContext, elapsedMs: Long) {
+    }
+}
+
+class MyView : View() {}
+
+class MyViewRenderer : Renderer {
+    override fun render(target: Any, context: AppContext, state: DrawState) {
+        if (target !is MyView) return
+
+        val contentSize = target.onMeasure(context)
+        val material = context.assets.material("PlayerWalkDown1")
+
+        state.putSprite("White", AffineTransform(
+            scale = Vector2f(400, 400),
+            translation = Vector2f(400f, 400f),
+        ))
+        state.putSprite("Black", AffineTransform(
+            scale = Vector2f(400, 400),
+        ))
+        state.putSprite("PlayerWalkDown1", AffineTransform(
+            scale = Vector2f(100, 100),
+            translation = Vector2f(100, 100),
+        ))
     }
 }
 
 fun main() {
-    val context = LwjglGlfwDisplayContext(
+    val app = App(
         "title",
-        Vector2f(width.toFloat(), height.toFloat()),
-        Vector2f(width.toFloat(), height.toFloat()),
+        Vector2i(windowWidth + 100, windowHeight),
         fullScreen = false,
-        vsync = false,
         refreshRate = 60,
-        events = EventQueue(setOf())
+        vsync = false,
+        Vector2i(windowWidth, windowHeight),
     )
-    context.enableKeyboardEvents(true)
-    context.enableMouseEvents(true)
-    context.enableMouseButtonEvents(true)
-    context.enableScrollEvents(true)
-    context.enableResizeEvents(true)
+    app.enableResizeEvents(true)
+    app.register(MyView::class, MyViewRenderer())
 
-    val assets = Assets(context)
-
-    // todo improve this variable
-    val screenStack = ScreenStack(context)
-    screenStack.transitionToScreen(TestScreen(context, screenStack, assets))
-    screenStack.run()
+    val rootView = HorizontalLayout()
+    val child1 = VerticalLayout()
+    val child2 = MyView()
+    child1.add(child2)
+    rootView.children.add(child1)
+    app.run(rootView);
 }

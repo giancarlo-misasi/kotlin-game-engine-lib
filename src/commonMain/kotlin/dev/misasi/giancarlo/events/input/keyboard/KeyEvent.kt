@@ -25,11 +25,12 @@
 
 package dev.misasi.giancarlo.events.input.keyboard
 
-import dev.misasi.giancarlo.crash
+import dev.misasi.giancarlo.system.System.Companion.crash
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.getTimeMillis
+import dev.misasi.giancarlo.system.System.Companion.getCurrentTimeMs
 
 data class KeyEvent(
+    val window: Long,
     val key: Key,
     val action: KeyAction,
     val modifier: KeyModifier?,
@@ -38,11 +39,11 @@ data class KeyEvent(
 ) : Event {
 
     companion object {
-        fun valueOf(keyCode: Int, scanCode: Int, actionCode: Int, modifierCode: Int): KeyEvent {
+        fun valueOf(window: Long, keyCode: Int, scanCode: Int, actionCode: Int, modifierCode: Int): KeyEvent {
             val key = Key.valueOf(keyCode) ?: crash("Unknown key value: $keyCode, $scanCode, $actionCode, $modifierCode")
             val action = KeyAction.valueOf(actionCode) ?: crash("Unknown key value: $keyCode, $scanCode, $actionCode, $modifierCode")
             val modifier = KeyModifier.valueOf(modifierCode)
-            return KeyEvent(key, action, modifier, scanCode, getTimeMillis())
+            return KeyEvent(window, key, action, modifier, scanCode, getCurrentTimeMs())
         }
     }
 }

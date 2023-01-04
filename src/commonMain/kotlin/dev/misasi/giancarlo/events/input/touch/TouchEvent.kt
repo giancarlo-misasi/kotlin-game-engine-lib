@@ -25,9 +25,10 @@
 
 package dev.misasi.giancarlo.events.input.touch
 
-import dev.misasi.giancarlo.crash
+import dev.misasi.giancarlo.system.System.Companion.crash
 
 data class TouchEvent (
+    val window: Long,
     val type: Type,
     val time: Long,
     val points: List<TouchPoint>

@@ -27,14 +27,46 @@ package dev.misasi.giancarlo.opengl
 
 import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.drawing.ShapeType
+import dev.misasi.giancarlo.events.input.mouse.CursorMode
+import dev.misasi.giancarlo.math.Matrix2f
 import dev.misasi.giancarlo.math.Matrix4f
 import dev.misasi.giancarlo.math.Vector2f
-import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
+import dev.misasi.giancarlo.math.Vector2i
+import dev.misasi.giancarlo.system.DataType
 
-interface OpenGl {
+expect class OpenGl {
+
+    // Instance
+    companion object {
+        val gl: OpenGl
+    }
 
     // General
     fun enable(target: Int)
+
+    // Window
+    fun createWindow(title: String, size: Vector2i, fullScreen: Boolean, refreshRate: Int, vsync: Boolean): Long
+    fun setCurrentWindow(window: Long)
+    fun setWindowTitle(window: Long, title: String)
+    fun setFullScreen(window: Long, resolution: Vector2i, refreshRate: Int)
+    fun setWindowed(window: Long, windowSize: Vector2i)
+    fun setVsync(window: Long, vsync: Boolean)
+    fun getPrimaryMonitorResolution(): Vector2i
+    fun getActualWindowSize(window: Long): Vector2i
+    fun setCursorMode(window: Long, mode: CursorMode)
+    fun swapBuffers(window: Long)
+    fun closeWindow(window: Long)
+    fun shouldCloseWindow(window: Long): Boolean
+
+    // Events
+    fun onKeyboardEvents(window: Long, handler: ((window: Long, keyCode: Int, scanCode: Int, actionCode: Int, modifierCode: Int) -> Unit)?)
+    fun onTextEvents(window: Long, handler: ((window: Long, codePoint: Int) -> Unit)?)
+    fun onMouseEvents(window: Long, handler: ((window: Long, x: Double, y: Double) -> Unit)?)
+    fun onMouseButtonEvents(window: Long, handler: ((window: Long, buttonCode: Int, actionCode: Int, modifierCode: Int) -> Unit)?)
+    fun onScrollEvents(window: Long, handler: ((window: Long, x: Double, y: Double) -> Unit)?)
+    fun onResizeEvents(window: Long, handler: ((window: Long, x: Int, y: Int) -> Unit)?)
+    fun pollEvents()
+
 
     // Program
     fun createProgram(): Int
@@ -52,6 +84,7 @@ interface OpenGl {
 
     // Uniforms
     fun getUniformLocation(program: Int, name: String): Int
+    fun setUniformMatrix2f(program: Int, uniform: Int, value: Matrix2f)
     fun setUniformMatrix4f(program: Int, uniform: Int, value: Matrix4f)
     fun setUniformVector2f(program: Int, uniform: Int, value: Vector2f)
     fun setUniform1f(program: Int, uniform: Int, value: Float)
@@ -66,9 +99,9 @@ interface OpenGl {
 
     // Vertex buffers
     fun createBuffer(type: Buffer.Type, usage: Buffer.Usage, maxBytes: Int): Int
-    fun createBuffer(type: Buffer.Type, usage: Buffer.Usage, data: DirectNativeByteBuffer): Int
+    fun createBuffer(type: Buffer.Type, usage: Buffer.Usage, data: NioBuffer): Int
     fun bindBuffer(handle: Int, type: Buffer.Type): Int
-    fun updateBufferData(handle: Int, type: Buffer.Type, data: DirectNativeByteBuffer, byteOffset: Int = 0)
+    fun updateBufferData(handle: Int, type: Buffer.Type, data: NioBuffer, byteOffset: Int = 0)
     fun deleteBuffer(handle: Int)
 
 
@@ -77,7 +110,7 @@ interface OpenGl {
     fun deleteAttributeArray(vao: Int)
 
     // Textures
-    fun createTexture2d(width: Int, height: Int, format: Rgba8.Format, data: DirectNativeByteBuffer? = null): Int
+    fun createTexture2d(size: Vector2i, format: Rgba8.Format, data: NioBuffer? = null): Int
     fun setTextureMinFilter(filter: Texture.Filter)
     fun setTextureMagFilter(filter: Texture.Filter)
     fun setTextureBorderColor(color: Rgba8)
@@ -94,9 +127,9 @@ interface OpenGl {
     fun deleteFrameBuffer(handle: Int)
 
     // Viewport
-    fun setViewport(x: Int, y: Int, width: Int, height: Int)
+    fun setViewport(size: Vector2i, position: Vector2i = Vector2i())
     fun enableScissor(enabled: Boolean)
-    fun setScissor(x: Int, y: Int, width: Int, height: Int)
+    fun setScissor(size: Vector2i, position: Vector2i = Vector2i())
 
     // Draw
     fun draw(type: ShapeType, offset: Int, vertexCount: Int)

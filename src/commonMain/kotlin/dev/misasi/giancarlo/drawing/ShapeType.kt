@@ -25,8 +25,8 @@
 
 package dev.misasi.giancarlo.drawing
 
-enum class ShapeType {
-    LINE,
-    TRIANGLE,
-    SQUARE
+enum class ShapeType (val vertexCount: Int) {
+    LINE(2),
+    TRIANGLE(3),
+    SQUARE(6)
 }

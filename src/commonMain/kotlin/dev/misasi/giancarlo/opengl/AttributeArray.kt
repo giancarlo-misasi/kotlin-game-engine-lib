@@ -25,10 +25,25 @@
 
 package dev.misasi.giancarlo.opengl
 
-class AttributeArray(private val gl: OpenGl, program: Program, specs: List<Attribute.Spec>) {
-    val totalSizeInBytes = specs.sumOf { it.sizeInBytes }
+import dev.misasi.giancarlo.opengl.Attribute.Companion.sizeInBytes
+import dev.misasi.giancarlo.system.DataType
+
+class AttributeArray(
+    private val gl: OpenGl,
+    program: Program,
+    attributeSpecs: List<Attribute.Spec>,
+    vararg buffersToAttach: Buffer
+) {
+    val totalSizeInBytes = attributeSpecs.sizeInBytes()
     private val handle: Int = gl.createAttributeArray()
-    private val attributes: List<Attribute> = initializeAttributes(program, specs)
+    private val attributes: List<Attribute> = initializeAttributes(program, attributeSpecs)
+
+    init {
+        bind()
+        buffersToAttach.forEach { it.bind() }
+        enableAttributes()
+        unbind(gl)
+    }
 
     fun bind(): AttributeArray {
         if (boundHandle != handle) {
@@ -36,20 +51,6 @@ class AttributeArray(private val gl: OpenGl, program: Program, specs: List<Attri
             boundHandle = handle
         }
         return this
-    }
-
-    fun attach(buffer: Buffer) {
-        bind()
-        buffer.bind()
-        enableAttributes()
-        unbind(gl)
-    }
-
-    fun attach(buffers: List<Buffer>) {
-        bind()
-        buffers.forEach { it.bind() }
-        enableAttributes()
-        unbind(gl)
     }
 
     fun delete() {

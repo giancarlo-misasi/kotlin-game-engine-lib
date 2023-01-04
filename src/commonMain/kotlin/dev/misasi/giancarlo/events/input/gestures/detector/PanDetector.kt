@@ -91,14 +91,14 @@ class PanDetector : GestureDetector {
         val distanceMoved = calculatePanDelta(initialEvent?.firstPoint?.position)
         return if (distanceMoved.lengthSquared >= minimumMovedDistanceSquared) {
             panning = true
-            GestureEvent(GestureEvent.Type.Pan, event.firstPoint.position, distanceMoved)
+            GestureEvent(event.window, GestureEvent.Type.Pan, event.firstPoint.position, distanceMoved)
         } else {
             null
         }
     }
 
     private fun continuePanning(event: TouchEvent) : GestureEvent {
-        return GestureEvent(GestureEvent.Type.Pan, event.firstPoint.position, calculatePanDelta(previousPosition))
+        return GestureEvent(event.window, GestureEvent.Type.Pan, event.firstPoint.position, calculatePanDelta(previousPosition))
     }
 
     private fun calculatePanDelta(startPosition: Vector2f?) : Vector2f {

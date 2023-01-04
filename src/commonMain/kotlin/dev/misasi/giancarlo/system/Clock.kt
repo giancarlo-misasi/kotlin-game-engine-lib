@@ -25,20 +25,20 @@
 
 package dev.misasi.giancarlo.system
 
-import dev.misasi.giancarlo.getTimeMillis
+import dev.misasi.giancarlo.system.System.Companion.getCurrentTimeMs
 import kotlin.math.max
 import kotlin.math.min
 
 class Clock {
 
-    private val startMs: Long = getTimeMillis()
+    private val startMs: Long = getCurrentTimeMs()
 
     @Volatile
     private var lastUpdateMs = startMs
 
-    fun elapsedSinceStartMs(): Long = getTimeMillis() - startMs
-    fun elapsedSinceUpdateMs(maxStepMs: Long): Long = max(0, min(getTimeMillis() - lastUpdateMs, maxStepMs))
-    fun update() = update(getTimeMillis())
+    fun elapsedSinceStartMs(): Long = getCurrentTimeMs() - startMs
+    fun elapsedSinceUpdateMs(maxStepMs: Long): Long = max(0, min(getCurrentTimeMs() - lastUpdateMs, maxStepMs))
+    fun update() = update(getCurrentTimeMs())
 
     @Synchronized
     private fun update(currentTimeMs: Long) {

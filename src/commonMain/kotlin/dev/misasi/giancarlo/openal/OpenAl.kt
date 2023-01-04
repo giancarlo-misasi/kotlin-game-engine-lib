@@ -27,11 +27,14 @@ package dev.misasi.giancarlo.openal
 
 import dev.misasi.giancarlo.math.Vector3f
 
-interface OpenAl {
+expect class OpenAl {
 
-    fun init()
+    // Instance
+    companion object {
+        val al: OpenAl
+    }
 
-    fun convertOgg(byteArray: ByteArray): PcmSound
+    fun convertOgg(name: String, byteArray: ByteArray): PcmSound
 
     fun createSoundBuffer(sound: PcmSound): Int
     fun deleteSoundBuffer(handle: Int)

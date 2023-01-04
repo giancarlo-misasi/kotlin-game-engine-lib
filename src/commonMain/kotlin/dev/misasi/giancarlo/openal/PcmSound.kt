@@ -25,7 +25,7 @@
 
 package dev.misasi.giancarlo.openal
 
-class PcmSound(val sampleRate: Int, val format: Format, val data: ShortArray) {
+class PcmSound(val name:String, val sampleRate: Int, val format: Format, val data: ShortArray) {
     enum class Format {
         MONO16,
         STEREO16

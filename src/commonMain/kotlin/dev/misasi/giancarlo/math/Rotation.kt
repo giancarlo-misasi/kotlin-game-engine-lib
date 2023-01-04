@@ -25,13 +25,22 @@
 
 package dev.misasi.giancarlo.math
 
-enum class Rotation {
-    DEGREES_90,
-    DEGREES_180,
-    DEGREES_270;
+import kotlin.math.cos
+import kotlin.math.sin
+
+enum class Rotation(val cosTheta: Float, val sinTheta: Float) {
+    DEGREES_90(0f, 1f),
+    DEGREES_180(-1f, 0f),
+    DEGREES_270(0f, -1f);
+
+    fun toVector2f(): Vector2f = Vector2f(cosTheta, sinTheta)
 
     companion object {
-        fun fromDirection(facingDirection: Direction) : Rotation? {
+
+        fun Rotation?.toVector2f(): Vector2f =
+            this?.toVector2f() ?: Vector2f(1f, 0f)
+
+        fun fromDirection(facingDirection: Direction): Rotation? {
             return when (facingDirection) {
                 Direction.LEFT,
                 Direction.DOWN_LEFT -> DEGREES_90

@@ -25,11 +25,9 @@
 
 package dev.misasi.giancarlo.opengl
 
-import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
-
 class VertexBuffer : Buffer {
-    constructor(gl: OpenGl, usage: Usage, maxBytes: Int) : super(gl, Type.VERTEX, usage, maxBytes)
-    constructor(gl: OpenGl, usage: Usage, data: DirectNativeByteBuffer) : super(gl, Type.VERTEX, usage, data)
+    constructor(gl: OpenGl, usage: Usage, capacityInBytes: Int) : super(gl, Type.VERTEX, usage, capacityInBytes)
+    constructor(gl: OpenGl, usage: Usage, data: NioBuffer) : super(gl, Type.VERTEX, usage, data)
 
     override fun bind(): VertexBuffer {
         if (boundHandle != handle) {
@@ -39,7 +37,7 @@ class VertexBuffer : Buffer {
         return this
     }
 
-    override fun update(data: DirectNativeByteBuffer, byteOffset: Int): VertexBuffer {
+    override fun update(data: NioBuffer, byteOffset: Int): VertexBuffer {
         gl.updateBufferData(handle, type, data, byteOffset)
         return this
     }

@@ -29,6 +29,7 @@ import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.math.Vector2f
 
 data class GestureEvent (
+    val window: Long,
     val type: Type,
     val position: Vector2f,
     val panDelta: Vector2f = Vector2f(),

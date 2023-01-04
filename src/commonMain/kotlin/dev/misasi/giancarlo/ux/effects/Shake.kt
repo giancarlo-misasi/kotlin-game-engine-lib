@@ -28,7 +28,7 @@ package dev.misasi.giancarlo.ux.effects
 import dev.misasi.giancarlo.math.Vector2f
 import kotlin.random.Random
 
-class Shake {
+data class Shake(val amount: Vector2f) {
     companion object {
         fun calculate(timeSinceStartMs: Long): Vector2f {
             val t = timeSinceStartMs % 86400000

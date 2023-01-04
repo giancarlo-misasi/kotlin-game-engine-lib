@@ -24,23 +24,13 @@
  */
 
 import org.gradle.internal.os.OperatingSystem
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
 group = "me.gianc"
 version = "1.0-SNAPSHOT"
 
-// For changing build dependencies by build type
-val buildVariant: String by project
-fun dependsOn(sourceSet: KotlinSourceSet, debug: KotlinSourceSet, release: KotlinSourceSet) {
-    if (buildVariant == "debug") {
-        sourceSet.dependsOn(debug)
-    } else {
-        sourceSet.dependsOn(release)
-    }
-}
-
 // Versions
-val kotlinVersion = "1.7.0"
+val kotlinVersion = "1.8.0"
+val coroutinesVersion = "1.6.4"
 val lwjglVersion = "3.3.1"
 val hostOs: OperatingSystem = OperatingSystem.current()
 val hostOsName = when {
@@ -51,7 +41,7 @@ val hostOsName = when {
 }
 
 plugins {
-    kotlin("multiplatform") version "1.7.0"
+    kotlin("multiplatform") version "1.8.0"
 }
 
 repositories {
@@ -73,32 +63,19 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-            }
-        }
-        val commonDebug by creating {
-            dependencies {
-                dependsOn(commonMain)
-            }
-        }
-        val commonRelease by creating {
-            dependencies {
-                dependsOn(commonMain)
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
             }
         }
         val commonTest by getting {
-            val that = this
             dependencies {
                 dependsOn(commonMain)
-                dependsOn(that, commonDebug, commonRelease)
-
                 implementation(kotlin("test"))
             }
         }
         val jvmMain by getting {
-            val that = this
             dependencies {
                 dependsOn(commonMain)
-                dependsOn(that, commonDebug, commonRelease)
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVersion")
 
                 // https://www.lwjgl.org/customize
                 arrayOf("lwjgl", "lwjgl-glfw", "lwjgl-opengl", "lwjgl-openal", "lwjgl-stb").map { "org.lwjgl:$it:$lwjglVersion" }.forEach {
@@ -110,7 +87,6 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 dependsOn(jvmMain)
-
                 implementation(kotlin("test"))
             }
         }

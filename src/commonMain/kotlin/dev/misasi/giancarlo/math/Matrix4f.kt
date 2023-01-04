@@ -25,6 +25,9 @@
 
 package dev.misasi.giancarlo.math
 
+import dev.misasi.giancarlo.math.Reflection.Companion.toVector2f
+import dev.misasi.giancarlo.math.Rotation.Companion.toVector2f
+
 class Matrix4f private constructor(val data: FloatArray) {
     companion object Factory {
         val zero = Matrix4f(floatArrayOf(
@@ -40,36 +43,6 @@ class Matrix4f private constructor(val data: FloatArray) {
             0f, 0f, 1f, 0f,
             0f, 0f, 0f, 1f
         ))
-
-        fun translation(offset: Vector2f) : Matrix4f {
-            val result = identity.data.copyOf()
-            result[3] = offset.x
-            result[7] = offset.y
-            return Matrix4f(result)
-        }
-
-        fun translation(offset: Vector3f) : Matrix4f {
-            val result = identity.data.copyOf()
-            result[3] = offset.x
-            result[7] = offset.y
-            result[11] = offset.z
-            return Matrix4f(result)
-        }
-
-        fun scale(scale: Vector2f) : Matrix4f {
-            val result = identity.data.copyOf()
-            result[0] = scale.x
-            result[5] = scale.y
-            return Matrix4f(result)
-        }
-
-        fun scale(scale: Vector3f) : Matrix4f {
-            val result = identity.data.copyOf()
-            result[0] = scale.x
-            result[5] = scale.y
-            result[10] = scale.z
-            return Matrix4f(result)
-        }
 
         fun ortho(size: Vector2f) : Matrix4f {
             // Left, Right, Bottom, Top, Near, Far
@@ -89,25 +62,51 @@ class Matrix4f private constructor(val data: FloatArray) {
             val f = cameraTarget.minus(cameraPosition).normal
             val s = f.cross(up.normal).normal
             val u = s.cross(f)
-
             val result = identity.data.copyOf()
-
             result[0] = s.x;
             result[1] = s.y;
             result[2] = s.z;
             result[3] = -s.dot(cameraPosition);
-
             result[4] = u.x;
             result[5] = u.y;
             result[6] = u.z;
             result[7] = -u.dot(cameraPosition);
-
             result[8] = -f.x;
             result[9] = -f.y;
             result[10] = -f.z;
             result[11] = f.dot(cameraPosition);
-
             return Matrix4f(result);
+        }
+
+        fun lookAt(cameraPosition: Vector2f): Matrix4f {
+            return lookAt(
+                Vector3f(cameraPosition, 0.5f),
+                Vector3f(cameraPosition, 0.0f),
+                Vector3f(0.0f, 1.0f, 0.0f)
+            )
+        }
+
+        fun linearTransform(
+            scale: Vector2f = Vector2f(),
+            reflection: Reflection? = null,
+            rotation: Rotation? = null
+        ): Matrix4f {
+            val (cosTheta, sinTheta) = rotation.toVector2f()
+            val scaleReflect = scale.multiply(reflection.toVector2f())
+            val result = identity.data.copyOf()
+            result[0] = scaleReflect.x * cosTheta
+            result[1] = -scaleReflect.y * sinTheta
+            result[4] = scaleReflect.x * sinTheta
+            result[5] = scaleReflect.y * cosTheta
+            return Matrix4f(result)
+        }
+
+        fun linearTransform(affineTransform: AffineTransform?): Matrix4f {
+            return if (affineTransform == null) {
+                identity
+            } else {
+                linearTransform(affineTransform.scale, affineTransform.reflection, affineTransform.rotation)
+            }
         }
     }
 

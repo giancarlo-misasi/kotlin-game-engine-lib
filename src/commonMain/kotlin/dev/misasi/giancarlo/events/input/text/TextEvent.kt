@@ -26,17 +26,18 @@
 package dev.misasi.giancarlo.events.input.text
 
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.getTimeMillis
+import dev.misasi.giancarlo.system.System.Companion.getCurrentTimeMs
 
 data class TextEvent (
+    val window: Long,
     val codePoint: Int,
     val time: Long
 ) : Event {
     val character = codePoint.toChar()
 
     companion object {
-        fun valueOf(codePoint: Int): TextEvent {
-            return TextEvent(codePoint, getTimeMillis())
+        fun valueOf(window: Long, codePoint: Int): TextEvent {
+            return TextEvent(window, codePoint, getCurrentTimeMs())
         }
     }
 }

@@ -25,6 +25,8 @@
 
 package dev.misasi.giancarlo.opengl
 
+import dev.misasi.giancarlo.system.DataType
+
 data class Attribute(
     val attributeHandle: Int,
     val spec: Spec,
@@ -34,5 +36,9 @@ data class Attribute(
         val sizeInBytes by lazy {
             type.size * count
         }
+    }
+
+    companion object {
+        fun List<Attribute.Spec>.sizeInBytes() = this.sumOf { it.sizeInBytes }
     }
 }

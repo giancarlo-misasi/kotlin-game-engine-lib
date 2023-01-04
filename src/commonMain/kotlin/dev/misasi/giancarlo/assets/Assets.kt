@@ -25,17 +25,40 @@
 
 package dev.misasi.giancarlo.assets
 
-import dev.misasi.giancarlo.assets.loaders.AtlasLoader
-import dev.misasi.giancarlo.assets.loaders.SoundLoader
-import dev.misasi.giancarlo.assets.loaders.TextureLoader
-import dev.misasi.giancarlo.crash
-import dev.misasi.giancarlo.opengl.DisplayContext
+import dev.misasi.giancarlo.assets.caches.AnimationCache
+import dev.misasi.giancarlo.assets.caches.BitmapCache
+import dev.misasi.giancarlo.assets.caches.MaterialCache
+import dev.misasi.giancarlo.assets.caches.ShaderCache
+import dev.misasi.giancarlo.assets.caches.SoundCache
+import dev.misasi.giancarlo.assets.caches.TextureCache
+import dev.misasi.giancarlo.drawing.AnimatedMaterial
+import dev.misasi.giancarlo.drawing.Bitmap
+import dev.misasi.giancarlo.drawing.StaticMaterial
+import dev.misasi.giancarlo.openal.OpenAl
+import dev.misasi.giancarlo.openal.PcmSound
+import dev.misasi.giancarlo.opengl.OpenGl
+import dev.misasi.giancarlo.opengl.Shader
+import dev.misasi.giancarlo.opengl.Texture
 
-class Assets (context: DisplayContext) {
-    private val atlases = AtlasLoader(TextureLoader(context.gl)).load()
-    private val sounds = SoundLoader(context.al).load()
+class Assets(gl: OpenGl, al: OpenAl) {
+    private val shaderCache = ShaderCache()
+    private val bitmapCache = BitmapCache()
+    private val materialCache = MaterialCache(bitmapCache)
+    private val animationCache = AnimationCache(materialCache)
+    private val soundCache = SoundCache(al)
+    private val textureCache = TextureCache(gl, bitmapCache)
 
-    fun atlas(name: String) = atlases[name] ?: crash("Atlas not found")
+    fun shader(key: String): Shader.Spec = shaderCache.get(key)
+    fun bitmap(key: String): Bitmap = bitmapCache.get(key)
+    fun material(key: String): StaticMaterial = materialCache.get(key)
+    fun animation(key: String): AnimatedMaterial.Spec = animationCache.get(key)
+    fun sound(key: String): PcmSound = soundCache.get(key)
+    fun texture(key: String): Texture = textureCache.get(key)
 
-    fun sound(name: String) = sounds[name] ?: crash("Sound not found")
+    fun put(shader: Shader.Spec) = shaderCache.put(shader.name, shader)
+    fun put(bitmap: Bitmap) = bitmapCache.put(bitmap.name, bitmap)
+    fun put(material: StaticMaterial) = materialCache.put(material.materialName, material)
+    fun put(animation: AnimatedMaterial.Spec) = animationCache.put(animation.animationName, animation)
+    fun put(sound: PcmSound) = soundCache.put(sound.name, sound)
+    fun put(texture: Texture) = textureCache.put(texture.name, texture)
 }

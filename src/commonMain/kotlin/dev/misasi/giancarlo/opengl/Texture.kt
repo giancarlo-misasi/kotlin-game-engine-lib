@@ -27,21 +27,32 @@ package dev.misasi.giancarlo.opengl
 
 import dev.misasi.giancarlo.drawing.Bitmap
 import dev.misasi.giancarlo.drawing.Rgba8
-import dev.misasi.giancarlo.math.Vector2f
-import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
+import dev.misasi.giancarlo.math.Vector2i
 
-class Texture private constructor(private val gl: OpenGl, private val handle: Int, val width: Int, val height: Int) {
-    constructor(gl: OpenGl, width: Int, height: Int, format: Rgba8.Format = Rgba8.Format.RGBA)
-            : this(gl, gl.createTexture2d(width, height, format), width, height)
-
+class Texture private constructor(
+    private val gl: OpenGl,
+    private val handle: Int,
+    val name: String,
+    val size: Vector2i
+) {
     constructor(gl: OpenGl, bmp: Bitmap)
-            : this(gl, gl.createTexture2d(bmp.width, bmp.height, bmp.format, buffer(bmp)), bmp.width, bmp.height)
+            : this(gl, gl.createTexture2d(bmp.size, bmp.format, buffer(bmp)), bmp.name, bmp.size)
+
+    constructor(
+        gl: OpenGl,
+        name: String,
+        size: Vector2i,
+        frameBuffer: FrameBuffer,
+        format: Rgba8.Format = Rgba8.Format.RGBA
+    ) : this(gl, gl.createTexture2d(size, format), name, size) {
+        frameBuffer.attach(this)
+    }
 
     init {
         gl.setTextureMinFilter(Filter.NEAREST)
         gl.setTextureMagFilter(Filter.NEAREST)
 //        gl.setTextureBorderColor(Rgba8.BLACK)
-        gl.setTextureBorderColor(Rgba8.RED) // for debug
+        gl.setTextureBorderColor(Rgba8.YELLOW) // for debug
         gl.setTextureWrapS(Wrap.CLAMP_TO_BORDER)
         gl.setTextureWrapT(Wrap.CLAMP_TO_BORDER)
     }
@@ -54,10 +65,6 @@ class Texture private constructor(private val gl: OpenGl, private val handle: In
     enum class Wrap {
         REPEAT,
         CLAMP_TO_BORDER
-    }
-
-    val size by lazy {
-        Vector2f(width.toFloat(), height.toFloat())
     }
 
     fun bind(): Texture {
@@ -88,8 +95,8 @@ class Texture private constructor(private val gl: OpenGl, private val handle: In
             }
         }
 
-        private fun buffer(bitmap: Bitmap): DirectNativeByteBuffer {
-            return DirectNativeByteBuffer(bitmap.sizeInBytes).putIntArray(bitmap.pixels)
+        private fun buffer(bitmap: Bitmap): NioBuffer {
+            return NioBuffer(bitmap.sizeInBytes).putIntArray(bitmap.pixels)
         }
     }
 }

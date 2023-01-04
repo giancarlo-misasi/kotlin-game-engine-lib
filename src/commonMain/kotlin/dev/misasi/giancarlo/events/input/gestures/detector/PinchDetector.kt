@@ -80,7 +80,7 @@ class PinchDetector : GestureDetector {
         currentPoint1 = event.getPointByIndex(0)!!.position
         currentPoint2 = event.getPointByIndex(1)!!.position
 
-        return GestureEvent(GestureEvent.Type.Pinch, event.firstPoint.position, pinchDelta = calculatePinchDelta())
+        return GestureEvent(event.window, GestureEvent.Type.Pinch, event.firstPoint.position, pinchDelta = calculatePinchDelta())
     }
 
     private fun calculatePinchDelta() : Float {

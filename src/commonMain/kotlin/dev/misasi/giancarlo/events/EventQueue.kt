@@ -30,20 +30,18 @@ import dev.misasi.giancarlo.events.input.gestures.detector.GestureDetector
 import dev.misasi.giancarlo.events.input.mouse.MouseEvent
 import dev.misasi.giancarlo.events.input.touch.TouchEvent
 import dev.misasi.giancarlo.opengl.Viewport
-import java.util.*
-import java.util.concurrent.LinkedBlockingQueue
 
 class EventQueue (
     private val detectors: Set<GestureDetector>
 ) {
-    private val events: Queue<Event> = LinkedBlockingQueue()
+    private val events = ArrayDeque<Event>()
 
     fun pushEvent(event: Event) {
-        events.add(event)
+        events.addLast(event)
     }
 
     fun pushMouseEvent(viewport: Viewport, event: MouseEvent) {
-        events.add(adjustToViewport(viewport, event))
+        events.addLast(adjustToViewport(viewport, event))
     }
 
     fun pushGestureEvent(viewport: Viewport, touchEvent: TouchEvent) {
@@ -51,7 +49,7 @@ class EventQueue (
              .asSequence()
              .mapNotNull { it.detect(touchEvent) }
              .map { adjustToViewport(viewport, it) }
-             .filter { viewport.withinBounds(it.position) }
+             .filter { viewport.contains(it.position) }
          )
     }
 
@@ -59,7 +57,7 @@ class EventQueue (
         return if (events.isEmpty()) {
             null;
         } else {
-            events.remove()
+            events.removeFirst()
         }
     }
 

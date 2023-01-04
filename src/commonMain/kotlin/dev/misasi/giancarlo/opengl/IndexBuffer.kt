@@ -25,11 +25,9 @@
 
 package dev.misasi.giancarlo.opengl
 
-import dev.misasi.giancarlo.memory.DirectNativeByteBuffer
-
 class IndexBuffer : Buffer {
-    constructor(gl: OpenGl, usage: Usage, maxBytes: Int) : super(gl, Type.INDEX, usage, maxBytes)
-    constructor(gl: OpenGl, usage: Usage, data: DirectNativeByteBuffer) : super(gl, Type.INDEX, usage, data)
+    constructor(gl: OpenGl, usage: Usage, capacityInBytes: Int) : super(gl, Type.INDEX, usage, capacityInBytes)
+    constructor(gl: OpenGl, usage: Usage, data: NioBuffer) : super(gl, Type.INDEX, usage, data)
 
     override fun bind(): IndexBuffer {
         if (boundHandle != handle) {
@@ -39,7 +37,7 @@ class IndexBuffer : Buffer {
         return this
     }
 
-    override fun update(data: DirectNativeByteBuffer, byteOffset: Int): IndexBuffer {
+    override fun update(data: NioBuffer, byteOffset: Int): IndexBuffer {
         gl.updateBufferData(handle, type, data, byteOffset)
         return this
     }

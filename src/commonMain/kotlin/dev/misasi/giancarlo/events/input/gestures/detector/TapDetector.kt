@@ -72,7 +72,7 @@ abstract class TapDetector (
 
                     if (tapsToDetect == taps) {
                         reset()
-                        return GestureEvent(gestureType, event.firstPoint.position)
+                        return GestureEvent(event.window, gestureType, event.firstPoint.position)
                     }
                 }
             }
