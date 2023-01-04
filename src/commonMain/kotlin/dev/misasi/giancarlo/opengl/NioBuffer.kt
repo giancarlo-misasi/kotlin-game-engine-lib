@@ -29,14 +29,12 @@ import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.system.DataType
-import java.nio.ByteBuffer
 
 expect class NioBuffer(capacityInBytes: Int) {
     constructor(dataType: DataType, count: Int)
 
-    var index: Int
+    val buffer: Any
     val sizeInBytes: Int
-    val byteBuffer: ByteBuffer
 
     fun cleanup()
     fun setIndex(newIndex: Int): Int

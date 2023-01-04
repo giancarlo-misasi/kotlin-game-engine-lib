@@ -317,7 +317,7 @@ actual class OpenGl private constructor() {
         val t = bufferTypeMapping[type]!!
         val u = bufferUsageMapping[usage]!!
         val vbo = bindBuffer(glVerifyGenerate(this, ::glGenBuffers) { "BUFFER(${type.name})[${usage.name}]" }, type)
-        glVerify(this) { glBufferData(t, data.byteBuffer, u) }
+        glVerify(this) { glBufferData(t, data.buffer as ByteBuffer, u) }
         return vbo
     }
 
@@ -331,7 +331,7 @@ actual class OpenGl private constructor() {
         val t = bufferTypeMapping[type]!!
         val b = bufferBindingMapping[type]!!
         glVerifyBound(this, b, handle) { "BUFFER<$handle>" }
-        glVerify(this) { glBufferSubData(t, byteOffset.toLong(), data.byteBuffer) }
+        glVerify(this) { glBufferSubData(t, byteOffset.toLong(), data.buffer as ByteBuffer) }
     }
 
     actual fun deleteBuffer(handle: Int) {
@@ -364,7 +364,7 @@ actual class OpenGl private constructor() {
                 0,
                 formatParameter,
                 GL_UNSIGNED_BYTE,
-                data?.byteBuffer
+                data?.buffer as ByteBuffer
             )
         }
         return texture

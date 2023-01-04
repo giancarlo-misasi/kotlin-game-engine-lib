@@ -25,12 +25,11 @@
 
 import org.gradle.internal.os.OperatingSystem
 
-group = "me.gianc"
-version = "1.0-SNAPSHOT"
+group = "dev.misasi.giancarlo"
+version = "1.0.0"
 
 // Versions
 val kotlinVersion = "1.8.0"
-val coroutinesVersion = "1.6.4"
 val lwjglVersion = "3.3.1"
 val hostOs: OperatingSystem = OperatingSystem.current()
 val hostOsName = when {
@@ -42,6 +41,7 @@ val hostOsName = when {
 
 plugins {
     kotlin("multiplatform") version "1.8.0"
+    id("maven-publish")
 }
 
 repositories {
@@ -63,7 +63,6 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
             }
         }
         val commonTest by getting {
@@ -75,7 +74,6 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 dependsOn(commonMain)
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVersion")
 
                 // https://www.lwjgl.org/customize
                 arrayOf("lwjgl", "lwjgl-glfw", "lwjgl-opengl", "lwjgl-openal", "lwjgl-stb").map { "org.lwjgl:$it:$lwjglVersion" }.forEach {

@@ -24,5 +24,5 @@
  */
 
 
-rootProject.name = "KotlinGameEngineLibrary"
+rootProject.name = "kotlin-game-engine"
 

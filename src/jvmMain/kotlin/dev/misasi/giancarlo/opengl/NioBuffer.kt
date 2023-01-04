@@ -30,23 +30,17 @@ import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.system.DataType
 import org.lwjgl.system.MemoryUtil
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.IntBuffer
 
 actual class NioBuffer actual constructor(capacityInBytes: Int) {
     actual constructor(dataType: DataType, count: Int) : this(dataType.size * count)
 
-    actual var index: Int = 0
-    actual val sizeInBytes: Int get() = index
-    actual val byteBuffer = ByteBuffer
-        .allocateDirect(capacityInBytes)
-        .order(ByteOrder.nativeOrder())
-//        MemoryUtil.memAlloc(capacityInBytes)
+    private var index: Int = 0
+    private val byteBuffer = MemoryUtil.memAlloc(capacityInBytes)
+    // ByteBuffer.allocateDirect(capacityInBytes).order(ByteOrder.nativeOrder())
+    actual val buffer: Any = byteBuffer
+    actual val sizeInBytes = capacityInBytes
 
-    actual fun cleanup() {
-//        MemoryUtil.memFree(byteBuffer)
-    }
+    actual fun cleanup() = MemoryUtil.memFree(byteBuffer)
 
     actual fun setIndex(newIndex: Int): Int {
         val previous = index
