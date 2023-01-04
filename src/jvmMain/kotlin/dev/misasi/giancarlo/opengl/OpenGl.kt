@@ -364,7 +364,7 @@ actual class OpenGl private constructor() {
                 0,
                 formatParameter,
                 GL_UNSIGNED_BYTE,
-                data?.buffer as ByteBuffer
+                data?.buffer as ByteBuffer?
             )
         }
         return texture
