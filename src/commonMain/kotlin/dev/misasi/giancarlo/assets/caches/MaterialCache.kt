@@ -59,7 +59,7 @@ class MaterialCache(bitmapCache: BitmapCache) : Cache<StaticMaterial> {
         }
 
         private fun staticMaterial(tokens: List<String>, bitmap: Bitmap): StaticMaterial {
-            val name = tokens[0]
+            val name = "${bitmap.name}${tokens[0]}"
             val position = Vector2f(tokens[1].toFloat(), tokens[2].toFloat())
             val size = Vector2i(tokens[3].toFloat(), tokens[4].toFloat())
             val uvPosition = position.divide(bitmap.size.toVector2f())

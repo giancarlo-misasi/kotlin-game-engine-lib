@@ -89,7 +89,6 @@ actual class System {
 
         private fun listFilesInJar(idePath: String): List<String> {
             val jarPath = idePath.trimStart('/')
-            println("jp=$jarPath");
             return ZipInputStream(getJarLocation().openStream()).use {
                 val result = mutableListOf<String>()
                 while (true) {
