@@ -75,7 +75,7 @@ class VerticalLayout : ViewGroup() {
             // Draw the child with the appropriate transforms
             val affine = AffineTransform.translate(Vector2f(x, y))
             state.applyOptionsScoped(DrawOptions(scissor, affine)) {
-                child.position = affine.translation
+                child.absolutePosition = affine.translation
                 child.onUpdateDrawState(context, state)
             }
 

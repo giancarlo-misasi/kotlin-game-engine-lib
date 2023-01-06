@@ -45,16 +45,16 @@ abstract class View() {
     var size: Vector2i? = null
         set(value) {
             field = value
-            bounds = calculateBounds()
+            absoluteBounds = calculateBounds()
         }
 
-    var position: Vector2f? = null
+    var absolutePosition: Vector2f? = null
         set(value) {
             field = value
-            bounds = calculateBounds()
+            absoluteBounds = calculateBounds()
         }
 
-    var bounds: Rectangle? = null
+    var absoluteBounds: Rectangle? = null
         private set
 
     var margin: Inset = Inset()
@@ -98,5 +98,5 @@ abstract class View() {
 
     private fun calculateInset(): Inset = margin.concatenate(padding)
 
-    private fun calculateBounds(): Rectangle? = size?.let { s -> position?.let { p -> Rectangle(p, s.toVector2f()) } }
+    private fun calculateBounds(): Rectangle? = size?.let { s -> absolutePosition?.let { p -> Rectangle(p, s.toVector2f()) } }
 }

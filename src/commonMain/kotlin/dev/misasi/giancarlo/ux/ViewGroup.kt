@@ -76,10 +76,10 @@ abstract class ViewGroup : View() {
         if (!visible) return false
         visibleChildren().forEach {
             val e = if (event is PositionEvent) {
-                if (bounds?.contains(event.position) == false) {
+                if (absoluteBounds?.contains(event.position) == false) {
                     return@onEvent false
                 }
-                event.withPosition(event.position.minus(position ?: Vector2f()))
+                event.withPosition(event.position.minus(absolutePosition ?: Vector2f()))
             } else event
 
             if (it.onEvent(context, e)) {
