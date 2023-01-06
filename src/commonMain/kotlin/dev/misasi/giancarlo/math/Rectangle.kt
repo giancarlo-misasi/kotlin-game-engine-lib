@@ -27,13 +27,15 @@ package dev.misasi.giancarlo.math
 
 import kotlin.math.sqrt
 
-data class Rectangle constructor(
-    val size: Vector2f,
+data class Rectangle(
     val tl: Vector2f,
-    val br: Vector2f
+    val size: Vector2f
 ) {
-    constructor(size: Vector2f) : this(size, Vector2f(), size)
-    constructor(position: Vector2f, size: Vector2f) : this(size, position, position.plus(size))
+    constructor(): this(Vector2f(), Vector2f())
+
+    val br by lazy {
+        tl.plus(size)
+    }
 
     val tr by lazy {
         Vector2f(br.x, tl.y)
@@ -56,7 +58,7 @@ data class Rectangle constructor(
     }
 
     fun move(delta: Vector2f): Rectangle {
-        return copy(tl = tl.plus(delta), br = br.plus(delta))
+        return Rectangle(tl.plus(delta), size)
     }
 
     fun moveTo(to: Vector2f): Rectangle {

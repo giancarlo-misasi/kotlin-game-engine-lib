@@ -25,13 +25,15 @@
 
 package dev.misasi.giancarlo.ux.transitions
 
+import dev.misasi.giancarlo.drawing.Animator
+
 class Fade private constructor(
     val startAlpha: Float,
     val endAlpha: Float,
     waitMs: Long,
     durationMs: Long
 ) : Transition(waitMs, durationMs) {
-    val fadeIn = endAlpha > startAlpha
+    override val currentAlpha: Float get() = Animator.fade(percentage, endAlpha > startAlpha)
 
     companion object {
         fun fadeIn(waitMs: Long = 0, durationMs: Long = 1000) =

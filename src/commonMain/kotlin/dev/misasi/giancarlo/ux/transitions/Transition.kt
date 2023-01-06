@@ -25,6 +25,8 @@
 
 package dev.misasi.giancarlo.ux.transitions
 
+import dev.misasi.giancarlo.math.AffineTransform
+import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.system.TimeAccumulator
 import dev.misasi.giancarlo.ux.attributes.TransitionState
 
@@ -38,7 +40,11 @@ abstract class Transition(
     val waiting: Boolean get() = TransitionState.WAITING == transitionState
     val active: Boolean get() = TransitionState.ACTIVE == transitionState
     val complete: Boolean get() = TransitionState.COMPLETE == transitionState
-    val percentage: Float? get() = if (active) accumulator.elapsedPercentage(durationMs) else null
+    val percentage: Float get() = if (active) accumulator.elapsedPercentage(durationMs) else 0f
+
+    open val currentPosition: Vector2f? = null
+    open val currentAffine: AffineTransform? = null
+    open val currentAlpha: Float? = null
 
     fun onUpdate(elapsedMs: Long) {
         if (transitionState.hasNext()) {

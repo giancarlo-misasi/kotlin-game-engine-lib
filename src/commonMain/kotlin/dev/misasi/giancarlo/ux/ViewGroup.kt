@@ -25,30 +25,66 @@
 
 package dev.misasi.giancarlo.ux
 
+import dev.misasi.giancarlo.drawing.DrawOptions
+import dev.misasi.giancarlo.drawing.DrawState
 import dev.misasi.giancarlo.events.Event
+import dev.misasi.giancarlo.math.AffineTransform
+import dev.misasi.giancarlo.math.Rectangle
+import dev.misasi.giancarlo.math.Vector2i
 
 abstract class ViewGroup : View() {
-    var children = mutableListOf<View>()
+    protected var children = mutableListOf<View>()
         private set
 
-    fun add(child: View) = children.add(child)
+    fun add(child: View) {
+        children.add(child)
+        child.parent = this
+    }
+
+    abstract override fun onSize(context: AppContext, maxSize: Vector2i)
+
+    override fun onUpdateDrawState(context: AppContext, state: DrawState) {
+        if (!visible) return
+        val s = size?.toVector2f() ?: return
+
+        // Want to limit child drawing to parent, so create scissor using my absolute bounds
+        val relativeOffset = AffineTransform.translate(inset.size.toVector2f())
+        state.applyOptionsScoped(DrawOptions(affine = relativeOffset)) { drawOptions ->
+            val absoluteScissorPosition = drawOptions.translate(relativeOffset.translation)
+            onLayout(context, state, Rectangle(absoluteScissorPosition, s))
+        }
+    }
+
+    protected abstract fun onLayout(context: AppContext, state: DrawState, scissor: Rectangle)
+
+    override fun onElapsed(context: AppContext, elapsedMs: Long) {
+        if (!visible) return
+        visibleChildren().forEach {
+            it.onElapsed(context, elapsedMs)
+        }
+    }
 
     override fun onEvent(context: AppContext, event: Event): Boolean {
         if (!visible) return false
-        children.forEach {
-            if (it.visible && it.onEvent(context, event)) {
+        visibleChildren().forEach {
+            if (it.onEvent(context, event)) {
                 return true
             }
         }
         return false
     }
 
-    override fun onElapsed(context: AppContext, elapsedMs: Long) {
-        if (!visible) return
-        children.forEach {
-            if (it.visible) {
-                it.onElapsed(context, elapsedMs)
-            }
-        }
+    protected fun visibleChildren() = children.filter { it.visible }
+
+    protected fun calculateWidth(views: List<View>) = inset.horizontal + views.mapNotNull { it.size?.x }.sum()
+
+    protected fun calculateHeight(views: List<View>) = inset.vertical + views.mapNotNull { it.size?.y }.sum()
+
+    protected fun calculateMaxWidth(views: List<View>, max: Int): Int {
+        return inset.horizontal + (views.mapNotNull { it.size?.x }.maxOrNull() ?: (max - inset.horizontal))
+    }
+
+    protected fun calculateMaxHeight(views: List<View>, max: Int): Int {
+        return inset.vertical + (views.mapNotNull { it.size?.y }.maxOrNull() ?: (max - inset.vertical))
     }
 }

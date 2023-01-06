@@ -37,11 +37,16 @@ data class AffineTransform(
     fun scale(scale: Vector2f): AffineTransform =
         copy(scale = this.scale.plus(scale))
 
-    fun concatenate(affine: AffineTransform) =
-        copy(
-            translation = this.translation.plus(affine.translation),
-            scale = this.scale.multiply(affine.scale),
-        )
+    fun concatenate(affine: AffineTransform?): AffineTransform {
+        return affine?.let {
+            AffineTransform(
+                translation.plus(it.translation),
+                scale.multiply(it.scale),
+                reflection?.concatenate(it.reflection),
+                rotation?.concatenate(it.rotation),
+            )
+        } ?: this
+    }
 
     fun toLinearTransform(): LinearTransform = LinearTransform(scale, reflection, rotation)
 

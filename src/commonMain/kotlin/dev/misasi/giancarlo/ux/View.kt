@@ -25,20 +25,61 @@
 
 package dev.misasi.giancarlo.ux
 
+import dev.misasi.giancarlo.drawing.DrawState
 import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.ux.attributes.Inset
 
-abstract class View {
-    var margin: Inset = Inset()
-    var padding: Inset = Inset()
+// temp hack
+private var nextViewId = 0
+private fun getNextViewId() = nextViewId++
+
+abstract class View() {
+    val id = getNextViewId() // debugging
+    var parent: View? = null // debugging
+
     var visible: Boolean = true
+
+    var size: Vector2i? = null
+
+    var margin: Inset = Inset()
+        set(value) {
+            field = value
+            inset = calculateInset()
+        }
+
+    var padding: Inset = Inset()
+        set(value) {
+            field = value
+            inset = calculateInset()
+        }
+
+    var inset: Inset = calculateInset()
+        private set
+
     val hidden: Boolean get() = !visible
 
-    open fun onMeasure(context: AppContext): Vector2i = defaultContentSize(context)
+    /**
+     * Sets the size of a view if not already set.
+     */
+    open fun onSize(context: AppContext, maxSize: Vector2i) {
+        size = maxSize
+    }
+
+    /**
+     * Populate the draw state with draw commands.
+     */
+    open fun onUpdateDrawState(context: AppContext, state: DrawState) = Unit
+
+    /**
+     * Respond to elapsed time.
+     */
     open fun onElapsed(context: AppContext, elapsedMs: Long) = Unit
+
+    /**
+     * Handle events.
+     */
     open fun onEvent(context: AppContext, event: Event): Boolean = false
 
-    private fun defaultContentSize(context: AppContext): Vector2i =
-        context.viewport.designedResolution.minus(margin.size).minus(padding.size)
+    private fun calculateInset(): Inset = margin.concatenate(padding)
 }

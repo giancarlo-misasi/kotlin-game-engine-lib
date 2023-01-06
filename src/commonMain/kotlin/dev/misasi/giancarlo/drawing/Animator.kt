@@ -47,8 +47,12 @@ class Animator {
             return 1f - fadeIn(percentage)
         }
 
-        fun translate(start: Vector2f, end: Vector2f, percentage: Float) : Vector2f {
-            return start.plus(end.minus(start).multiply(percentage))
+        fun translation(start: Vector2f, end: Vector2f, percentage: Float): Vector2f {
+            return end.minus(start).multiply(percentage)
+        }
+
+        fun translate(start: Vector2f, end: Vector2f, percentage: Float): Vector2f {
+            return start.plus(translation(start, end, percentage))
         }
     }
 }

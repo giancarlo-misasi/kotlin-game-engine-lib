@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Giancarlo Misasi
+ * Copyright (c) 2023 Giancarlo Misasi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +23,24 @@
  *
  */
 
-package dev.misasi.giancarlo.ux
+package dev.misasi.giancarlo.drawing
 
-import dev.misasi.giancarlo.drawing.DrawState
+import dev.misasi.giancarlo.math.AffineTransform
+import dev.misasi.giancarlo.math.Rectangle
+import dev.misasi.giancarlo.math.Vector2f
 
-interface Renderer {
-    fun render(target: Any, context: AppContext, state: DrawState)
+data class DrawOptions(
+    val scissor: Rectangle? = null,
+    val affine: AffineTransform? = null,
+    val alpha: Float? = null,
+    val effect: Effect? = null,
+) {
+    fun concatenate(other: DrawOptions) = DrawOptions(
+        other.scissor,
+        affine?.concatenate(other.affine) ?: other.affine,
+        other.alpha?.let { alpha?.times(it) } ?: alpha,
+        other.effect ?: effect
+    )
+
+    fun translate(point: Vector2f) = affine?.translation?.plus(point) ?: point
 }

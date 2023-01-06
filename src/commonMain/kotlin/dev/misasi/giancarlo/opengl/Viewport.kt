@@ -34,11 +34,11 @@ class Viewport private constructor(
     val actualScreenSize: Vector2i,
     val adjustedScreenSize: Vector2i,
     val offset: Vector2f,
-    val view: Rectangle,
+    val bounds: Rectangle,
     val scale: Vector2f
 ) {
     fun contains(point: Vector2f): Boolean {
-        return view.contains(point) // todo verify if this change is okay (do we need to factor in offset, or am I handling that in events already?)
+        return bounds.contains(point) // todo verify if this change is okay (do we need to factor in offset, or am I handling that in events already?)
     }
 
     fun adjustToBounds(point: Vector2f): Vector2f {
@@ -59,8 +59,8 @@ class Viewport private constructor(
             val adjustedScreenSize = calculateAdjustedScreenSize(designedResolution.aspectRatio, actualScreenSize)
             val offset = actualScreenSize.minus(adjustedScreenSize).toVector2f().multiply(0.5f)
             val scale = adjustedScreenSize.toVector2f().divide(designedResolution.toVector2f())
-            val view = Rectangle(offset, adjustedScreenSize.toVector2f().plus(offset))
-            return Viewport(designedResolution, actualScreenSize, adjustedScreenSize, offset, view, scale)
+            val bounds = Rectangle(offset, adjustedScreenSize.toVector2f().plus(offset))
+            return Viewport(designedResolution, actualScreenSize, adjustedScreenSize, offset, bounds, scale)
         }
     }
 }

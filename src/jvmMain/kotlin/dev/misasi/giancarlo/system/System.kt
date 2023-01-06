@@ -94,7 +94,6 @@ actual class System {
                 while (true) {
                     val entry = it.nextEntry ?: break
                     if (!entry.name.startsWith(jarPath) || entry.isDirectory) continue
-                    println(getResourceNameWithExtension(entry.name))
                     result.add(getResourceNameWithExtension(entry.name))
                 }
                 result

@@ -25,6 +25,8 @@
 
 package dev.misasi.giancarlo.ux.transitions
 
+import dev.misasi.giancarlo.drawing.Animator
+import dev.misasi.giancarlo.math.AffineTransform
 import dev.misasi.giancarlo.math.Vector2f
 
 class Slide private constructor(
@@ -33,6 +35,8 @@ class Slide private constructor(
     waitMs: Long,
     durationMs: Long
 ) : Transition(waitMs, durationMs) {
+    override val currentPosition: Vector2f get() = Animator.translate(startPosition, endPosition, percentage)
+    override val currentAffine: AffineTransform get() = AffineTransform.translate(currentPosition)
 
     companion object {
         fun slideLeft(distance: Float, start: Vector2f = Vector2f(), waitMs: Long = 0, durationMs: Long = 1000) =

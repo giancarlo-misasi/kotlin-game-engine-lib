@@ -25,17 +25,33 @@
 
 package dev.misasi.giancarlo.math
 
-import kotlin.math.cos
-import kotlin.math.sin
-
 enum class Rotation(val cosTheta: Float, val sinTheta: Float) {
     DEGREES_90(0f, 1f),
     DEGREES_180(-1f, 0f),
     DEGREES_270(0f, -1f);
 
+    fun concatenate(other: Rotation?) = other?.let { concatMap[this]!![it]!! } ?: this
+
     fun toVector2f(): Vector2f = Vector2f(cosTheta, sinTheta)
 
     companion object {
+        private val concatMap = mapOf(
+            DEGREES_90 to mapOf(
+                DEGREES_90 to DEGREES_180,
+                DEGREES_180 to DEGREES_270,
+                DEGREES_270 to null,
+            ),
+            DEGREES_180 to mapOf(
+                DEGREES_90 to DEGREES_270,
+                DEGREES_180 to null,
+                DEGREES_270 to DEGREES_90,
+            ),
+            DEGREES_270 to mapOf(
+                DEGREES_90 to null,
+                DEGREES_180 to DEGREES_90,
+                DEGREES_270 to DEGREES_180,
+            ),
+        )
 
         fun Rotation?.toVector2f(): Vector2f =
             this?.toVector2f() ?: Vector2f(1f, 0f)

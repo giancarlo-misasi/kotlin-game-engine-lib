@@ -25,6 +25,10 @@
 
 package dev.misasi.giancarlo.collections
 
+import kotlin.experimental.ExperimentalTypeInference
+
+@OptIn(ExperimentalTypeInference::class)
+@OverloadResolutionByLambdaReturnType
 inline fun <T> Iterable<T>.sumOf(selector: (T) -> Float): Float {
     var sum = 0f
     for (element in this) {

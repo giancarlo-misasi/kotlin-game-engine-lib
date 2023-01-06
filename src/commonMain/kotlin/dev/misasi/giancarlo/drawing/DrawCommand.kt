@@ -25,13 +25,6 @@
 
 package dev.misasi.giancarlo.drawing
 
-import dev.misasi.giancarlo.math.AffineTransform
-
-data class DrawCommand(
-    val textureName: String,
-    val affine: AffineTransform? = null,
-    val alpha: Float? = null,
-    val effect: Effect? = null,
-) {
+data class DrawCommand(val textureName: String, val options: DrawOptions) {
     var count: Int = 1 // ignore count in equals check
 }

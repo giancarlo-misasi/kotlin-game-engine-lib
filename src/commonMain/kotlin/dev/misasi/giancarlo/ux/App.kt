@@ -27,9 +27,8 @@ package dev.misasi.giancarlo.ux
 
 import dev.misasi.giancarlo.assets.Assets
 import dev.misasi.giancarlo.drawing.Alpha
-import dev.misasi.giancarlo.drawing.Animator
 import dev.misasi.giancarlo.drawing.DrawCommand
-import dev.misasi.giancarlo.drawing.DrawState
+import dev.misasi.giancarlo.drawing.DrawOptions
 import dev.misasi.giancarlo.drawing.Effect
 import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.drawing.StaticMaterial
@@ -53,15 +52,8 @@ import dev.misasi.giancarlo.opengl.Viewport
 import dev.misasi.giancarlo.opengl.Window
 import dev.misasi.giancarlo.system.Clock
 import dev.misasi.giancarlo.system.DataType
-import dev.misasi.giancarlo.ux.renderers.HorizontalLayoutRenderer
-import dev.misasi.giancarlo.ux.renderers.VerticalLayoutRenderer
-import dev.misasi.giancarlo.ux.transitions.Fade
-import dev.misasi.giancarlo.ux.transitions.Slide
 import dev.misasi.giancarlo.ux.transitions.Transition
 import dev.misasi.giancarlo.ux.transitions.ViewOrchestrator
-import dev.misasi.giancarlo.ux.views.HorizontalLayout
-import dev.misasi.giancarlo.ux.views.VerticalLayout
-import kotlin.reflect.KClass
 
 class App(
     title: String,
@@ -80,16 +72,15 @@ class App(
 
     private val program = createProgram(this)
     private val drawBuffer = DrawBuffer(gl, program, attributeSpecs, Buffer.Usage.STREAM, spriteCapacity)
-    private val drawState = DrawState(assets, spriteSizeInBytes, spriteCapacity)
+    private val drawState = AppDrawState(assets, spriteSizeInBytes, spriteCapacity)
 
     private val postProcessProgram = createProgram(this)
     private val postProcessFrameBuffer = FrameBuffer(gl)
     private val postProcessTexture = Texture(gl, "post", designedResolution, postProcessFrameBuffer)
     private val postProcessMaterial = StaticMaterial("post", "post", postProcessUv, designedResolution)
     private val postProcessDrawBuffer = DrawBuffer(gl, postProcessProgram, attributeSpecs, Buffer.Usage.STATIC, 1)
-    private val postProcessDrawState = DrawState(assets, spriteSizeInBytes, 1)
+    private val postProcessDrawState = AppDrawState(assets, spriteSizeInBytes, 1)
 
-    private val rendererRegistry = setupRegistry()
     private val viewOrchestrator = ViewOrchestrator()
 
     init {
@@ -101,12 +92,9 @@ class App(
 
         postProcessProgram.bind()
         postProcessDrawState.updateIndexes(postProcessDrawBuffer)
-
         updatePostProcessing()
 
-        gl.enableScissor(true)
-//        gl.setClearColor(Rgba8.BLACK)
-        gl.setClearColor(Rgba8.CYAN)
+        gl.setClearColor(Rgba8.BLACK)
     }
 
     override val viewport: Viewport get() = window.viewport
@@ -145,8 +133,6 @@ class App(
         }
     }
 
-    fun register(kclass: KClass<*>, renderer: Renderer) = rendererRegistry.register(kclass, renderer)
-
     private fun onElapsed(elapsedMs: Long) {
         clock.update()
         viewOrchestrator.onElapsed(elapsedMs)
@@ -157,20 +143,21 @@ class App(
 
         val transitions = viewOrchestrator.activeTransitions
         if (transitions.isNotEmpty()) {
-            transitions.filter { it.value.active }
-                .forEach { (view, transition) ->
-                    pushTransition(transition)
-                    rendererRegistry.render(view, this, drawState)
-                    popTransition(transition)
+            transitions.filter { it.value.active }.forEach { (view, transition) ->
+                view.onSize(this, viewport.designedResolution) // todo: track to avoid recalculation every loop
+                drawState.applyOptionsScoped(calculateDrawOptions(transition)) {
+                    view.onUpdateDrawState(this, drawState)
+                }
             }
         } else {
-            val view = viewOrchestrator.rootView
-            if (view != null) {
-                rendererRegistry.render(view, this, drawState)
+            viewOrchestrator.rootView?.let { view ->
+                view.onSize(this, viewport.designedResolution) // todo: track to avoid recalculation every loop
+                drawState.applyOptionsScoped(DrawOptions(viewport.bounds)) {
+                    view.onUpdateDrawState(this, drawState)
+                }
             }
         }
 
-        // Update the vertex data
         drawState.updateVertexes(drawBuffer)
     }
 
@@ -179,7 +166,6 @@ class App(
 
         // Draw using designed resolution and then scale with post-processing to fit screen size
         gl.setViewport(viewport.designedResolution)
-        gl.setScissor(viewport.designedResolution)
         gl.clear()
 
         program.bind()
@@ -192,21 +178,20 @@ class App(
             val texture = assets.texture(command.textureName)
 
             // Issue draw commands
-            offset = drawBuffer.draw(gl, texture, offset, command.count)
+            drawBuffer.applyScissorScoped(viewport, command.options.scissor) {
+                offset = drawBuffer.draw(texture, offset, command.count)
+            }
         }
 
         FrameBuffer.unbind(gl)
 
         // First clear off the screen
         gl.setViewport(viewport.actualScreenSize)
-        gl.setScissor(viewport.actualScreenSize)
         gl.clear()
 
-        // Now draw the adjusted texture centered in the screen
-        gl.setViewport(viewport.adjustedScreenSize, viewport.offset.toVector2i())
-        gl.setScissor(viewport.adjustedScreenSize, viewport.offset.toVector2i())
+        // Now draw the post-processed texture
         postProcessProgram.bind()
-        postProcessDrawBuffer.draw(gl, postProcessTexture, 0, 1)
+        postProcessDrawBuffer.draw(postProcessTexture, 0, 1)
 
         // Finally, let's swap the buffers and see the fruit of our labours
         window.swapBuffers()
@@ -224,14 +209,14 @@ class App(
 
     private fun updateUniforms(command: DrawCommand) {
         // TODO: Compare current / previous to avoid unnecessary calculations
-        val affine = command.affine ?: AffineTransform()
+        val affine = command.options.affine ?: AffineTransform()
         val mvp = calculateModelViewProjection(viewport.designedResolution, affine)
         program.setUniformMatrix4f(Uniform.MODEL_VIEW_PROJECTION.id, mvp)
         program.setUniformVector2f(Uniform.TRANSLATION.id, affine.translation)
-        program.setUniformFloat(Uniform.ALPHA.id, Alpha.normalize(command.alpha))
-        program.setUniformBoolean(Uniform.SEPIA.id, command.effect == Effect.SEPIA)
-        program.setUniformBoolean(Uniform.RETRO.id, command.effect == Effect.RETRO)
-        program.setUniformBoolean(Uniform.INVERT.id, command.effect == Effect.INVERT)
+        program.setUniformFloat(Uniform.ALPHA.id, Alpha.normalize(command.options.alpha))
+        program.setUniformBoolean(Uniform.SEPIA.id, command.options.effect == Effect.SEPIA)
+        program.setUniformBoolean(Uniform.RETRO.id, command.options.effect == Effect.RETRO)
+        program.setUniformBoolean(Uniform.INVERT.id, command.options.effect == Effect.INVERT)
     }
 
     private fun updatePostProcessing() {
@@ -242,39 +227,21 @@ class App(
         postProcessDrawState.reset()
         postProcessDrawState.putSprite(postProcessMaterial.materialName, AffineTransform(
             scale = viewport.adjustedScreenSize.toVector2f(),
-            reflection = Reflection.VERTICAL
+            reflection = Reflection.VERTICAL,
+            translation = viewport.offset,
         ))
         postProcessDrawState.updateVertexes(postProcessDrawBuffer)
     }
+
+    private fun calculateDrawOptions(transition: Transition) = DrawOptions(
+        affine = transition.currentAffine,
+        alpha = transition.currentAlpha,
+    )
 
     private fun calculateModelViewProjection(size: Vector2i, affine: AffineTransform): Matrix4f {
         return Matrix4f.ortho(size.toVector2f())
             .multiply(Matrix4f.lookAt(Vector2f()))
             .multiply(Matrix4f.linearTransform(affine))
-    }
-
-    private fun pushTransition(transition: Transition) {
-        if (transition.percentage == null) return
-
-        if (transition is Fade) {
-            drawState.pushAlpha(Animator.fade(transition.percentage!!, transition.fadeIn))
-        }
-
-        if (transition is Slide) {
-            drawState.pushAffine(AffineTransform.translate(Animator.translate(transition.startPosition, transition.endPosition, transition.percentage!!)))
-        }
-    }
-
-    private fun popTransition(transition: Transition) {
-        if (transition.percentage == null) return
-
-        if (transition is Fade) {
-            drawState.popAlpha()
-        }
-
-        if (transition is Slide) {
-            drawState.popAffine()
-        }
     }
 
     private enum class Uniform(val id: String) {
@@ -306,13 +273,6 @@ class App(
                 context.assets.shader("SpriteVertex"),
                 context.assets.shader("SpriteFragment"),
             ), Uniform.values().map { it.id })
-        }
-
-        private fun setupRegistry(): RendererRegistry {
-            val registry = RendererRegistry()
-            registry.register(HorizontalLayout::class, HorizontalLayoutRenderer(registry))
-            registry.register(VerticalLayout::class, VerticalLayoutRenderer(registry))
-            return registry
         }
     }
 }

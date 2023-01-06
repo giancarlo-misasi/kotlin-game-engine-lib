@@ -31,6 +31,7 @@ import dev.misasi.giancarlo.drawing.ShapeType
 import dev.misasi.giancarlo.events.input.mouse.CursorMode
 import dev.misasi.giancarlo.math.Matrix2f
 import dev.misasi.giancarlo.math.Matrix4f
+import dev.misasi.giancarlo.math.Rectangle
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.system.DataType
@@ -438,16 +439,25 @@ actual class OpenGl private constructor() {
         glVerify(this) { glDeleteFramebuffers(handle) }
     }
 
-    actual fun setViewport(size: Vector2i, position: Vector2i) {
-        glVerify(this) { glViewport(position.x, position.y, size.x, size.y) }
+    actual fun setViewport(size: Vector2i) {
+        // viewport is specified by the lower left corner
+        glVerify(this) { glViewport(0, 0, size.x, size.y) }
     }
 
     actual fun enableScissor(enabled: Boolean) {
-        glVerify(this) { glEnable(GL_SCISSOR_TEST) }
+        if (enabled) glVerify(this) { glEnable(GL_SCISSOR_TEST) }
+        else glVerify(this) { glDisable(GL_SCISSOR_TEST) }
     }
 
-    actual fun setScissor(size: Vector2i, position: Vector2i) {
-        glVerify(this) { glScissor(position.x, position.y, size.x, size.y) }
+    actual fun setScissor(viewportHeight: Int, bounds: Rectangle) {
+        val y = viewportHeight - bounds.bl.y
+        // scissor is specified by the lower left corner
+        glVerify(this) { glScissor(
+            bounds.bl.x.toInt(),
+            y.toInt(),
+            bounds.size.x.toInt(),
+            bounds.size.y.toInt())
+        }
     }
 
     actual fun draw(type: ShapeType, offset: Int, vertexCount: Int) {
@@ -500,10 +510,6 @@ actual class OpenGl private constructor() {
 
     actual fun clear() {
         glVerify(this) { glClear(GL_COLOR_BUFFER_BIT) }
-    }
-
-    actual fun enable(target: Int) {
-        glVerify(this) { glEnable(target) }
     }
 
     actual fun getErrorMessage(): String? {

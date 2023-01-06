@@ -39,14 +39,12 @@ class EventQueue (
 
     fun pushEvent(event: Event) {
         events.addLast(event)
-        println(events.last())
     }
 
     fun pushPositionEvent(viewport: Viewport, event: PositionEvent) {
         val position = viewport.adjustToBounds(event.position)
         if (viewport.contains(position)) {
             events.addLast(event.withPosition(position))
-            println(events.last())
         }
     }
 

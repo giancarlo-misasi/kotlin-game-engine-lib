@@ -30,6 +30,7 @@ import dev.misasi.giancarlo.drawing.ShapeType
 import dev.misasi.giancarlo.events.input.mouse.CursorMode
 import dev.misasi.giancarlo.math.Matrix2f
 import dev.misasi.giancarlo.math.Matrix4f
+import dev.misasi.giancarlo.math.Rectangle
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.system.DataType
@@ -40,9 +41,6 @@ expect class OpenGl {
     companion object {
         val gl: OpenGl
     }
-
-    // General
-    fun enable(target: Int)
 
     // Window
     fun createWindow(title: String, size: Vector2i, fullScreen: Boolean, refreshRate: Int, vsync: Boolean): Long
@@ -128,9 +126,9 @@ expect class OpenGl {
     fun deleteFrameBuffer(handle: Int)
 
     // Viewport
-    fun setViewport(size: Vector2i, position: Vector2i = Vector2i())
+    fun setViewport(size: Vector2i)
     fun enableScissor(enabled: Boolean)
-    fun setScissor(size: Vector2i, position: Vector2i = Vector2i())
+    fun setScissor(viewportHeight: Int, bounds: Rectangle)
 
     // Draw
     fun draw(type: ShapeType, offset: Int, vertexCount: Int)

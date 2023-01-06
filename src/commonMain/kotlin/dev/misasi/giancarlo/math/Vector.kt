@@ -58,8 +58,8 @@ data class Vector2i (val x: Int = 0, val y: Int = 0) {
     constructor(x: Number, y: Number) : this(x.toInt(), y.toInt())
 
     val xy by lazy { x * y }
-    val lengthSquared by lazy { (x * x + y * y).toFloat() }
-    val length by lazy { sqrt(lengthSquared) }
+    val lengthSquared by lazy { (x * x + y * y) }
+    val length by lazy { sqrt(lengthSquared.toFloat()) }
     val inverseLength by lazy { 1f / length  }
     val aspectRatio by lazy { x.toFloat() / y.toFloat() }
     val normal by lazy { Vector2i(x * inverseLength, y * inverseLength) }
@@ -105,8 +105,8 @@ data class Vector3i (val x: Int = 0, val y: Int = 0, val z: Int = 0) {
     constructor(x: Number, y: Number, z: Number) : this(x.toInt(), y.toInt(), z.toInt())
     constructor(v: Vector2i, z: Number) : this(v.x, v.y, z.toInt())
 
-    val lengthSquared by lazy { (x * x + y * y + z * z).toFloat() }
-    val length by lazy { sqrt(lengthSquared) }
+    val lengthSquared by lazy { (x * x + y * y + z * z) }
+    val length by lazy { sqrt(lengthSquared.toFloat()) }
     val inverseLength by lazy { 1f / length }
     val normal by lazy { Vector3i(x * inverseLength, y * inverseLength, z * inverseLength) }
     val negated by lazy { Vector3i(-x, -y, -z) }

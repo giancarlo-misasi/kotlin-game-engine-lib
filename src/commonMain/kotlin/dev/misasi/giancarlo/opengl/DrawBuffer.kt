@@ -26,11 +26,13 @@
 package dev.misasi.giancarlo.opengl
 
 import dev.misasi.giancarlo.drawing.ShapeType
+import dev.misasi.giancarlo.math.Rectangle
+import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.opengl.Attribute.Companion.sizeInBytes
 import dev.misasi.giancarlo.system.DataType
 
 class DrawBuffer(
-    gl: OpenGl,
+    private val gl: OpenGl,
     program: Program,
     attributeSpecs: List<Attribute.Spec>,
     bufferUsage: Buffer.Usage,
@@ -50,12 +52,24 @@ class DrawBuffer(
 
     fun updateVertexes(data: NioBuffer) = vertexBuffer.bind().update(data)
 
-    fun draw(gl: OpenGl, texture: Texture, spriteOffset: Int = 0, count: Int): Int {
+    fun applyScissorScoped(viewport: Viewport, scopedScissor: Rectangle?, block: () -> Unit) {
+        if (scopedScissor == null) {
+            block()
+            return
+        }
+
+        gl.setScissor(viewport.actualScreenSize.y, scopedScissor)
+        gl.enableScissor(true)
+        block()
+        gl.enableScissor(false)
+    }
+
+    fun draw(texture: Texture, spriteOffset: Int = 0, count: Int): Int {
         texture.bind()
         attributeArray.bind()
         gl.drawIndexed(
             shapeType,
-            vertexCount * spriteOffset,
+            spriteOffset * shapeType.vertexCount * indexType.size,
             shapeType.vertexCount * count,
             indexType
         )
