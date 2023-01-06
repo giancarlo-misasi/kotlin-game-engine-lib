@@ -27,6 +27,8 @@ package dev.misasi.giancarlo.ux
 
 import dev.misasi.giancarlo.drawing.DrawState
 import dev.misasi.giancarlo.events.Event
+import dev.misasi.giancarlo.math.Rectangle
+import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.ux.attributes.Inset
 
@@ -35,12 +37,25 @@ private var nextViewId = 0
 private fun getNextViewId() = nextViewId++
 
 abstract class View() {
-    val id = getNextViewId() // debugging
-    var parent: View? = null // debugging
+    val id = getNextViewId()  // debugging
+    var parent: View? = null  // debugging
 
     var visible: Boolean = true
 
     var size: Vector2i? = null
+        set(value) {
+            field = value
+            bounds = calculateBounds()
+        }
+
+    var position: Vector2f? = null
+        set(value) {
+            field = value
+            bounds = calculateBounds()
+        }
+
+    var bounds: Rectangle? = null
+        private set
 
     var margin: Inset = Inset()
         set(value) {
@@ -82,4 +97,6 @@ abstract class View() {
     open fun onEvent(context: AppContext, event: Event): Boolean = false
 
     private fun calculateInset(): Inset = margin.concatenate(padding)
+
+    private fun calculateBounds(): Rectangle? = size?.let { s -> position?.let { p -> Rectangle(p, s.toVector2f()) } }
 }

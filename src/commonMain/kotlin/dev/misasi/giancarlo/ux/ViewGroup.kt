@@ -28,8 +28,10 @@ package dev.misasi.giancarlo.ux
 import dev.misasi.giancarlo.drawing.DrawOptions
 import dev.misasi.giancarlo.drawing.DrawState
 import dev.misasi.giancarlo.events.Event
+import dev.misasi.giancarlo.events.input.PositionEvent
 import dev.misasi.giancarlo.math.AffineTransform
 import dev.misasi.giancarlo.math.Rectangle
+import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector2i
 
 abstract class ViewGroup : View() {
@@ -41,6 +43,9 @@ abstract class ViewGroup : View() {
         child.parent = this
     }
 
+    /**
+     * Sets the size based on children if not already set.
+     */
     abstract override fun onSize(context: AppContext, maxSize: Vector2i)
 
     override fun onUpdateDrawState(context: AppContext, state: DrawState) {
@@ -55,6 +60,9 @@ abstract class ViewGroup : View() {
         }
     }
 
+    /**
+     * Set children's size and applies transforms to allow relative drawing.
+     */
     protected abstract fun onLayout(context: AppContext, state: DrawState, scissor: Rectangle)
 
     override fun onElapsed(context: AppContext, elapsedMs: Long) {
@@ -67,7 +75,14 @@ abstract class ViewGroup : View() {
     override fun onEvent(context: AppContext, event: Event): Boolean {
         if (!visible) return false
         visibleChildren().forEach {
-            if (it.onEvent(context, event)) {
+            val e = if (event is PositionEvent) {
+                if (bounds?.contains(event.position) == false) {
+                    return@onEvent false
+                }
+                event.withPosition(event.position.minus(position ?: Vector2f()))
+            } else event
+
+            if (it.onEvent(context, e)) {
                 return true
             }
         }
