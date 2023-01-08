@@ -31,6 +31,7 @@ import dev.misasi.giancarlo.drawing.DrawCommand
 import dev.misasi.giancarlo.drawing.DrawOptions
 import dev.misasi.giancarlo.drawing.DrawState
 import dev.misasi.giancarlo.drawing.Material
+import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.drawing.TextureCoordinate
 import dev.misasi.giancarlo.math.Aabb
 import dev.misasi.giancarlo.math.AffineTransform
@@ -68,6 +69,10 @@ class AppDrawState (
         }
         putSpriteIntoDirectVertexBuffer(material, affine, alpha)
         spriteCount++
+    }
+
+    override fun putText(text: String, affine: AffineTransform, fontName: String, fontSize: Int, fontColor: Rgba8) {
+        assets.fonts("$fontName$fontSize").draw(text, affine, fontColor.floatA, this)
     }
 
     override fun reset() {

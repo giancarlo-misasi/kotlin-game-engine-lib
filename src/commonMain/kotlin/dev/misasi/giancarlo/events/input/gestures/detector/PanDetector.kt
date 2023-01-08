@@ -26,7 +26,7 @@
 package dev.misasi.giancarlo.events.input.gestures.detector
 
 import dev.misasi.giancarlo.events.input.gestures.GestureEvent
-import dev.misasi.giancarlo.events.input.touch.TouchEvent
+import dev.misasi.giancarlo.events.input.gestures.touch.TouchEvent
 import dev.misasi.giancarlo.math.Vector2f
 
 class PanDetector : GestureDetector {
@@ -91,14 +91,14 @@ class PanDetector : GestureDetector {
         val distanceMoved = calculatePanDelta(initialEvent?.firstPoint?.position)
         return if (distanceMoved.lengthSquared >= minimumMovedDistanceSquared) {
             panning = true
-            GestureEvent(event.window, GestureEvent.Type.Pan, event.firstPoint.position, distanceMoved)
+            GestureEvent(event.window, event.time, event.firstPoint.position, GestureEvent.Type.Pan, distanceMoved)
         } else {
             null
         }
     }
 
     private fun continuePanning(event: TouchEvent) : GestureEvent {
-        return GestureEvent(event.window, GestureEvent.Type.Pan, event.firstPoint.position, calculatePanDelta(previousPosition))
+        return GestureEvent(event.window, event.time, event.firstPoint.position, GestureEvent.Type.Pan, calculatePanDelta(previousPosition))
     }
 
     private fun calculatePanDelta(startPosition: Vector2f?) : Vector2f {

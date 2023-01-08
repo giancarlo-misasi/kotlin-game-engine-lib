@@ -29,15 +29,16 @@ import dev.misasi.giancarlo.events.Event
 import dev.misasi.giancarlo.system.System.Companion.getCurrentTimeMs
 import dev.misasi.giancarlo.math.Vector2f
 
-data class ScrollEvent (
-    val window: Long,
-    val offset: Vector2f,
-    val time: Long
+data class ScrollEvent(
+    override val window: Long,
+    override val time: Long,
+    override val absolutePosition: Vector2f,
+    val offset: Vector2f
 ) : Event {
 
     companion object {
-        fun valueOf(window: Long, x: Double, y: Double): ScrollEvent {
-            return ScrollEvent(window, Vector2f(x.toFloat(), y.toFloat()), getCurrentTimeMs())
+        fun valueOf(window: Long, position: Vector2f, x: Double, y: Double): ScrollEvent {
+            return ScrollEvent(window, getCurrentTimeMs(), position, Vector2f(x.toFloat(), y.toFloat()))
         }
     }
 }

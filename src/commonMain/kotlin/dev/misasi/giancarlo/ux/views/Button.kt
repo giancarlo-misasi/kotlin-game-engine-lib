@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Giancarlo Misasi
+ * Copyright (c) 2023 Giancarlo Misasi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,20 +23,28 @@
  *
  */
 
-package dev.misasi.giancarlo.events.lifecycle
+package dev.misasi.giancarlo.ux.views
 
-import dev.misasi.giancarlo.events.Event
+import dev.misasi.giancarlo.drawing.DrawState
+import dev.misasi.giancarlo.events.input.mouse.MouseButton
+import dev.misasi.giancarlo.math.AffineTransform
+import dev.misasi.giancarlo.math.Vector2i
+import dev.misasi.giancarlo.ux.AppContext
 
-data class LifecycleEvent (
-    val stage: Stage,
-    val data: Any?
-) : Event {
-    enum class Stage {
-        Create,
-        Start,
-        Resume,
-        Pause,
-        Stop,
-        Destroy
+class Button(
+    size: Vector2i,
+    button: MouseButton = MouseButton.LEFT,
+) : Clickable(size, button) {
+    var background: String? = null
+    var fontName: String = ""
+    var text: String? = null
+
+    override fun onUpdateDrawState(context: AppContext, state: DrawState) {
+        val s = size?.toVector2f() ?: return
+
+        background?.let { state.putSprite(it, AffineTransform.scale(s)) }
+        text?.let {  }
+
+        super.onUpdateDrawState(context, state)
     }
 }

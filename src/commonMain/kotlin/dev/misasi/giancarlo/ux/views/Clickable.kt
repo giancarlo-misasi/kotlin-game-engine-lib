@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Giancarlo Misasi
+ * Copyright (c) 2023 Giancarlo Misasi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,22 +23,35 @@
  *
  */
 
-package dev.misasi.giancarlo.events.input.gestures
+package dev.misasi.giancarlo.ux.views
 
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.events.input.mouse.MouseButton
+import dev.misasi.giancarlo.events.input.mouse.MouseButtonAction
+import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
+import dev.misasi.giancarlo.math.Vector2i
+import dev.misasi.giancarlo.ux.AppContext
+import dev.misasi.giancarlo.ux.View
 
-data class GestureEvent (
-    override val window: Long,
-    override val time: Long,
-    override val absolutePosition: Vector2f,
-    val type: Type,
-    val panDelta: Vector2f = Vector2f(),
-    val pinchDelta: Float = 0f
-) : Event {
-    enum class Type {
-        Tap,
-        Pan,
-        Pinch
+abstract class Clickable(
+    size: Vector2i?,
+    private val button: MouseButton,
+) : View(size) {
+    private var pressed = false
+
+    var onClick: () -> Unit = {}
+
+    final override fun onEvent(context: AppContext, event: Event): Boolean {
+        if (event !is MouseButtonEvent || event.button != button) return false
+
+        val contains = absoluteBounds?.contains(event.absolutePosition) ?: false
+        if (contains && pressed && event.action == MouseButtonAction.RELEASE) {
+            onClick()
+            pressed = false
+            return true
+        }
+
+        pressed = contains && event.action == MouseButtonAction.PRESS
+        return false
     }
 }

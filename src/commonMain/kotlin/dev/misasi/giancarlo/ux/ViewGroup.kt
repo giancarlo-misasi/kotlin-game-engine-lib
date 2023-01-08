@@ -28,7 +28,6 @@ package dev.misasi.giancarlo.ux
 import dev.misasi.giancarlo.drawing.DrawOptions
 import dev.misasi.giancarlo.drawing.DrawState
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.events.input.PositionEvent
 import dev.misasi.giancarlo.math.AffineTransform
 import dev.misasi.giancarlo.math.Rectangle
 import dev.misasi.giancarlo.math.Vector2f
@@ -75,14 +74,7 @@ abstract class ViewGroup : View() {
     override fun onEvent(context: AppContext, event: Event): Boolean {
         if (!visible) return false
         visibleChildren().forEach {
-            val e = if (event is PositionEvent) {
-                if (absoluteBounds?.contains(event.position) == false) {
-                    return@onEvent false
-                }
-                event.withPosition(event.position.minus(absolutePosition ?: Vector2f()))
-            } else event
-
-            if (it.onEvent(context, e)) {
+            if (it.onEvent(context, event)) {
                 return true
             }
         }

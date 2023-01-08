@@ -25,5 +25,21 @@
 
 package dev.misasi.giancarlo.events
 
+import dev.misasi.giancarlo.math.Vector2f
+
 interface Event {
+    /**
+     * The window the event occurred in.
+     */
+    val window: Long
+
+    /**
+     * The time of the event.
+     */
+    val time: Long
+
+    /**
+     * The absolute position of the event.
+     */
+    val absolutePosition: Vector2f
 }

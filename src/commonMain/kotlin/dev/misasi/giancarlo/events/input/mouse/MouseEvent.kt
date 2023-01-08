@@ -26,21 +26,17 @@
 package dev.misasi.giancarlo.events.input.mouse
 
 import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.events.input.PositionEvent
 import dev.misasi.giancarlo.system.System.Companion.getCurrentTimeMs
 import dev.misasi.giancarlo.math.Vector2f
 
 data class MouseEvent(
-    val window: Long,
-    override val position: Vector2f,
-    val time: Long
-) : Event, PositionEvent {
-
-    override fun withPosition(position: Vector2f): Event = copy(position = position)
-
+    override val window: Long,
+    override val time: Long,
+    override val absolutePosition: Vector2f
+) : Event {
     companion object {
         fun valueOf(window: Long, x: Double, y: Double): MouseEvent {
-            return MouseEvent(window, Vector2f(x.toFloat(), y.toFloat()), getCurrentTimeMs())
+            return MouseEvent(window, getCurrentTimeMs(), Vector2f(x.toFloat(), y.toFloat()))
         }
     }
 }

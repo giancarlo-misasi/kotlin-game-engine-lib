@@ -71,7 +71,7 @@ actual class System {
         actual fun getResourceAsBitmap(name: String, path: String): Bitmap = getResourceAsStream(path).use {
             val bufferedImage = ImageIO.read(it)
             val argb = IntArray(bufferedImage.width * bufferedImage.height)
-            bufferedImage.getRGB(0, 0, bufferedImage.width, bufferedImage.height, argb, 0, bufferedImage.width);
+            bufferedImage.getRGB(0, 0, bufferedImage.width, bufferedImage.height, argb, 0, bufferedImage.width)
             return Bitmap(name, argb, Rgba8.Format.BGRA, Vector2i(bufferedImage.width, bufferedImage.height))
         }
 

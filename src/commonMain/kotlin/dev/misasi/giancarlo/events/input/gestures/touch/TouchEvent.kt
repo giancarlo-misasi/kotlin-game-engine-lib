@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Giancarlo Misasi
+ * Copyright (c) 2023 Giancarlo Misasi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,11 +23,55 @@
  *
  */
 
-package dev.misasi.giancarlo.events.input.touch
+package dev.misasi.giancarlo.events.input.gestures.touch
 
-import dev.misasi.giancarlo.math.Vector2f
+import dev.misasi.giancarlo.system.System.Companion.crash
 
-data class TouchPoint (
-    val id: Int,
-    val position: Vector2f
-)
+data class TouchEvent (
+    val window: Long,
+    val type: Type,
+    val time: Long,
+    val points: List<TouchPoint>
+) {
+    init {
+        if (points.isEmpty()) {
+            crash("TouchEvent must have at least one point.")
+        }
+    }
+
+    val valid by lazy {
+        Type.None != type
+    }
+
+    val numberOfPoints by lazy {
+        points.size
+    }
+
+    val firstPoint by lazy {
+        points[0]
+    }
+
+    fun getPointByIndex(index: Int) : TouchPoint? {
+        return points[index]
+    }
+
+    fun getPointById(id: Int) : TouchPoint? {
+        return points.find { id == it.id }
+    }
+
+    fun hasSamePoints(other: TouchEvent) : Boolean {
+        if (!valid || points.size != other.points.size) {
+            return false
+        }
+
+        return points.all { other.getPointById(it.id) != null }
+    }
+
+    enum class Type {
+        None,
+        Begin,
+        Move,
+        End,
+        Cancel
+    }
+}

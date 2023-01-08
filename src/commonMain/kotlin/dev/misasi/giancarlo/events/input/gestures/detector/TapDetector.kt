@@ -26,7 +26,7 @@
 package dev.misasi.giancarlo.events.input.gestures.detector
 
 import dev.misasi.giancarlo.events.input.gestures.GestureEvent
-import dev.misasi.giancarlo.events.input.touch.TouchEvent
+import dev.misasi.giancarlo.events.input.gestures.touch.TouchEvent
 
 abstract class TapDetector (
     private val tapsToDetect: Int,
@@ -72,7 +72,7 @@ abstract class TapDetector (
 
                     if (tapsToDetect == taps) {
                         reset()
-                        return GestureEvent(event.window, gestureType, event.firstPoint.position)
+                        return GestureEvent(event.window, event.time, event.firstPoint.position, gestureType)
                     }
                 }
             }

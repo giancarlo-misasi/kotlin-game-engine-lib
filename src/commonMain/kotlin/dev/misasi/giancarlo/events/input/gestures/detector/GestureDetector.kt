@@ -26,7 +26,7 @@
 package dev.misasi.giancarlo.events.input.gestures.detector
 
 import dev.misasi.giancarlo.events.input.gestures.GestureEvent
-import dev.misasi.giancarlo.events.input.touch.TouchEvent
+import dev.misasi.giancarlo.events.input.gestures.touch.TouchEvent
 
 interface GestureDetector {
     fun reset()

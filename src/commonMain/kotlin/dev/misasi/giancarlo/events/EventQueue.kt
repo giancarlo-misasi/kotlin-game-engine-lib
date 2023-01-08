@@ -25,11 +25,8 @@
 
 package dev.misasi.giancarlo.events
 
-import dev.misasi.giancarlo.events.input.PositionEvent
-import dev.misasi.giancarlo.events.input.gestures.GestureEvent
 import dev.misasi.giancarlo.events.input.gestures.detector.GestureDetector
-import dev.misasi.giancarlo.events.input.mouse.MouseEvent
-import dev.misasi.giancarlo.events.input.touch.TouchEvent
+import dev.misasi.giancarlo.events.input.gestures.touch.TouchEvent
 import dev.misasi.giancarlo.opengl.Viewport
 
 class EventQueue (
@@ -37,24 +34,15 @@ class EventQueue (
 ) {
     private val events = ArrayDeque<Event>()
 
-    fun pushEvent(event: Event) {
-        events.addLast(event)
-    }
-
-    fun pushPositionEvent(viewport: Viewport, event: PositionEvent) {
-        val position = viewport.adjustToBounds(event.position)
+    fun pushEvent(viewport: Viewport, event: Event) {
+        val position = viewport.adjustToBounds(event.absolutePosition)
         if (viewport.contains(position)) {
-            events.addLast(event.withPosition(position))
+            events.addLast(event)
         }
     }
 
     fun pushGestureEvent(viewport: Viewport, touchEvent: TouchEvent) {
-         events.addAll(detectors
-             .asSequence()
-             .mapNotNull { it.detect(touchEvent) }
-             .map { adjustToViewport(viewport, it) }
-             .filter { viewport.contains(it.position) }
-         )
+         detectors.mapNotNull { it.detect(touchEvent) }.forEach { pushEvent(viewport, it) }
     }
 
     fun getNextEvent() : Event? {
@@ -64,6 +52,4 @@ class EventQueue (
             events.removeFirst()
         }
     }
-
-    private fun adjustToViewport(viewport: Viewport, event: GestureEvent) = event.copy(position = viewport.adjustToBounds(event.position))
 }

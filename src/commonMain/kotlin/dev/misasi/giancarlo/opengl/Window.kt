@@ -81,28 +81,32 @@ class Window(
     }
 
     private fun onKeyboardEvent(window: Long, keyCode: Int, scanCode: Int, actionCode: Int, modifierCode: Int) {
-        events.pushEvent(KeyEvent.valueOf(window, keyCode, scanCode, actionCode, modifierCode))
+        val position = gl.getMousePosition(window)
+        events.pushEvent(viewport, KeyEvent.valueOf(window, position, keyCode, scanCode, actionCode, modifierCode))
     }
 
     private fun onTextEvent(window: Long, codePoint: Int) {
-        events.pushEvent(TextEvent.valueOf(window, codePoint))
+        val position = gl.getMousePosition(window)
+        events.pushEvent(viewport, TextEvent.valueOf(window, position, codePoint))
     }
 
     private fun onMouseEvent(window: Long, x: Double, y: Double) {
-        events.pushPositionEvent(viewport, MouseEvent.valueOf(window, x, y))
+        events.pushEvent(viewport, MouseEvent.valueOf(window, x, y))
     }
 
     private fun onMouseButtonEvent(window: Long, buttonCode: Int, actionCode: Int, modifierCode: Int) {
         val position = gl.getMousePosition(window)
-        events.pushPositionEvent(viewport, MouseButtonEvent.valueOf(window, position, buttonCode, actionCode, modifierCode))
+        events.pushEvent(viewport, MouseButtonEvent.valueOf(window, position, buttonCode, actionCode, modifierCode))
     }
 
     private fun onScrollEvent(window: Long, x: Double, y: Double) {
-        events.pushEvent(ScrollEvent.valueOf(window, x, y))
+        val position = gl.getMousePosition(window)
+        events.pushEvent(viewport, ScrollEvent.valueOf(window, position, x, y))
     }
 
     private fun onResizeEvent(window: Long, x: Int, y: Int) {
-        events.pushEvent(ResizeEvent.valueOf(window, x, y))
+        val position = gl.getMousePosition(window)
+        events.pushEvent(viewport, ResizeEvent.valueOf(window, position, x, y))
         viewport = createViewport()
     }
 }

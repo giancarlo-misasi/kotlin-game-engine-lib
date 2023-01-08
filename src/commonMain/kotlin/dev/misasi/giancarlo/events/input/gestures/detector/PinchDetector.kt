@@ -26,7 +26,7 @@
 package dev.misasi.giancarlo.events.input.gestures.detector
 
 import dev.misasi.giancarlo.events.input.gestures.GestureEvent
-import dev.misasi.giancarlo.events.input.touch.TouchEvent
+import dev.misasi.giancarlo.events.input.gestures.touch.TouchEvent
 import dev.misasi.giancarlo.math.Vector2f
 import kotlin.math.sqrt
 
@@ -80,7 +80,7 @@ class PinchDetector : GestureDetector {
         currentPoint1 = event.getPointByIndex(0)!!.position
         currentPoint2 = event.getPointByIndex(1)!!.position
 
-        return GestureEvent(event.window, GestureEvent.Type.Pinch, event.firstPoint.position, pinchDelta = calculatePinchDelta())
+        return GestureEvent(event.window, event.time, event.firstPoint.position, GestureEvent.Type.Pinch, pinchDelta = calculatePinchDelta())
     }
 
     private fun calculatePinchDelta() : Float {
