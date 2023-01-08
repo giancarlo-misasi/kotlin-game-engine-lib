@@ -98,6 +98,7 @@ class App(
     }
 
     override val viewport: Viewport get() = window.viewport
+    override var debugLayout: Boolean = false
 
     override fun go(nextRootView: View, outTransition: Transition, inTransition: Transition) {
         viewOrchestrator.go(nextRootView, outTransition, inTransition)

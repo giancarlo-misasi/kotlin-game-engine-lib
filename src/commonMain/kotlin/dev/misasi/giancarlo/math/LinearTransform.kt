@@ -46,7 +46,7 @@ data class LinearTransform(
             reflection: Reflection? = null,
             rotation: Rotation? = null
         ): Vector2f {
-            val scaleReflectPoint = scale.multiply(reflection.toVector2f()).multiply(point)
+            val scaleReflectPoint = scale.times(reflection.toVector2f()).times(point)
             val (cosTheta, sinTheta) = rotation.toVector2f()
             return applyLinearTransform(scaleReflectPoint, cosTheta, sinTheta)
         }
@@ -57,9 +57,9 @@ data class LinearTransform(
             rotation: Rotation?,
             vararg points: Vector2f
         ): List<Vector2f> {
-            val scaleReflect = scale.multiply(reflection.toVector2f())
+            val scaleReflect = scale.times(reflection.toVector2f())
             val (cosTheta, sinTheta) = rotation.toVector2f()
-            return points.map { applyLinearTransform(scaleReflect.multiply(it), cosTheta, sinTheta) }
+            return points.map { applyLinearTransform(scaleReflect.times(it), cosTheta, sinTheta) }
         }
 
         private fun applyLinearTransform(scaleReflectPoint: Vector2f, cosTheta: Float, sinTheta: Float): Vector2f =

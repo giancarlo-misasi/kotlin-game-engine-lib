@@ -26,6 +26,7 @@
 package dev.misasi.giancarlo.drawing
 
 import dev.misasi.giancarlo.system.System.Companion.crash
+import kotlin.random.Random
 
 data class Rgb8(
     val r: Int = 0,
@@ -192,6 +193,17 @@ data class Rgb8(
         val GAINSBORO = Rgb8(220, 220, 220)
         val WHITE_SMOKE = Rgb8(245, 245, 245)
         val WHITE = Rgb8(255, 255, 255)
+
+        fun random(): Rgb8 {
+            val r = Random(randomSeed++)
+            return Rgb8(
+                r.nextInt(256),
+                r.nextInt(256),
+                r.nextInt(256),
+            )
+        }
+
+        private var randomSeed = 0
     }
 }
 
@@ -239,6 +251,10 @@ data class Rgba8 (
 
     val floatA by lazy {
         a.toFloat() / 255.toFloat()
+    }
+
+    companion object {
+        fun random() = Rgb8.random().toRgba()
     }
 }
 

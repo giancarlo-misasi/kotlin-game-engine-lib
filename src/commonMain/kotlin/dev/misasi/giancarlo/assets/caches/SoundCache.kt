@@ -33,6 +33,8 @@ import dev.misasi.giancarlo.system.System.Companion.getResourceAsBytes
 class SoundCache(private val al: OpenAl) : Cache<PcmSound> {
     private val sounds = LruMap<String, PcmSound>(100)
 
+    override fun keys() = sounds.keys.toSet()
+
     override fun get(name: String): PcmSound {
         return sounds.getOrPut(name) { pcmSound(name, al) }
     }

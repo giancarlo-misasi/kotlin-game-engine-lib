@@ -42,6 +42,8 @@ interface AppContext {
     val assets: Assets
     val viewport: Viewport
 
+    var debugLayout: Boolean
+
     fun go(
         nextRootView: View,
         outTransition: Transition = Fade.fadeOut(),

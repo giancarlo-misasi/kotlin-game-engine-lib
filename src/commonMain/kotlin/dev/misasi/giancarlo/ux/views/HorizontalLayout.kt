@@ -2,6 +2,7 @@ package dev.misasi.giancarlo.ux.views
 
 import dev.misasi.giancarlo.drawing.DrawOptions
 import dev.misasi.giancarlo.drawing.DrawState
+import dev.misasi.giancarlo.drawing.Rgb8
 import dev.misasi.giancarlo.math.AffineTransform
 import dev.misasi.giancarlo.math.Rectangle
 import dev.misasi.giancarlo.math.Vector2f
@@ -13,6 +14,7 @@ import dev.misasi.giancarlo.ux.attributes.HorizontalAlignment
 import dev.misasi.giancarlo.ux.attributes.VerticalAlignment
 
 class HorizontalLayout : ViewGroup() {
+    private val debugColor = Rgb8.random()
     var verticalAlignment = VerticalAlignment.MIDDLE
     var horizontalAlignment = HorizontalAlignment.MIDDLE
 
@@ -52,9 +54,20 @@ class HorizontalLayout : ViewGroup() {
 
     override fun onLayout(context: AppContext, state: DrawState, scissor: Rectangle) {
         val s = size ?: return
-        val w = calculateWidth(visibleChildren())
+
+        if (context.debugLayout) {
+            state.applyOptionsScoped(DrawOptions(scissor)) {
+                val materialName = context.assets.materials().firstOrNull() ?: return@applyOptionsScoped
+                state.putSprite(
+                    materialName,
+                    AffineTransform(scale = context.viewport.actualScreenSize.toVector2f()),
+                    debugColor,
+                )
+            }
+        }
 
         // Calculate horizontal alignment offset
+        val w = calculateWidth(visibleChildren())
         var x: Int = when(horizontalAlignment) {
             HorizontalAlignment.LEFT -> 0
             HorizontalAlignment.MIDDLE -> s.x.minus(w).div(2)
@@ -74,8 +87,8 @@ class HorizontalLayout : ViewGroup() {
 
             // Draw the child with the appropriate transforms
             val affine = AffineTransform.translate(Vector2f(x, y))
-            state.applyOptionsScoped(DrawOptions(scissor, affine)) {
-                child.absolutePosition = affine.translation
+            state.applyOptionsScoped(DrawOptions(scissor, affine)) { concatDrawOptions ->
+                child.absolutePosition = concatDrawOptions.affine?.translation!!
                 child.onUpdateDrawState(context, state)
             }
 

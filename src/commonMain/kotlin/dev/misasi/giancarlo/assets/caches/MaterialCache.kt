@@ -42,6 +42,8 @@ class MaterialCache(bitmapCache: BitmapCache) : Cache<StaticMaterial> {
         .associateBy { it.materialName }
         .toMutableMap()
 
+    override fun keys() = materials.keys.toSet()
+
     override fun get(name: String) = materials[name] ?: crash("Material $name not found.")
 
     override fun put(name: String, value: StaticMaterial) {
@@ -62,8 +64,8 @@ class MaterialCache(bitmapCache: BitmapCache) : Cache<StaticMaterial> {
             val name = "${bitmap.name}${tokens[0]}"
             val position = Vector2f(tokens[1].toFloat(), tokens[2].toFloat())
             val size = Vector2i(tokens[3].toFloat(), tokens[4].toFloat())
-            val uvPosition = position.divide(bitmap.size.toVector2f())
-            val uvSize = size.toVector2f().divide(bitmap.size.toVector2f())
+            val uvPosition = position.div(bitmap.size.toVector2f())
+            val uvSize = size.toVector2f().div(bitmap.size.toVector2f())
             return StaticMaterial(name, bitmap.name, Aabb.create(uvPosition, uvSize), size)
         }
     }

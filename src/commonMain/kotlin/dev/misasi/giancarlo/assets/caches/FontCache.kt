@@ -42,6 +42,8 @@ class FontCache(bitmapCache: BitmapCache, materialCache: MaterialCache) : Cache<
         .associateBy { it.fontName }
         .toMutableMap()
 
+    override fun keys() = fonts.keys.toSet()
+
     override fun get(name: String) = fonts[name] ?: crash("Font $name not found.")
 
     override fun put(name: String, value: BitmapFont) {
@@ -114,8 +116,8 @@ class FontCache(bitmapCache: BitmapCache, materialCache: MaterialCache) : Cache<
             val name = "${fontName}${map["id"]!!.toInt().toChar()}"
             val position = Vector2f(map["x"]!!.toInt(), map["y"]!!.toInt())
             val size = Vector2i(map["width"]!!.toInt(), map["height"]!!.toInt())
-            val uvPosition = position.divide(bitmap.size.toVector2f())
-            val uvSize = size.toVector2f().divide(bitmap.size.toVector2f())
+            val uvPosition = position.div(bitmap.size.toVector2f())
+            val uvSize = size.toVector2f().div(bitmap.size.toVector2f())
             return StaticMaterial(name, bitmap.name, Aabb.create(uvPosition, uvSize), size)
         }
 

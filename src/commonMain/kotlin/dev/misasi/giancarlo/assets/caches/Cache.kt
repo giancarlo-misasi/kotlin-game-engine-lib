@@ -26,6 +26,7 @@
 package dev.misasi.giancarlo.assets.caches
 
 interface Cache<DataType> {
+    fun keys(): Set<String>
     fun get(name: String): DataType
     fun put(name: String, value: DataType)
 }

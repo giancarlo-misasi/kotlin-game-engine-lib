@@ -33,6 +33,9 @@ class TextureCache(
     private val bitmapCache: BitmapCache,
 ) : Cache<Texture> {
     private val textures = mutableMapOf<String, Texture>()
+
+    override fun keys() = textures.keys.toSet()
+
     override fun get(name: String): Texture {
         return textures.getOrPut(name) { Texture(gl, bitmapCache.get(name)) }
     }

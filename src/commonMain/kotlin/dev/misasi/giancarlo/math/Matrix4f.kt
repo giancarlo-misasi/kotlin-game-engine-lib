@@ -92,7 +92,7 @@ class Matrix4f private constructor(val data: FloatArray) {
             rotation: Rotation? = null
         ): Matrix4f {
             val (cosTheta, sinTheta) = rotation.toVector2f()
-            val scaleReflect = scale.multiply(reflection.toVector2f())
+            val scaleReflect = scale.times(reflection.toVector2f())
             val result = identity.data.copyOf()
             result[0] = scaleReflect.x * cosTheta
             result[1] = -scaleReflect.y * sinTheta

@@ -42,7 +42,7 @@ class Viewport private constructor(
     }
 
     fun adjustToBounds(point: Vector2f): Vector2f {
-        return point.minus(offset).divide(scale)
+        return point.minus(offset).div(scale)
     }
 
     companion object {
@@ -57,8 +57,8 @@ class Viewport private constructor(
 
         fun create(actualScreenSize: Vector2i, designedResolution: Vector2i): Viewport {
             val adjustedScreenSize = calculateAdjustedScreenSize(designedResolution.aspectRatio, actualScreenSize)
-            val offset = actualScreenSize.minus(adjustedScreenSize).toVector2f().multiply(0.5f)
-            val scale = adjustedScreenSize.toVector2f().divide(designedResolution.toVector2f())
+            val offset = actualScreenSize.minus(adjustedScreenSize).toVector2f().times(0.5f)
+            val scale = adjustedScreenSize.toVector2f().div(designedResolution.toVector2f())
             val bounds = Rectangle(offset, adjustedScreenSize.toVector2f().plus(offset))
             return Viewport(designedResolution, actualScreenSize, adjustedScreenSize, offset, bounds, scale)
         }

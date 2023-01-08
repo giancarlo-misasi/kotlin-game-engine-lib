@@ -63,7 +63,7 @@ class Matrix2f private constructor(val data: FloatArray) {
         }
 
         fun linearTransform(linearTransform: LinearTransform): Matrix2f {
-            val scaleReflect = linearTransform.scale.multiply(linearTransform.reflection.toVector2f())
+            val scaleReflect = linearTransform.scale.times(linearTransform.reflection.toVector2f())
             val (cosTheta, sinTheta) = linearTransform.rotation.toVector2f()
             val result = identity.data.copyOf()
             result[0] = scaleReflect.x * cosTheta

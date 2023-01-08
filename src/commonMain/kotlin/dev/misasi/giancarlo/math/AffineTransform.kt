@@ -41,7 +41,7 @@ data class AffineTransform(
         return affine?.let {
             AffineTransform(
                 translation.plus(it.translation),
-                scale.multiply(it.scale),
+                scale.times(it.scale),
                 reflection?.concatenate(it.reflection),
                 rotation?.concatenate(it.rotation),
             )

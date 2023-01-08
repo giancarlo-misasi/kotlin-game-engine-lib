@@ -38,9 +38,9 @@ class Physics {
                 return velocity
             }
 
-            val parallelComponent = intersection.normal.multiply(dotProduct)
+            val parallelComponent = intersection.normal.times(dotProduct)
             val perpendicularComponent = velocity.minus(parallelComponent)
-            return velocity.minus(parallelComponent.multiply(bounce)).minus(perpendicularComponent.multiply(slide))
+            return velocity.minus(parallelComponent.times(bounce)).minus(perpendicularComponent.times(slide))
         }
 
         fun dynamicElasticCollision(
@@ -62,8 +62,8 @@ class Physics {
             val momentumBf = (momentumBi * -massDelta + 2 * massA * momentumAi) / massTotal
 
             return Pair(
-                velocityA.plus(intersection.normal.multiply(momentumAf - momentumAi)),
-                velocityB.plus(intersection.normal.multiply(momentumBf - momentumBi))
+                velocityA.plus(intersection.normal.times(momentumAf - momentumAi)),
+                velocityB.plus(intersection.normal.times(momentumBf - momentumBi))
             )
         }
     }

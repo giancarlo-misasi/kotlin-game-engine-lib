@@ -32,6 +32,8 @@ import dev.misasi.giancarlo.system.System.Companion.getResourceAsBitmap
 class BitmapCache : Cache<Bitmap> {
     private val bitmaps = LruMap<String, Bitmap>(100)
 
+    override fun keys() = bitmaps.keys.toSet()
+
     override fun get(name: String): Bitmap {
         return bitmaps.getOrPut(name) { bitmap(name) }
     }

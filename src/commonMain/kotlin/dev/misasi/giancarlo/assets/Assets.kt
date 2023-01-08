@@ -51,6 +51,14 @@ class Assets(gl: OpenGl, al: OpenAl) {
     private val soundCache = SoundCache(al)
     private val textureCache = TextureCache(gl, bitmapCache)
 
+    fun shaders() = shaderCache.keys()
+    fun bitmaps() = bitmapCache.keys()
+    fun materials() = materialCache.keys()
+    fun fonts() = fontCache.keys()
+    fun animations() = animationCache.keys()
+    fun sounds() = soundCache.keys()
+    fun textures() = textureCache.keys()
+
     fun shader(key: String): Shader.Spec = shaderCache.get(key)
     fun bitmap(key: String): Bitmap = bitmapCache.get(key)
     fun material(key: String): StaticMaterial = materialCache.get(key)

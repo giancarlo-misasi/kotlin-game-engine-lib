@@ -37,6 +37,8 @@ class AnimationCache(materialCache: MaterialCache) : Cache<AnimatedMaterial.Spec
         .associateBy { it.animationName }
         .toMutableMap()
 
+    override fun keys() = animations.keys.toSet()
+
     override fun get(name: String) = animations[name] ?: crash("Animation $name not found.")
 
     override fun put(name: String, value: AnimatedMaterial.Spec) {

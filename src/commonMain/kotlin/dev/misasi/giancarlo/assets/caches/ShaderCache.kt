@@ -38,6 +38,8 @@ class ShaderCache : Cache<Shader.Spec> {
         .associateBy { it.name }
         .toMutableMap()
 
+    override fun keys() = shaders.keys.toSet()
+
     override fun get(name: String) = shaders[name] ?: crash("Shader $name not found.")
 
     override fun put(name: String, value: Shader.Spec) {
