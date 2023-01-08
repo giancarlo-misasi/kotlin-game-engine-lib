@@ -26,25 +26,38 @@
 package dev.misasi.giancarlo.ux.views
 
 import dev.misasi.giancarlo.drawing.DrawState
+import dev.misasi.giancarlo.drawing.Font
 import dev.misasi.giancarlo.events.input.mouse.MouseButton
 import dev.misasi.giancarlo.math.AffineTransform
+import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.math.Vector2i
 import dev.misasi.giancarlo.ux.AppContext
+import java.lang.IllegalStateException
 
 class Button(
-    size: Vector2i,
-    button: MouseButton = MouseButton.LEFT,
-) : Clickable(size, button) {
-    var background: String? = null
-    var fontName: String = ""
-    var text: String? = null
-
+    var background: String? = null,
+    var font: Font = Font.ROBOTO24,
+    var text: String? = null,
+    size: Vector2i? = null,
+    button: MouseButton? = null,
+    onClick: (() -> Unit)? = null,
+) : Clickable(size, button, onClick) {
     override fun onUpdateDrawState(context: AppContext, state: DrawState) {
         val s = size?.toVector2f() ?: return
-
-        background?.let { state.putSprite(it, AffineTransform.scale(s),) }
-        text?.let {  }
-
-        super.onUpdateDrawState(context, state)
+        background?.let {
+            if (pressed) {
+                state.putSprite(it, AffineTransform(scale = s, translation = Vector2f(2, 2)),)
+            } else {
+                state.putSprite(it, AffineTransform.scale(s),)
+            }
+        }
+        text?.let {
+            val bitmapFont = context.assets.fonts(font.assetName)
+            val width = s.x - bitmapFont.width(it)
+            val height = s.y - bitmapFont.properties.lineHeight
+            if (width < 0 || height < 0) throw IllegalStateException("Button too small!")
+            val affine = AffineTransform.translate(Vector2f(width, height).half())
+            state.putText(it, affine, font)
+        }
     }
 }

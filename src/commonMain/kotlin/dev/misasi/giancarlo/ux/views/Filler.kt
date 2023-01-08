@@ -25,36 +25,7 @@
 
 package dev.misasi.giancarlo.ux.views
 
-import dev.misasi.giancarlo.events.Event
-import dev.misasi.giancarlo.events.input.mouse.MouseButton
-import dev.misasi.giancarlo.events.input.mouse.MouseButtonAction
-import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
 import dev.misasi.giancarlo.math.Vector2i
-import dev.misasi.giancarlo.ux.AppContext
 import dev.misasi.giancarlo.ux.View
 
-abstract class Clickable(
-    size: Vector2i?,
-    button: MouseButton?,
-    onClick: (() -> Unit)?,
-) : View(size) {
-    var pressed = false
-        private set
-
-    var onClick = onClick ?: {}
-    var button = button ?: MouseButton.LEFT
-
-    final override fun onEvent(context: AppContext, event: Event): Boolean {
-        if (event !is MouseButtonEvent || event.button != button) return false
-
-        val contains = absoluteBounds?.contains(event.absolutePosition) ?: false
-        if (contains && pressed && event.action == MouseButtonAction.RELEASE) {
-            onClick()
-            pressed = false
-            return true
-        }
-
-        pressed = contains && event.action == MouseButtonAction.PRESS
-        return false
-    }
-}
+class Filler(size: Vector2i) : View(size)

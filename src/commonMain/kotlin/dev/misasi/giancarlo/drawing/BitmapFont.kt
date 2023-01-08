@@ -54,7 +54,7 @@ data class Font(val name: String, val size: Int, val color: Rgb8) {
 
 class BitmapFont(
     val fontName: String,
-    private val properties: Properties,
+    val properties: Properties,
     private val chars: Map<Char, Character>,
     private val kernings: Map<Pair<Char, Char>, Kerning>,
 ) {
@@ -81,8 +81,19 @@ class BitmapFont(
         val id = Pair(first, second)
     }
 
-    fun draw(string: String, affineTransform: AffineTransform, font: Font, alpha: Int?, drawState: DrawState) {
-        val (ix, _) = affineTransform.translation.toVector2i()
+    fun width(string: String): Int = iterate(string) { _, _, _ -> }
+
+    fun draw(string: String, affineTransform: AffineTransform, color: Rgb8, alpha: Int?, drawState: DrawState) {
+        iterate(string) { c, x, y ->
+            val affine = affineTransform.concatenate(AffineTransform(
+                translation = c.offset.plus(Vector2f(x, y)),
+                scale = c.size,
+            ))
+            drawState.putSprite("$fontName${c.codePoint}", affine, color, alpha)
+        }
+    }
+
+    private fun iterate(string: String, block: (c: Character, x: Int, y: Int) -> Unit): Int {
         var x = 0
         var y = 0
         var prev = ' '
@@ -91,14 +102,11 @@ class BitmapFont(
                 ' ' -> x += spaceWidth
                 '\t' -> x += tabWidth
                 '\r' -> break
-                '\n' -> x = ix.also { y += properties.lineHeight }
+                '\n' -> x = 0.also { y += properties.lineHeight }
                 else -> {
                     val c = chars[raw] ?: crash("Font $fontName cannot render '$raw'.")
-                    val affine = AffineTransform(
-                        translation = c.offset.plus(Vector2f(x, y)),
-                        scale = c.size,
-                    ).concatenate(affineTransform)
-                    drawState.putSprite("$fontName${c.codePoint}", affine, font.color, alpha)
+
+                    block(c, x, y)
 
                     val k = Pair(prev, raw)
                     x += c.xAdvance + (kernings[k]?.amount ?: 0)
@@ -106,5 +114,6 @@ class BitmapFont(
             }
             prev = raw
         }
+        return x
     }
 }

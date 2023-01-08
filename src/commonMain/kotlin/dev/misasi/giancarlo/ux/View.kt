@@ -66,7 +66,7 @@ abstract class View(size: Vector2i? = null) {
      * Sets the size of a view if not already set.
      */
     open fun onSize(context: AppContext, maxSize: Vector2i) {
-        size = maxSize
+        size = maxSize.minus(inset.size)
     }
 
     /**

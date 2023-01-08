@@ -73,7 +73,7 @@ class AppDrawState (
     }
 
     override fun putText(text: String, affine: AffineTransform, font: Font, alpha: Int?) {
-        assets.fonts(font.assetName).draw(text, affine, font, alpha, this)
+        assets.fonts(font.assetName).draw(text, affine, font.color, alpha, this)
     }
 
     override fun reset() {
