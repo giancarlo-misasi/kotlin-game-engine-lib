@@ -34,7 +34,7 @@ import dev.misasi.giancarlo.assets.caches.SoundCache
 import dev.misasi.giancarlo.assets.caches.TextureCache
 import dev.misasi.giancarlo.drawing.AnimatedMaterial
 import dev.misasi.giancarlo.drawing.Bitmap
-import dev.misasi.giancarlo.drawing.Font
+import dev.misasi.giancarlo.drawing.BitmapFont
 import dev.misasi.giancarlo.drawing.StaticMaterial
 import dev.misasi.giancarlo.openal.OpenAl
 import dev.misasi.giancarlo.openal.PcmSound
@@ -54,7 +54,7 @@ class Assets(gl: OpenGl, al: OpenAl) {
     fun shader(key: String): Shader.Spec = shaderCache.get(key)
     fun bitmap(key: String): Bitmap = bitmapCache.get(key)
     fun material(key: String): StaticMaterial = materialCache.get(key)
-    fun fonts(key: String): Font = fontCache.get(key)
+    fun fonts(key: String): BitmapFont = fontCache.get(key)
     fun animation(key: String): AnimatedMaterial.Spec = animationCache.get(key)
     fun sound(key: String): PcmSound = soundCache.get(key)
     fun texture(key: String): Texture = textureCache.get(key)
@@ -62,7 +62,7 @@ class Assets(gl: OpenGl, al: OpenAl) {
     fun put(shader: Shader.Spec) = shaderCache.put(shader.name, shader)
     fun put(bitmap: Bitmap) = bitmapCache.put(bitmap.name, bitmap)
     fun put(material: StaticMaterial) = materialCache.put(material.materialName, material)
-    fun put(font: Font) = fontCache.put(font.fontName, font)
+    fun put(font: BitmapFont) = fontCache.put(font.fontName, font)
     fun put(animation: AnimatedMaterial.Spec) = animationCache.put(animation.animationName, animation)
     fun put(sound: PcmSound) = soundCache.put(sound.name, sound)
     fun put(texture: Texture) = textureCache.put(texture.name, texture)

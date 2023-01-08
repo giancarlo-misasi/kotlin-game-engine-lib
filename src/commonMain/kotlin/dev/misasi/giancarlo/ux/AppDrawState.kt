@@ -26,11 +26,12 @@
 package dev.misasi.giancarlo.ux
 
 import dev.misasi.giancarlo.assets.Assets
-import dev.misasi.giancarlo.drawing.Alpha
 import dev.misasi.giancarlo.drawing.DrawCommand
 import dev.misasi.giancarlo.drawing.DrawOptions
 import dev.misasi.giancarlo.drawing.DrawState
+import dev.misasi.giancarlo.drawing.Font
 import dev.misasi.giancarlo.drawing.Material
+import dev.misasi.giancarlo.drawing.Rgb8
 import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.drawing.TextureCoordinate
 import dev.misasi.giancarlo.math.Aabb
@@ -58,7 +59,7 @@ class AppDrawState (
         drawOptions = old
     }
 
-    override fun putSprite(materialName: String, affine: AffineTransform, alpha: Float?) {
+    override fun putSprite(materialName: String, affine: AffineTransform, color: Rgb8?, alpha: Int?) {
         if (spriteCount >= spriteCapacity) throw IllegalStateException("Sprite capacity overflow.")
         val material = assets.material(materialName)
         val command = DrawCommand(material.textureName, drawOptions)
@@ -67,12 +68,12 @@ class AppDrawState (
         } else {
             commands.last().count++
         }
-        putSpriteIntoDirectVertexBuffer(material, affine, alpha)
+        putSpriteIntoDirectVertexBuffer(material, affine, color, alpha)
         spriteCount++
     }
 
-    override fun putText(text: String, affine: AffineTransform, fontName: String, fontSize: Int, fontColor: Rgba8) {
-        assets.fonts("$fontName$fontSize").draw(text, affine, fontColor.floatA, this)
+    override fun putText(text: String, affine: AffineTransform, font: Font, alpha: Int?) {
+        assets.fonts(font.assetName).draw(text, affine, font, alpha, this)
     }
 
     override fun reset() {
@@ -93,27 +94,35 @@ class AppDrawState (
 
     fun getCommands(): List<DrawCommand> = commands
 
-    private fun putSpriteIntoDirectVertexBuffer(material: Material, affine: AffineTransform, alpha: Float?) {
+    private fun putSpriteIntoDirectVertexBuffer(material: Material, affine: AffineTransform, color: Rgb8?, alpha: Int?) {
         val offset = affine.scale.half() // required since defaultAabb is around origin to support rotation
         val xy = affine.applyLinearTransform(defaultAabb)
         val uv = material.coordinates
-        val a = Alpha.normalize(alpha)
+        val c = Rgba8(color, alpha)
+        // 0 -> useAlpha
+        // 1 ->
+        // 2-31 -> Unused
+        val mask = (bit(color) shl 1) or (bit(alpha))
 
         directVertexBuffer.putVector2f(xy.tl.plus(offset).plus(affine.translation))
         putTextureCoordinate(uv.tl)
-        directVertexBuffer.putFloat(a)
+        directVertexBuffer.putRgba8(c)
+        directVertexBuffer.putInt(mask)
 
         directVertexBuffer.putVector2f(xy.bl.plus(offset).plus(affine.translation))
         putTextureCoordinate(uv.bl)
-        directVertexBuffer.putFloat(a)
+        directVertexBuffer.putRgba8(c)
+        directVertexBuffer.putInt(mask)
 
         directVertexBuffer.putVector2f(xy.br.plus(offset).plus(affine.translation))
         putTextureCoordinate(uv.br)
-        directVertexBuffer.putFloat(a)
+        directVertexBuffer.putRgba8(c)
+        directVertexBuffer.putInt(mask)
 
         directVertexBuffer.putVector2f(xy.tr.plus(offset).plus(affine.translation))
         putTextureCoordinate(uv.tr)
-        directVertexBuffer.putFloat(a)
+        directVertexBuffer.putRgba8(c)
+        directVertexBuffer.putInt(mask)
     }
 
     private fun putTextureCoordinate(uv: Vector2f) {
@@ -137,5 +146,7 @@ class AppDrawState (
                 arrayOf(0, 1, 2, 2, 3, 0).map { j -> start + j }
             }.flatten()
         }
+
+        private fun <T> bit(value: T?) = if(value == null) 0 else 1
     }
 }

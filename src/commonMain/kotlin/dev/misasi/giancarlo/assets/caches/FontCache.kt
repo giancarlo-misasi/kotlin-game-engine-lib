@@ -26,7 +26,7 @@
 package dev.misasi.giancarlo.assets.caches
 
 import dev.misasi.giancarlo.drawing.Bitmap
-import dev.misasi.giancarlo.drawing.Font
+import dev.misasi.giancarlo.drawing.BitmapFont
 import dev.misasi.giancarlo.drawing.StaticMaterial
 import dev.misasi.giancarlo.math.Aabb
 import dev.misasi.giancarlo.math.Vector2f
@@ -36,7 +36,7 @@ import dev.misasi.giancarlo.system.System.Companion.getResourceAsLines
 import dev.misasi.giancarlo.system.System.Companion.getResourceName
 import dev.misasi.giancarlo.system.System.Companion.getResources
 
-class FontCache(bitmapCache: BitmapCache, materialCache: MaterialCache) : Cache<Font> {
+class FontCache(bitmapCache: BitmapCache, materialCache: MaterialCache) : Cache<BitmapFont> {
     private val fonts = getResources(PATH)
         .map { load(it, bitmapCache, materialCache) }
         .associateBy { it.fontName }
@@ -44,7 +44,7 @@ class FontCache(bitmapCache: BitmapCache, materialCache: MaterialCache) : Cache<
 
     override fun get(name: String) = fonts[name] ?: crash("Font $name not found.")
 
-    override fun put(name: String, value: Font) {
+    override fun put(name: String, value: BitmapFont) {
         fonts[name] = value
     }
 
@@ -52,7 +52,7 @@ class FontCache(bitmapCache: BitmapCache, materialCache: MaterialCache) : Cache<
         private const val PATH = "/fonts"
         private val SPACE_OR_TAB = "[ \t]".toRegex()
 
-        private fun load(path: String, bitmapCache: BitmapCache, materialCache: MaterialCache): Font {
+        private fun load(path: String, bitmapCache: BitmapCache, materialCache: MaterialCache): BitmapFont {
             val fontName = getResourceName(path)
             val bitmap = bitmapCache.get(fontName.trimEnd('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))
             val lines = getResourceAsLines("${PATH}/$path")
@@ -61,16 +61,16 @@ class FontCache(bitmapCache: BitmapCache, materialCache: MaterialCache) : Cache<
                 .mapNotNull { characters(it, fontName, bitmap, materialCache) }
                 .associateBy { it.codePoint }
             val kernings = lines.mapNotNull { kernings(it) }.associateBy { it.id }
-            return Font(fontName, common, characters, kernings)
+            return BitmapFont(fontName, common, characters, kernings)
         }
 
-        private fun common(line: String): Font.Properties? {
+        private fun common(line: String): BitmapFont.Properties? {
             if (!line.startsWith("common")) return null
 
             val map = parseLine(line)
             if (!map.keys.containsAll(commonKeys)) return null
 
-            return Font.Properties(
+            return BitmapFont.Properties(
                 map["lineHeight"]!!.toInt(),
             )
         }
@@ -80,7 +80,7 @@ class FontCache(bitmapCache: BitmapCache, materialCache: MaterialCache) : Cache<
             fontName: String,
             bitmap: Bitmap,
             materialCache: MaterialCache
-        ): Font.Character? {
+        ): BitmapFont.Character? {
             if (!line.startsWith("char")) return null
 
             val map = parseLine(line)
@@ -89,7 +89,7 @@ class FontCache(bitmapCache: BitmapCache, materialCache: MaterialCache) : Cache<
             val material = parseMaterial(map, fontName, bitmap)
             materialCache.put(material.materialName, material)
 
-            return Font.Character(
+            return BitmapFont.Character(
                 map["id"]!!.toInt().toChar(),
                 parseSize(map),
                 parseOffset(map),
@@ -97,13 +97,13 @@ class FontCache(bitmapCache: BitmapCache, materialCache: MaterialCache) : Cache<
             )
         }
 
-        private fun kernings(line: String): Font.Kerning? {
+        private fun kernings(line: String): BitmapFont.Kerning? {
             if (!line.startsWith("kerning")) return null
 
             val map = parseLine(line)
             if (!map.keys.containsAll(kerningKeys)) return null
 
-            return Font.Kerning(
+            return BitmapFont.Kerning(
                 map["first"]!!.toInt().toChar(),
                 map["second"]!!.toInt().toChar(),
                 map["amount"]!!.toInt(),

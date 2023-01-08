@@ -30,7 +30,7 @@ import dev.misasi.giancarlo.drawing.Alpha
 import dev.misasi.giancarlo.drawing.DrawCommand
 import dev.misasi.giancarlo.drawing.DrawOptions
 import dev.misasi.giancarlo.drawing.Effect
-import dev.misasi.giancarlo.drawing.Rgba8
+import dev.misasi.giancarlo.drawing.Rgb8
 import dev.misasi.giancarlo.drawing.StaticMaterial
 import dev.misasi.giancarlo.events.input.mouse.CursorMode
 import dev.misasi.giancarlo.math.Aabb
@@ -94,7 +94,7 @@ class App(
         postProcessDrawState.updateIndexes(postProcessDrawBuffer)
         updatePostProcessing()
 
-        gl.setClearColor(Rgba8.BLACK)
+        gl.setClearColor(Rgb8.BLACK.toRgba())
     }
 
     override val viewport: Viewport get() = window.viewport
@@ -225,11 +225,14 @@ class App(
         val mvp = calculateModelViewProjection(viewport.adjustedScreenSize, AffineTransform())
         postProcessProgram.setUniformMatrix4f(Uniform.MODEL_VIEW_PROJECTION.id, mvp)
         postProcessDrawState.reset()
-        postProcessDrawState.putSprite(postProcessMaterial.materialName, AffineTransform(
-            scale = viewport.adjustedScreenSize.toVector2f(),
-            reflection = Reflection.VERTICAL,
-            translation = viewport.offset,
-        ))
+        postProcessDrawState.putSprite(
+            postProcessMaterial.materialName,
+            AffineTransform(
+                scale = viewport.adjustedScreenSize.toVector2f(),
+                reflection = Reflection.VERTICAL,
+                translation = viewport.offset,
+            ),
+        )
         postProcessDrawState.updateVertexes(postProcessDrawBuffer)
     }
 
@@ -257,7 +260,8 @@ class App(
         private val attributeSpecs: List<Attribute.Spec> = listOf(
             Attribute.Spec("inXy", DataType.FLOAT, 2),
             Attribute.Spec("inUv", DataType.UNSIGNED_SHORT, 2, normalize = true),
-            Attribute.Spec("inAlpha", DataType.FLOAT, 1)
+            Attribute.Spec("inColor", DataType.INT, 1),
+            Attribute.Spec("inMasks", DataType.INT, 1)
         )
         private val spriteSizeInBytes = 4 * attributeSpecs.sizeInBytes()
         private const val spriteCapacity = 10000

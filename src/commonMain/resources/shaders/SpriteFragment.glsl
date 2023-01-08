@@ -20,10 +20,19 @@ uniform int uInvert = 0;
 
 // input
 layout (location = 0) in vec2 inUv;
-layout (location = 1) in float inAlpha;
+layout (location = 1) flat in int inColor;
+layout (location = 2) flat in int inMasks;
 
 // output
 layout (location = 0) out vec4 outColor;
+
+float b2f(int data, int shift) {
+    return ((data >> shift) & 0xFF) / 255.0;
+}
+
+bool b2b(int data, int shift) {
+    return ((data >> shift) & 0x1) == 0x1;
+}
 
 vec3 sepia(vec3 v) {
     return vec3(
@@ -52,18 +61,28 @@ void main() {
     // apply texture
     vec4 c = texture2D(uTexture0, inUv);
 
-    // apply alpha (and blend the override if set)
-    if (inAlpha >= 0.0) {
-        c.a = inAlpha;
+    // unpack
+    float r = b2f(inColor, 24);
+    float g = b2f(inColor, 16);
+    float b = b2f(inColor, 8);
+    float a = b2f(inColor, 0);
+    bool useColor = b2b(inMasks, 1);
+    bool useAlpha = b2b(inMasks, 0);
+
+    // apply color
+    if (useColor) {
+        c.rgb = vec3(r, g, b);
     }
+
+    // apply alpha
+    if (useAlpha) {
+        c.a *= a;
+    }
+
     if (uAlpha >= 0.0) {
         c.a *= uAlpha;
     }
 
-    // apply effects
-//    if (uDayNight == 1) {
-//        c.rgb = day_night(c.rgb);
-//    }
     if (uSepia == 1) {
         c.rgb = sepia(c.rgb);
     }

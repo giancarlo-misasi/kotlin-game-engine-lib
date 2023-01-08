@@ -29,7 +29,30 @@ import dev.misasi.giancarlo.math.AffineTransform
 import dev.misasi.giancarlo.math.Vector2f
 import dev.misasi.giancarlo.system.System.Companion.crash
 
-class Font(
+data class Font(val name: String, val size: Int, val color: Rgb8) {
+
+    val assetName = "$name$size"
+
+    companion object {
+        val ROBOTO16 = fnt("Roboto", 16)
+        val ROBOTO20 = fnt("Roboto", 20)
+        val ROBOTO24 = fnt("Roboto", 24)
+        val ROBOTO28 = fnt("Roboto", 28)
+        val ROBOTO32 = fnt("Roboto", 32)
+        val ROBOTO36 = fnt("Roboto", 36)
+        val ROBOTO40 = fnt("Roboto", 40)
+        val ROBOTO44 = fnt("Roboto", 44)
+        val ROBOTO48 = fnt("Roboto", 48)
+        val ROBOTO52 = fnt("Roboto", 52)
+        val ROBOTO56 = fnt("Roboto", 56)
+        val ROBOTO60 = fnt("Roboto", 60)
+        val ROBOTO64 = fnt("Roboto", 64)
+
+        private fun fnt(name: String, size: Int) = Font("$name", size, Rgb8.WHITE)
+    }
+}
+
+class BitmapFont(
     val fontName: String,
     private val properties: Properties,
     private val chars: Map<Char, Character>,
@@ -58,8 +81,8 @@ class Font(
         val id = Pair(first, second)
     }
 
-    fun draw(string: String, affine: AffineTransform, alpha: Float?, state: DrawState) {
-        val (ix, iy) = affine.translation.toVector2i()
+    fun draw(string: String, affineTransform: AffineTransform, font: Font, alpha: Int?, drawState: DrawState) {
+        val (ix, _) = affineTransform.translation.toVector2i()
         var x = 0
         var y = 0
         var prev = ' '
@@ -71,11 +94,11 @@ class Font(
                 '\n' -> x = ix.also { y += properties.lineHeight }
                 else -> {
                     val c = chars[raw] ?: crash("Font $fontName cannot render '$raw'.")
-                    val a = AffineTransform(
+                    val affine = AffineTransform(
                         translation = c.offset.plus(Vector2f(x, y)),
                         scale = c.size,
-                    ).concatenate(affine)
-                    state.putSprite("$fontName${c.codePoint}", a, alpha)
+                    ).concatenate(affineTransform)
+                    drawState.putSprite("$fontName${c.codePoint}", affine, font.color, alpha)
 
                     val k = Pair(prev, raw)
                     x += c.xAdvance + (kernings[k]?.amount ?: 0)

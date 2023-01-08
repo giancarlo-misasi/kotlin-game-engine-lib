@@ -42,7 +42,7 @@ class Button(
     override fun onUpdateDrawState(context: AppContext, state: DrawState) {
         val s = size?.toVector2f() ?: return
 
-        background?.let { state.putSprite(it, AffineTransform.scale(s)) }
+        background?.let { state.putSprite(it, AffineTransform.scale(s),) }
         text?.let {  }
 
         super.onUpdateDrawState(context, state)

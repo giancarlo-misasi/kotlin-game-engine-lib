@@ -29,13 +29,7 @@ import dev.misasi.giancarlo.math.AffineTransform
 
 interface DrawState {
     fun applyOptionsScoped(scopedDrawOptions: DrawOptions, block: (concatDrawOptions: DrawOptions) -> Unit)
-    fun putSprite(materialName: String, affine: AffineTransform = AffineTransform(), alpha: Float? = null)
-    fun putText(
-        text: String,
-        affine: AffineTransform = AffineTransform(),
-        fontName: String = "Roboto",
-        fontSize: Int = 16,
-        fontColor: Rgba8 = Rgba8.WHITE,
-    )
+    fun putSprite(materialName: String, affine: AffineTransform = AffineTransform(), color: Rgb8? = null, alpha: Int? = null)
+    fun putText(text: String, affine: AffineTransform = AffineTransform(), font: Font = Font.ROBOTO16, alpha: Int? = null)
     fun reset()
 }

@@ -26,6 +26,7 @@
 package dev.misasi.giancarlo.opengl
 
 import dev.misasi.giancarlo.drawing.Bitmap
+import dev.misasi.giancarlo.drawing.Rgb8
 import dev.misasi.giancarlo.drawing.Rgba8
 import dev.misasi.giancarlo.math.Vector2i
 
@@ -52,7 +53,7 @@ class Texture private constructor(
         gl.setTextureMinFilter(Filter.NEAREST)
         gl.setTextureMagFilter(Filter.NEAREST)
 //        gl.setTextureBorderColor(Rgba8.BLACK)
-        gl.setTextureBorderColor(Rgba8.YELLOW) // for debug
+        gl.setTextureBorderColor(Rgb8.YELLOW.toRgba()) // for debug
         gl.setTextureWrapS(Wrap.CLAMP_TO_BORDER)
         gl.setTextureWrapT(Wrap.CLAMP_TO_BORDER)
     }
