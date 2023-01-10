@@ -36,6 +36,8 @@ data class GestureEvent (
     val panDelta: Vector2f = Vector2f(),
     val pinchDelta: Float = 0f
 ) : Event {
+    override val id: Int = Event.getNextId()
+
     enum class Type {
         Tap,
         Pan,

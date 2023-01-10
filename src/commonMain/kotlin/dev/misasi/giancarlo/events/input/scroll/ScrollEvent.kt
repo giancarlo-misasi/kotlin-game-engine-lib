@@ -35,6 +35,7 @@ data class ScrollEvent(
     override val absolutePosition: Vector2f,
     val offset: Vector2f
 ) : Event {
+    override val id: Int = Event.getNextId()
 
     companion object {
         fun valueOf(window: Long, position: Vector2f, x: Double, y: Double): ScrollEvent {

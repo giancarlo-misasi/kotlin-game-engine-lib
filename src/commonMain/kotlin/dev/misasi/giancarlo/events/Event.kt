@@ -28,6 +28,8 @@ package dev.misasi.giancarlo.events
 import dev.misasi.giancarlo.math.Vector2f
 
 interface Event {
+    val id: Int
+
     /**
      * The window the event occurred in.
      */
@@ -42,4 +44,9 @@ interface Event {
      * The absolute position of the event.
      */
     val absolutePosition: Vector2f
+
+    companion object {
+        private var nextId = 0
+        fun getNextId() = nextId++
+    }
 }

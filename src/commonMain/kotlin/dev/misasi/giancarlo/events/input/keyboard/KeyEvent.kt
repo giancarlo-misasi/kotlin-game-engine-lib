@@ -39,6 +39,7 @@ data class KeyEvent(
     val modifier: KeyModifier?,
     val scanCode: Int
 ) : Event {
+    override val id: Int = Event.getNextId()
 
     companion object {
         fun valueOf(window: Long, position: Vector2f, keyCode: Int, scanCode: Int, actionCode: Int, modifierCode: Int): KeyEvent {

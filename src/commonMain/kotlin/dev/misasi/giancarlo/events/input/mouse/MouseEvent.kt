@@ -34,6 +34,8 @@ data class MouseEvent(
     override val time: Long,
     override val absolutePosition: Vector2f
 ) : Event {
+    override val id: Int = Event.getNextId()
+
     companion object {
         fun valueOf(window: Long, x: Double, y: Double): MouseEvent {
             return MouseEvent(window, getCurrentTimeMs(), Vector2f(x.toFloat(), y.toFloat()))

@@ -10,6 +10,8 @@ data class ResizeEvent(
     override val absolutePosition: Vector2f,
     val size: Vector2f
 ) : Event {
+    override val id: Int = Event.getNextId()
+
     companion object {
         fun valueOf(window: Long, position: Vector2f, x: Int, y: Int): ResizeEvent {
             return ResizeEvent(window, getCurrentTimeMs(), position, Vector2f(x.toFloat(), y.toFloat()))

@@ -27,6 +27,7 @@ package dev.misasi.giancarlo.events
 
 import dev.misasi.giancarlo.events.input.gestures.detector.GestureDetector
 import dev.misasi.giancarlo.events.input.gestures.touch.TouchEvent
+import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
 import dev.misasi.giancarlo.opengl.Viewport
 
 class EventQueue (

@@ -35,6 +35,7 @@ data class TextEvent(
     override val absolutePosition: Vector2f,
     val codePoint: Int
 ) : Event {
+    override val id: Int = Event.getNextId()
     val character = codePoint.toChar()
 
     companion object {

@@ -28,6 +28,7 @@ package dev.misasi.giancarlo.ux
 import dev.misasi.giancarlo.drawing.DrawOptions
 import dev.misasi.giancarlo.drawing.DrawState
 import dev.misasi.giancarlo.events.Event
+import dev.misasi.giancarlo.events.input.mouse.MouseButtonEvent
 import dev.misasi.giancarlo.math.AffineTransform
 import dev.misasi.giancarlo.math.Rectangle
 import dev.misasi.giancarlo.math.Vector2f

@@ -39,6 +39,8 @@ data class MouseButtonEvent(
     val action: MouseButtonAction,
     val modifier: KeyModifier?
 ) : Event {
+    override val id: Int = Event.getNextId()
+
     companion object {
         fun valueOf(window: Long, position: Vector2f, buttonCode: Int, actionCode: Int, modifierCode: Int): MouseButtonEvent {
             val button = MouseButton.valueOf(buttonCode) ?: crash("Unknown mbtn value: $buttonCode, $actionCode, $modifierCode")
